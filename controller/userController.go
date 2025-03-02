@@ -5,9 +5,5 @@ import (
 )
 
 type UserController struct {
-	CrudController
-}
-
-func (c *UserController) getModel() interface{} {
-	return &entity.User{}
+	CrudController[entity.User]
 }

@@ -21,12 +21,8 @@ func GetRouter() *gin.Engine {
 		userController := new(controller.UserController)
 		userGroup := v1.Group("/user")
 		{
-			userGroup.GET("", userController.Retrieve)
-			userGroup.POST("", userController.Create)
-			userGroup.PUT("/:id", userController.Update)
-			userGroup.DELETE("/:id", userController.Delete)
+			userController.Register(userGroup)
 		}
-
 	}
 
 	return router
