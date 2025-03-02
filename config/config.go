@@ -6,8 +6,14 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+type MasterDBConfig struct {
+	Driver string `yaml:"driver"`
+	DSN    string `yaml:"dsn"`
+}
+
 type Config struct {
-	Port int `yaml:"port"`
+	Port      int              `yaml:"port"`
+	MasterDBs []MasterDBConfig `yaml:"master_db"`
 }
 
 var config Config

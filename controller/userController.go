@@ -1,15 +1,13 @@
 package controller
 
 import (
-	"net/http"
-
-	"github.com/gin-gonic/gin"
+	"github.com/BlenDMinh/dutgrad-server/database/entity"
 )
 
-type UserController struct{}
+type UserController struct {
+	CrudController
+}
 
-func (u UserController) Retrieve(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Retrieve user",
-	})
+func (c *UserController) getModel() interface{} {
+	return &entity.User{}
 }
