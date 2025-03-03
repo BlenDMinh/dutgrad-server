@@ -1,0 +1,114 @@
+package controllers
+
+import (
+	"net/http"
+
+	"github.com/BlenDMinh/dutgrad-server/models"
+	"github.com/BlenDMinh/dutgrad-server/models/dtos"
+	"github.com/BlenDMinh/dutgrad-server/services"
+	"github.com/gin-gonic/gin"
+)
+
+type AuthController struct {
+	authService services.AuthService
+	userService services.UserService
+}
+
+func NewAuthController() *AuthController {
+	return &AuthController{
+		authService: services.AuthService{},
+		userService: services.UserService{},
+	}
+}
+
+func (ac *AuthController) Register(ctx *gin.Context) {
+	var req dtos.RegisterRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		errMsg := err.Error()
+		ctx.JSON(http.StatusBadRequest, models.NewErrorResponse(http.StatusBadRequest, "Invalid request format", &errMsg))
+		return
+	}
+
+	dto := dtos.RegisterDTO(req)
+	user, token, expiresAt, err := ac.authService.RegisterUser(&dto)
+
+	if err != nil {
+		statusCode := http.StatusInternalServerError
+		if err.Error() == "user with this email already exists" {
+			statusCode = http.StatusConflict
+		}
+		errMsg := err.Error()
+		ctx.JSON(statusCode, models.NewErrorResponse(statusCode, "Registration failed", &errMsg))
+		return
+	}
+
+	ctx.JSON(http.StatusCreated, models.NewSuccessResponse(http.StatusCreated, "User registered successfully", dtos.AuthResponse{
+		Token:   token,
+		User:    user,
+		Expires: expiresAt,
+	}))
+}
+
+func (ac *AuthController) Login(ctx *gin.Context) {
+	var req dtos.LoginRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		errMsg := err.Error()
+		ctx.JSON(http.StatusBadRequest, models.NewErrorResponse(http.StatusBadRequest, "Invalid request format", &errMsg))
+		return
+	}
+
+	user, token, expiresAt, err := ac.authService.LoginUser(req.Email, req.Password)
+	if err != nil {
+		errMsg := err.Error()
+		ctx.JSON(http.StatusUnauthorized, models.NewErrorResponse(http.StatusUnauthorized, "Authentication failed", &errMsg))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, models.NewSuccessResponse(http.StatusOK, "Login successful", dtos.AuthResponse{
+		Token:   token,
+		User:    user,
+		Expires: expiresAt,
+	}))
+}
+
+func (ac *AuthController) ExternalAuth(ctx *gin.Context) {
+	var req dtos.ExternalAuthRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		errMsg := err.Error()
+		ctx.JSON(http.StatusBadRequest, models.NewErrorResponse(http.StatusBadRequest, "Invalid request format", &errMsg))
+		return
+	}
+
+	dto := dtos.ExternalAuthDTO{
+		Email:      req.Email,
+		FirstName:  req.FirstName,
+		LastName:   req.LastName,
+		ExternalID: req.ExternalID,
+		AuthType:   req.AuthType,
+	}
+
+	user, token, expiresAt, isNewUser, err := ac.authService.ExternalAuth(&dto)
+
+	if err != nil {
+		statusCode := http.StatusInternalServerError
+		if err.Error() == "invalid authentication type" {
+			statusCode = http.StatusBadRequest
+		}
+		errMsg := err.Error()
+		ctx.JSON(statusCode, models.NewErrorResponse(statusCode, "Authentication failed", &errMsg))
+		return
+	}
+
+	statusCode := http.StatusOK
+	message := "Login successful"
+	if isNewUser {
+		statusCode = http.StatusCreated
+		message = "User registered successfully"
+	}
+
+	ctx.JSON(statusCode, models.NewSuccessResponse(statusCode, message, dtos.AuthResponse{
+		Token:   token,
+		User:    user,
+		Expires: expiresAt,
+	}))
+}
