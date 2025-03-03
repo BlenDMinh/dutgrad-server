@@ -1,4 +1,4 @@
-package model
+package models
 
 type ResponseWrapper struct {
 	Status  int         `json:"status"`

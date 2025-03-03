@@ -1,4 +1,4 @@
-package config
+package configs
 
 import (
 	"os"
@@ -14,6 +14,7 @@ type MasterDBConfig struct {
 type Config struct {
 	Port      int              `yaml:"port"`
 	MasterDBs []MasterDBConfig `yaml:"master_db"`
+	JwtSecret string           `yaml:"jwt_secret"`
 }
 
 var config Config

@@ -1,11 +1,11 @@
-package database
+package databases
 
 import (
 	"fmt"
 	"net/url"
 
-	"github.com/BlenDMinh/dutgrad-server/config"
-	"github.com/BlenDMinh/dutgrad-server/database/entity"
+	"github.com/BlenDMinh/dutgrad-server/configs"
+	"github.com/BlenDMinh/dutgrad-server/databases/entities"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
@@ -13,9 +13,9 @@ import (
 	"gorm.io/plugin/dbresolver"
 )
 
-var EntityList = []interface{}{
-	&entity.User{},
-	&entity.UserAuthCredential{},
+var entityList = []interface{}{
+	&entities.User{},
+	&entities.UserAuthCredential{},
 }
 
 var db *gorm.DB
@@ -57,7 +57,7 @@ func connect(driver string, dsn string) *gorm.DB {
 }
 
 func Init() {
-	config := config.GetEnv()
+	config := configs.GetEnv()
 
 	if len(config.MasterDBs) == 0 {
 		panic("no database configuration found")
@@ -86,8 +86,8 @@ func Init() {
 		}))
 	}
 
-	for _, entity := range EntityList {
-		db.AutoMigrate(entity)
+	for _, entities := range entityList {
+		db.AutoMigrate(entities)
 	}
 }
 

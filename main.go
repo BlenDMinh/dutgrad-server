@@ -1,13 +1,13 @@
 package main
 
 import (
-	"github.com/BlenDMinh/dutgrad-server/config"
-	"github.com/BlenDMinh/dutgrad-server/database"
+	"github.com/BlenDMinh/dutgrad-server/configs"
+	"github.com/BlenDMinh/dutgrad-server/databases"
 	"github.com/BlenDMinh/dutgrad-server/server"
 )
 
 func main() {
-	config.Init()
-	database.Init()
+	configs.Init()
+	databases.Init()
 	server.Init()
 }

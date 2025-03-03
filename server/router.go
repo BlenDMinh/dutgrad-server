@@ -1,7 +1,8 @@
 package server
 
 import (
-	"github.com/BlenDMinh/dutgrad-server/controller"
+	"github.com/BlenDMinh/dutgrad-server/controllers"
+	"github.com/BlenDMinh/dutgrad-server/middlewares"
 	"github.com/gin-gonic/gin"
 )
 
@@ -18,10 +19,19 @@ func GetRouter() *gin.Engine {
 			})
 		})
 
-		userController := new(controller.UserController)
+		userController := new(controllers.UserController)
 		userGroup := v1.Group("/user")
 		{
-			userController.Register(userGroup)
+			userGroup.Use(middlewares.AuthMiddleware()).GET("/me", userController.GetCurrentUser)
+			userController.RegisterCRUD(userGroup)
+		}
+
+		authGroup := v1.Group("/auth")
+		{
+			authController := controllers.NewAuthController()
+			authGroup.POST("/register", authController.Register)
+			authGroup.POST("/login", authController.Login)
+			authGroup.POST("/external-auth", authController.ExternalAuth)
 		}
 	}
 
