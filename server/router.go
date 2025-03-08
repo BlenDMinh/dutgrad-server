@@ -10,6 +10,7 @@ func GetRouter() *gin.Engine {
 	router := gin.New()
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
+	router.HandleMethodNotAllowed = true
 
 	v1 := router.Group("/v1")
 	{
