@@ -11,10 +11,29 @@ type MasterDBConfig struct {
 	DSN    string `yaml:"dsn"`
 }
 
+type RedisConfig struct {
+	Addr	 string `yaml:"addr"`
+	Password string `yaml:"password"`
+	DB		 int    `yaml:"db"`
+}
+
+type GoogleOAuthConfig struct {
+	ClientID     string `yaml:"client_id"`
+	ClientSecret string `yaml:"client_secret"`
+	RedirectURL  string `yaml:"redirect_url"`
+}
+
+type OAuthConfig struct {
+	Google GoogleOAuthConfig `yaml:"google"`
+}
+
 type Config struct {
 	Port      int              `yaml:"port"`
 	MasterDBs []MasterDBConfig `yaml:"master_db"`
+	Redis     RedisConfig      `yaml:"redis"`
+	OAuth     OAuthConfig      `yaml:"oauth"`
 	JwtSecret string           `yaml:"jwt_secret"`
+	WebClientURL string        `yaml:"web_client_url"`
 }
 
 var config Config
