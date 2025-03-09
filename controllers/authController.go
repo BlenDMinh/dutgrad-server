@@ -11,16 +11,16 @@ import (
 )
 
 type AuthController struct {
-	authService  services.AuthService
-	userService  services.UserService
-	redisService services.RedisService
+	authService  *services.AuthService
+	userService  *services.UserService
+	redisService *services.RedisService
 }
 
 func NewAuthController() *AuthController {
 	return &AuthController{
-		authService:  services.AuthService{},
-		userService:  services.UserService{},
-		redisService: services.RedisService{},
+		authService:  &services.AuthService{},
+		userService:  &services.UserService{},
+		redisService: services.NewRedisService(),
 	}
 }
 
