@@ -72,7 +72,7 @@ func (c *OAuthController) HandleOAuthCallback(ctx *gin.Context, providerName str
 		AuthType:   userInfo.Provider,
 	}
 
-	user, jwt_token, expiresAt, _, err := c.authService.ExternalAuth(&externalAuthDto)
+	user, jwt_token, expiresAt, IsNewUser, err := c.authService.ExternalAuth(&externalAuthDto)
 	if err != nil {
 		log.Printf("Authentication error: %v", err)
 		ctx.Redirect(http.StatusTemporaryRedirect,
@@ -84,6 +84,7 @@ func (c *OAuthController) HandleOAuthCallback(ctx *gin.Context, providerName str
 	authResponse := dtos.AuthResponse{
 		Token:   jwt_token,
 		User:    user,
+		IsNewUser: IsNewUser,
 		Expires: expiresAt,
 	}
 

@@ -38,6 +38,7 @@ type ExternalAuthRequest struct {
 
 type AuthResponse struct {
 	Token   string      `json:"token"`
+	IsNewUser bool 	    `json:"is_new_user"`
 	User    interface{} `json:"user"`
 	Expires interface{} `json:"expires"`
 }

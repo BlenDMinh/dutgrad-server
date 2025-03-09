@@ -48,6 +48,7 @@ func (ac *AuthController) Register(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, models.NewSuccessResponse(http.StatusCreated, "User registered successfully", dtos.AuthResponse{
 		Token:   token,
 		User:    user,
+		IsNewUser: true,
 		Expires: expiresAt,
 	}))
 }
