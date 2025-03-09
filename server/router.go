@@ -33,6 +33,12 @@ func GetRouter() *gin.Engine {
 			authGroup.POST("/register", authController.Register)
 			authGroup.POST("/login", authController.Login)
 			authGroup.POST("/external-auth", authController.ExternalAuth)
+
+			oauthGroup := authGroup.Group("/oauth")
+			{
+				oauthController := controllers.NewOAuthController()
+				oauthGroup.GET("/google", oauthController.GoogleOAuth)
+			}
 		}
 	}
 

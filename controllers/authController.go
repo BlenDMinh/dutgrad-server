@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/BlenDMinh/dutgrad-server/models"
@@ -10,14 +11,16 @@ import (
 )
 
 type AuthController struct {
-	authService services.AuthService
-	userService services.UserService
+	authService  services.AuthService
+	userService  services.UserService
+	redisService services.RedisService
 }
 
 func NewAuthController() *AuthController {
 	return &AuthController{
-		authService: services.AuthService{},
-		userService: services.UserService{},
+		authService:  services.AuthService{},
+		userService:  services.UserService{},
+		redisService: services.RedisService{},
 	}
 }
 
@@ -111,4 +114,43 @@ func (ac *AuthController) ExternalAuth(ctx *gin.Context) {
 		User:    user,
 		Expires: expiresAt,
 	}))
+}
+
+func (ac *AuthController) ExchangeState(ctx *gin.Context) {
+	state := ctx.Query("state")
+	if state == "" {
+		ctx.JSON(http.StatusBadRequest, models.NewErrorResponse(
+			http.StatusBadRequest,
+			"Invalid state token",
+			nil))
+		return
+	}
+
+	// Get auth data from Redis
+	authDataJSON, err := ac.redisService.Get(state)
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, models.NewErrorResponse(
+			http.StatusNotFound,
+			"State token expired or invalid",
+			nil))
+		return
+	}
+
+	// Delete the used token
+	ac.redisService.Del(state)
+
+	// Parse the JSON data
+	var authResponse dtos.AuthResponse
+	if err := json.Unmarshal([]byte(authDataJSON), &authResponse); err != nil {
+		ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(
+			http.StatusInternalServerError,
+			"Failed to parse auth data",
+			nil))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, models.NewSuccessResponse(
+		http.StatusOK,
+		"Token exchange successful",
+		authResponse))
 }
