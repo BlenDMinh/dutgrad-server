@@ -20,10 +20,10 @@ func GetRouter() *gin.Engine {
 			})
 		})
 
-		userController := new(controllers.UserController)
+		userController := controllers.NewUserController()
 		userGroup := v1.Group("/user")
 		{
-			userGroup.Use(middlewares.AuthMiddleware()).GET("/me", userController.GetCurrentUser)
+			userGroup.GET("/me", middlewares.AuthMiddleware(), userController.GetCurrentUser)
 			userController.RegisterCRUD(userGroup)
 		}
 

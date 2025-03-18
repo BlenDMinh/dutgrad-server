@@ -10,13 +10,12 @@ import (
 )
 
 type UserController struct {
-	CrudController[entities.User]
-	userService services.UserService
+	CrudController[*entities.User, uint]
 }
 
 func NewUserController() *UserController {
 	return &UserController{
-		userService: services.UserService{},
+		CrudController: *NewCrudController(services.NewUserService()),
 	}
 }
 
@@ -27,7 +26,7 @@ func (uc *UserController) GetCurrentUser(ctx *gin.Context) {
 		return
 	}
 
-	user, err := uc.userService.GetUserByID(userID.(uint))
+	user, err := uc.service.GetById(userID.(uint))
 	if err != nil {
 		errMsg := err.Error()
 		ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(http.StatusInternalServerError, "Failed to retrieve user", &errMsg))

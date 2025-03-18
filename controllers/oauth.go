@@ -10,19 +10,21 @@ import (
 	"github.com/BlenDMinh/dutgrad-server/configs"
 	"github.com/BlenDMinh/dutgrad-server/models/dtos"
 	"github.com/BlenDMinh/dutgrad-server/services"
+	"github.com/BlenDMinh/dutgrad-server/services/oauth"
+	"github.com/BlenDMinh/dutgrad-server/services/oauth/providers"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
 type OAuthController struct {
-	providers    map[string]services.OAuthProvider
+	providers    map[string]oauth.OAuthProvider
 	authService  *services.AuthService
 	redisService *services.RedisService
 }
 
 func NewOAuthController() *OAuthController {
-	providers := map[string]services.OAuthProvider{
-		"google": services.NewGoogleOAuthProvider(),
+	providers := map[string]oauth.OAuthProvider{
+		"google": providers.NewGoogleOAuthProvider(),
 		// Add other providers here
 	}
 
@@ -82,10 +84,10 @@ func (c *OAuthController) HandleOAuthCallback(ctx *gin.Context, providerName str
 
 	stateToken := uuid.New().String()
 	authResponse := dtos.AuthResponse{
-		Token:   jwt_token,
-		User:    user,
+		Token:     jwt_token,
+		User:      user,
 		IsNewUser: IsNewUser,
-		Expires: expiresAt,
+		Expires:   expiresAt,
 	}
 
 	if err := c.redisService.Set(stateToken, authResponse, 5*time.Minute); err != nil {
