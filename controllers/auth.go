@@ -46,10 +46,10 @@ func (ac *AuthController) Register(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusCreated, models.NewSuccessResponse(http.StatusCreated, "User registered successfully", dtos.AuthResponse{
-		Token:   token,
-		User:    user,
+		Token:     token,
+		User:      user,
 		IsNewUser: true,
-		Expires: expiresAt,
+		Expires:   expiresAt,
 	}))
 }
 
@@ -127,7 +127,6 @@ func (ac *AuthController) ExchangeState(ctx *gin.Context) {
 		return
 	}
 
-	// Get auth data from Redis
 	authDataJSON, err := ac.redisService.Get(state)
 	if err != nil {
 		ctx.JSON(http.StatusNotFound, models.NewErrorResponse(
@@ -137,10 +136,8 @@ func (ac *AuthController) ExchangeState(ctx *gin.Context) {
 		return
 	}
 
-	// Delete the used token
 	ac.redisService.Del(state)
 
-	// Parse the JSON data
 	var authResponse dtos.AuthResponse
 	if err := json.Unmarshal([]byte(authDataJSON), &authResponse); err != nil {
 		ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(

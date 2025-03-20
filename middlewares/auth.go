@@ -10,7 +10,6 @@ import (
 
 func AuthMiddleware() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		// Get token from Authorization header
 		authHeader := ctx.GetHeader("Authorization")
 		if authHeader == "" || len(authHeader) < 8 || authHeader[:7] != "Bearer " {
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, models.NewErrorResponse(http.StatusUnauthorized, "Unauthorized", nil))
@@ -19,7 +18,6 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		tokenString := authHeader[7:]
 
-		// Verify token
 		userID, err := helpers.VerifyJWTToken(tokenString)
 		if err != nil {
 			errMsg := err.Error()
@@ -27,7 +25,6 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		// Set userID in context
 		ctx.Set("userID", userID)
 		ctx.Next()
 	}
