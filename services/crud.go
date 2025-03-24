@@ -47,6 +47,8 @@ func (s *CrudService[T, ID]) Update(id ID, model *T) (*T, error) {
 	if existing == nil {
 		return nil, fmt.Errorf("%s entity record with id %v not found", reflect.TypeOf(new(T)).Elem().Name(), id)
 	}
+	reflect.ValueOf(model).Elem().FieldByName("CreatedAt").Set(reflect.ValueOf(existing).Elem().FieldByName("CreatedAt"))
+	reflect.ValueOf(model).Elem().FieldByName("ID").Set(reflect.ValueOf(id))
 
 	return s.repo.Update(model)
 }
