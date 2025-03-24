@@ -48,10 +48,9 @@ func (p *GoogleOAuthProvider) GetUserInfo(token *oauth2.Token) (*oauth.OAuthUser
 	defer resp.Body.Close()
 
 	var googleUser struct {
-		Email     string `json:"email"`
-		FirstName string `json:"given_name"`
-		LastName  string `json:"family_name"`
-		Sub       string `json:"sub"`
+		Email    string `json:"email"`
+		Username string `json:"given_name"`
+		Sub      string `json:"sub"`
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&googleUser); err != nil {
@@ -59,10 +58,9 @@ func (p *GoogleOAuthProvider) GetUserInfo(token *oauth2.Token) (*oauth.OAuthUser
 	}
 
 	return &oauth.OAuthUserInfo{
-		Email:     googleUser.Email,
-		FirstName: googleUser.FirstName,
-		LastName:  googleUser.LastName,
-		ID:        googleUser.Sub,
-		Provider:  "google",
+		Email:    googleUser.Email,
+		Username: googleUser.Username,
+		ID:       googleUser.Sub,
+		Provider: "google",
 	}, nil
 }

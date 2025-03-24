@@ -68,8 +68,7 @@ func (c *OAuthController) HandleOAuthCallback(ctx *gin.Context, providerName str
 
 	externalAuthDto := dtos.ExternalAuthDTO{
 		Email:      userInfo.Email,
-		FirstName:  userInfo.FirstName,
-		LastName:   userInfo.LastName,
+		Username:   userInfo.Username,
 		ExternalID: userInfo.ID,
 		AuthType:   userInfo.Provider,
 	}

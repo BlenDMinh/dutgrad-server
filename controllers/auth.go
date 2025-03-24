@@ -85,8 +85,7 @@ func (ac *AuthController) ExternalAuth(ctx *gin.Context) {
 
 	dto := dtos.ExternalAuthDTO{
 		Email:      req.Email,
-		FirstName:  req.FirstName,
-		LastName:   req.LastName,
+		Username:   req.Username,
 		ExternalID: req.ExternalID,
 		AuthType:   req.AuthType,
 	}

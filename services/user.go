@@ -6,7 +6,7 @@ import (
 )
 
 type UserService struct {
-	CrudService[*entities.User, uint]
+	CrudService[entities.User, uint]
 }
 
 func NewUserService() *UserService {
