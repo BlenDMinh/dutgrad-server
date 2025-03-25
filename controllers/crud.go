@@ -128,7 +128,7 @@ func (c *CrudController[T, ID]) Update(ctx *gin.Context) {
 		return
 	}
 
-	updatedModel, err := c.service.Update(id, model)
+	updatedModel, err := c.service.UpdateByID(id, model)
 	if err != nil {
 		errMsg := err.Error()
 		ctx.JSON(500, models.NewErrorResponse(500, "Internal Server Error", &errMsg))
@@ -136,6 +136,31 @@ func (c *CrudController[T, ID]) Update(ctx *gin.Context) {
 	}
 
 	ctx.JSON(200, models.NewSuccessResponse(200, "Updated", updatedModel))
+}
+
+func (c *CrudController[T, ID]) Patch(ctx *gin.Context) {
+	id, err := c.parseID(ctx)
+	if err != nil {
+		errMsg := err.Error()
+		ctx.JSON(400, models.NewErrorResponse(400, "Bad Request", &errMsg))
+		return
+	}
+
+	model := c.getModel()
+	if err := ctx.ShouldBindJSON(model); err != nil {
+		errMsg := err.Error()
+		ctx.JSON(400, models.NewErrorResponse(400, "Bad Request", &errMsg))
+		return
+	}
+
+	patchedModel, err := c.service.PatchByID(id, model)
+	if err != nil {
+		errMsg := err.Error()
+		ctx.JSON(500, models.NewErrorResponse(500, "Internal Server Error", &errMsg))
+		return
+	}
+
+	ctx.JSON(200, models.NewSuccessResponse(200, "Patched", patchedModel))
 }
 
 func (c *CrudController[T, ID]) Delete(ctx *gin.Context) {
@@ -161,5 +186,6 @@ func (c *CrudController[T, ID]) RegisterCRUD(router gin.IRouter) {
 	router.GET("/:id", c.RetrieveOne)
 	router.POST("", c.Create)
 	router.PUT("/:id", c.Update)
+	router.PATCH("/:id", c.Patch)
 	router.DELETE("/:id", c.Delete)
 }

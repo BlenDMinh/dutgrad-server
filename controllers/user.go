@@ -10,7 +10,7 @@ import (
 )
 
 type UserController struct {
-	CrudController[*entities.User, uint]
+	CrudController[entities.User, uint]
 }
 
 func NewUserController() *UserController {

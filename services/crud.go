@@ -3,6 +3,7 @@ package services
 import (
 	"fmt"
 	"reflect"
+	"time"
 
 	"github.com/BlenDMinh/dutgrad-server/databases/entities"
 	"github.com/BlenDMinh/dutgrad-server/databases/repositories"
@@ -12,7 +13,9 @@ type ICrudService[T entities.Entity, ID any] interface {
 	GetAll(page int, pageSize int) ([]T, error)
 	GetById(id ID) (*T, error)
 	Create(model *T) (*T, error)
-	Update(id ID, model *T) (*T, error)
+	Update(model *T) (*T, error)
+	UpdateByID(id ID, model *T) (*T, error)
+	PatchByID(id ID, patchData *T) (*T, error)
 	Upsert(id ID, model *T) (*T, error)
 	Delete(id ID) error
 }
@@ -39,7 +42,12 @@ func (s *CrudService[T, ID]) Create(model *T) (*T, error) {
 	return s.repo.Create(model)
 }
 
-func (s *CrudService[T, ID]) Update(id ID, model *T) (*T, error) {
+func (s *CrudService[T, ID]) Update(model *T) (*T, error) {
+	reflect.ValueOf(model).Elem().FieldByName("UpdatedAt").Set(reflect.ValueOf(time.Now()))
+	return s.repo.Update(model)
+}
+
+func (s *CrudService[T, ID]) UpdateByID(id ID, model *T) (*T, error) {
 	existing, err := s.repo.GetById(id)
 	if err != nil {
 		return nil, err
@@ -47,10 +55,68 @@ func (s *CrudService[T, ID]) Update(id ID, model *T) (*T, error) {
 	if existing == nil {
 		return nil, fmt.Errorf("%s entity record with id %v not found", reflect.TypeOf(new(T)).Elem().Name(), id)
 	}
+	reflect.ValueOf(model).Elem().FieldByName("UpdatedAt").Set(reflect.ValueOf(time.Now()))
 	reflect.ValueOf(model).Elem().FieldByName("CreatedAt").Set(reflect.ValueOf(existing).Elem().FieldByName("CreatedAt"))
 	reflect.ValueOf(model).Elem().FieldByName("ID").Set(reflect.ValueOf(id))
 
 	return s.repo.Update(model)
+}
+
+func (s *CrudService[T, ID]) PatchByID(id ID, patchData *T) (*T, error) {
+	existing, err := s.repo.GetById(id)
+	if err != nil {
+		return nil, err
+	}
+	if existing == nil {
+		return nil, fmt.Errorf("%s entity record with id %v not found", reflect.TypeOf(new(T)).Elem().Name(), id)
+	}
+
+	updatedModel := *existing
+
+	patchValue := reflect.ValueOf(patchData).Elem()
+	existingValue := reflect.ValueOf(&updatedModel).Elem()
+	modelType := patchValue.Type()
+
+	for i := 0; i < modelType.NumField(); i++ {
+		field := modelType.Field(i)
+		if field.Name == "ID" || field.Name == "CreatedAt" {
+			continue
+		}
+
+		patchFieldValue := patchValue.Field(i)
+
+		if !isZeroValue(patchFieldValue) {
+			existingValue.Field(i).Set(patchFieldValue)
+		}
+	}
+
+	reflect.ValueOf(patchData).Elem().FieldByName("UpdatedAt").Set(reflect.ValueOf(time.Now()))
+	return s.repo.Update(&updatedModel)
+}
+
+func isZeroValue(v reflect.Value) bool {
+	switch v.Kind() {
+	case reflect.Bool:
+		return !v.Bool()
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return v.Int() == 0
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		return v.Uint() == 0
+	case reflect.Float32, reflect.Float64:
+		return v.Float() == 0
+	case reflect.Complex64, reflect.Complex128:
+		return v.Complex() == 0
+	case reflect.String:
+		return v.String() == ""
+	case reflect.Ptr, reflect.Interface:
+		return v.IsNil()
+	case reflect.Array, reflect.Slice, reflect.Map:
+		return v.Len() == 0
+	case reflect.Struct:
+		return reflect.DeepEqual(v.Interface(), reflect.Zero(v.Type()).Interface())
+	default:
+		return false
+	}
 }
 
 func (s *CrudService[T, ID]) Delete(id ID) error {

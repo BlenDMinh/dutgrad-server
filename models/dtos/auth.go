@@ -1,16 +1,14 @@
 package dtos
 
 type RegisterDTO struct {
-	FirstName string
-	LastName  string
-	Email     string
-	Password  string
+	Username string
+	Email    string
+	Password string
 }
 
 type ExternalAuthDTO struct {
 	Email      string
-	FirstName  string
-	LastName   string
+	Username   string
 	ExternalID string
 	AuthType   string
 }
@@ -21,24 +19,22 @@ type LoginRequest struct {
 }
 
 type RegisterRequest struct {
-	FirstName string `json:"first_name" binding:"required"`
-	LastName  string `json:"last_name" binding:"required"`
-	Email     string `json:"email" binding:"required,email"`
-	Password  string `json:"password" binding:"required,min=8"`
+	Username string `json:"username" binding:"required"`
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required,min=8"`
 }
 
 type ExternalAuthRequest struct {
 	TokenID    string `json:"token_id" binding:"required"`
 	Email      string `json:"email" binding:"required,email"`
-	FirstName  string `json:"first_name" binding:"required"`
-	LastName   string `json:"last_name" binding:"required"`
+	Username   string `json:"username" binding:"required"`
 	ExternalID string `json:"external_id" binding:"required"`
 	AuthType   string `json:"auth_type" binding:"required"` // "google" or "facebook"
 }
 
 type AuthResponse struct {
-	Token   string      `json:"token"`
-	IsNewUser bool 	    `json:"is_new_user"`
-	User    interface{} `json:"user"`
-	Expires interface{} `json:"expires"`
+	Token     string      `json:"token"`
+	IsNewUser bool        `json:"is_new_user"`
+	User      interface{} `json:"user"`
+	Expires   interface{} `json:"expires"`
 }

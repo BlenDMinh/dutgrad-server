@@ -5,11 +5,10 @@ import (
 )
 
 type OAuthUserInfo struct {
-	Email     string
-	FirstName string
-	LastName  string
-	ID        string
-	Provider  string
+	Email    string
+	Username string
+	ID       string
+	Provider string
 }
 
 type OAuthProvider interface {

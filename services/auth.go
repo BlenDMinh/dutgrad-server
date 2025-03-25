@@ -43,8 +43,7 @@ func (s *AuthService) RegisterUser(dto *dtos.RegisterDTO) (*entities.User, strin
 	email := dto.Email
 	now := time.Now()
 	user := entities.User{
-		FirstName: dto.FirstName,
-		LastName:  dto.LastName,
+		Username:  dto.Username,
 		Email:     &email,
 		CreatedAt: now,
 		UpdatedAt: now,
@@ -151,8 +150,7 @@ func (s *AuthService) ExternalAuth(dto *dtos.ExternalAuthDTO) (*entities.User, s
 		email := dto.Email
 		now := time.Now()
 		user = entities.User{
-			FirstName: dto.FirstName,
-			LastName:  dto.LastName,
+			Username:  dto.Username,
 			Email:     &email,
 			CreatedAt: now,
 			UpdatedAt: now,
