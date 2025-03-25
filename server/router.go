@@ -41,6 +41,13 @@ func GetRouter() *gin.Engine {
 				oauthGroup.GET("/google", oauthController.GoogleOAuth)
 			}
 		}
+
+		// Space routes
+		spaceController := controllers.NewSpaceController()
+		spaceGroup := v1.Group("/spaces")
+		{
+			spaceController.RegisterCRUD(spaceGroup)
+		}
 	}
 
 	return router
