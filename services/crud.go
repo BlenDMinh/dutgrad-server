@@ -85,7 +85,7 @@ func (s *CrudService[T, ID]) PatchByID(id ID, patchData *T) (*T, error) {
 
 		patchFieldValue := patchValue.Field(i)
 
-		if !isZeroValue(patchFieldValue) {
+		if field.Type.Kind() == reflect.Bool || !isZeroValue(patchFieldValue) {
 			existingValue.Field(i).Set(patchFieldValue)
 		}
 	}
