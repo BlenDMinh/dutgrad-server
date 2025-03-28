@@ -1,6 +1,8 @@
 package repositories
 
 import (
+	"fmt"
+
 	"github.com/BlenDMinh/dutgrad-server/databases"
 	"github.com/BlenDMinh/dutgrad-server/databases/entities"
 )
@@ -13,6 +15,8 @@ type ICrudRepository[T entities.Entity, ID any] interface {
 	Create(model *T) (*T, error)
 	Update(model *T) (*T, error)
 	Delete(id ID) error
+	GetByField(fieldName string, value interface{}) ([]T, error)
+	DeleteByField(fieldName string, value interface{}) error
 }
 
 type CrudRepository[T entities.Entity, ID any] struct {
@@ -90,4 +94,16 @@ func (c *CrudRepository[T, ID]) Delete(id ID) error {
 	}
 
 	return nil
+}
+
+func (c *CrudRepository[T, ID]) GetByField(fieldName string, value interface{}) ([]T, error) {
+	var results []T
+	db := databases.GetDB()
+	err := db.Where(fmt.Sprintf("%s = ?", fieldName), value).Find(&results).Error
+	return results, err
+}
+
+func (c *CrudRepository[T, ID]) DeleteByField(fieldName string, value interface{}) error {
+	db := databases.GetDB()
+	return db.Where(fmt.Sprintf("%s = ?", fieldName), value).Delete(new(T)).Error
 }

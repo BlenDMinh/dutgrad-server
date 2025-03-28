@@ -58,6 +58,13 @@ func GetRouter() *gin.Engine {
 		{
 			spaceDocumentsGroup.GET("", documentController.GetBySpaceID)
 		}
+
+		userQuerySessionController := controllers.NewUserQuerySessionController()
+		userQuerySessionGroup := v1.Group("/user-query-sessions")
+		{
+			userQuerySessionController.RegisterCRUD(userQuerySessionGroup)
+		}
+
 	}
 
 	return router
