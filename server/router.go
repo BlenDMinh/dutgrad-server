@@ -42,11 +42,21 @@ func GetRouter() *gin.Engine {
 			}
 		}
 
-		// Space routes
+		documentController := controllers.NewDocumentController()
+		documentGroup := v1.Group("/documents")
+		{
+			documentController.RegisterCRUD(documentGroup)
+		}
+
 		spaceController := controllers.NewSpaceController()
 		spaceGroup := v1.Group("/spaces")
 		{
 			spaceController.RegisterCRUD(spaceGroup)
+		}
+
+		spaceDocumentsGroup := v1.Group("space/:space_id/documents")
+		{
+			spaceDocumentsGroup.GET("", documentController.GetBySpaceID)
 		}
 	}
 
