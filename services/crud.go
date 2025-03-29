@@ -18,6 +18,8 @@ type ICrudService[T entities.Entity, ID any] interface {
 	PatchByID(id ID, patchData *T) (*T, error)
 	Upsert(id ID, model *T) (*T, error)
 	Delete(id ID) error
+	GetByField(fieldName string, value interface{}) ([]T, error)
+	DeleteByField(fieldName string, value interface{}) error
 }
 
 type CrudService[T entities.Entity, ID any] struct {
@@ -134,4 +136,12 @@ func (s *CrudService[T, ID]) Upsert(id ID, model *T) (*T, error) {
 	}
 
 	return s.repo.Update(model)
+}
+
+func (s *CrudService[T, ID]) GetByField(fieldName string, value interface{}) ([]T, error) {
+	return s.repo.GetByField(fieldName, value)
+}
+
+func (s *CrudService[T, ID]) DeleteByField(fieldName string, value interface{}) error {
+	return s.repo.DeleteByField(fieldName, value)
 }
