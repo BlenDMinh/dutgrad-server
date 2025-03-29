@@ -59,6 +59,12 @@ func GetRouter() *gin.Engine {
 			spaceDocumentsGroup.GET("", documentController.GetBySpaceID)
 		}
 
+		spaceInvitationLinkController := controllers.NewSpaceInvitationLinkController()
+		spaceInvitationLinkGroup := v1.Group("/space-invitation-links")
+		{
+			spaceInvitationLinkController.RegisterCRUD(spaceInvitationLinkGroup)
+		}
+
 		userQuerySessionController := controllers.NewUserQuerySessionController()
 		userQuerySessionGroup := v1.Group("/user-query-sessions")
 		{
