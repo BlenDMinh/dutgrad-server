@@ -32,6 +32,7 @@ var rootCmd = &cobra.Command{
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	rootCmd.AddCommand(seedCmd)
+	rootCmd.AddCommand(migrateCmd)
 	err := rootCmd.Execute()
 	if err != nil {
 		os.Exit(1)
