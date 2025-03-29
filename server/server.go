@@ -11,3 +11,7 @@ func Init() {
 	r := GetRouter()
 	r.Run(":" + strconv.Itoa(config.Port))
 }
+
+func Close() {
+
+}

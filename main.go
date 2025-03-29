@@ -1,13 +1,10 @@
+/*
+Copyright © 2025 NAME HERE <EMAIL ADDRESS>
+*/
 package main
 
-import (
-	"github.com/BlenDMinh/dutgrad-server/configs"
-	"github.com/BlenDMinh/dutgrad-server/databases"
-	"github.com/BlenDMinh/dutgrad-server/server"
-)
+import "github.com/BlenDMinh/dutgrad-server/cmd"
 
 func main() {
-	configs.Init()
-	databases.Init()
-	server.Init()
+	cmd.Execute()
 }

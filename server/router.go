@@ -54,6 +54,12 @@ func GetRouter() *gin.Engine {
 			spaceController.RegisterCRUD(spaceGroup)
 		}
 
+		spaceInvitationController := controllers.NewSpaceInvitationController()
+		spaceInvitationGroup := v1.Group("/space-invitations")
+		{
+			spaceInvitationController.RegisterCRUD(spaceInvitationGroup)
+		}
+
 		spaceDocumentsGroup := v1.Group("space/:space_id/documents")
 		{
 			spaceDocumentsGroup.GET("", documentController.GetBySpaceID)

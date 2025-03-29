@@ -94,3 +94,15 @@ func Init() {
 func GetDB() *gorm.DB {
 	return db
 }
+
+func Close() {
+	sqlDB, err := db.DB()
+	if err != nil {
+		panic(fmt.Sprintf("failed to get database connection: %v", err))
+	}
+	err = sqlDB.Close()
+	if err != nil {
+		panic(fmt.Sprintf("failed to close database connection: %v", err))
+	}
+	fmt.Println("Database connection closed.")
+}
