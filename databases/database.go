@@ -5,18 +5,12 @@ import (
 	"net/url"
 
 	"github.com/BlenDMinh/dutgrad-server/configs"
-	// "github.com/BlenDMinh/dutgrad-server/databases/entities"
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/plugin/dbresolver"
 )
-
-// var entityList = []interface{}{
-// 	&entities.User{},
-// 	&entities.UserAuthCredential{},
-// }
 
 var db *gorm.DB
 
@@ -86,9 +80,6 @@ func Init() {
 		}))
 	}
 	fmt.Println("Database connected. Run `goose up` to migrate.")
-	// for _, entities := range entityList {
-	// 	db.AutoMigrate(entities)
-	// }
 }
 
 func GetDB() *gorm.DB {

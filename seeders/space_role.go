@@ -19,17 +19,17 @@ func (s *SpaceRoleSeeder) Seed() error {
 		{
 			ID:         1,
 			Name:       "owner",
-			Permission: 0, // for now
+			Permission: 0,
 		},
 		{
 			ID:         2,
 			Name:       "editor",
-			Permission: 0, // for now
+			Permission: 0,
 		},
 		{
 			ID:         3,
 			Name:       "viewer",
-			Permission: 0, // for now
+			Permission: 0,
 		},
 	}
 

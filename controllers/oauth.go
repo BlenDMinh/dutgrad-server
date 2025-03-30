@@ -25,7 +25,6 @@ type OAuthController struct {
 func NewOAuthController() *OAuthController {
 	providers := map[string]oauth.OAuthProvider{
 		"google": providers.NewGoogleOAuthProvider(),
-		// Add other providers here
 	}
 
 	return &OAuthController{

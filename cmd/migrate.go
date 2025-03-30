@@ -3,7 +3,7 @@ package cmd
 import (
 	"github.com/BlenDMinh/dutgrad-server/configs"
 	"github.com/BlenDMinh/dutgrad-server/databases"
-	_ "github.com/lib/pq" // Change to your DB driver (e.g., MySQL, SQLite)
+	_ "github.com/lib/pq"
 	"github.com/pressly/goose/v3"
 	"github.com/spf13/cobra"
 )
