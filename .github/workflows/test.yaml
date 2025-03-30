@@ -36,8 +36,11 @@ jobs:
       - name: Download config.zip from S3
         run: aws s3 cp s3://dutgrad-ci-cd-bucket/config.zip ./config.zip
 
+      - name: Remove Existing Config Folder
+        run: rm -rf ./dutgrad-docker-env/config
+
       - name: Extract Config Files
-        run: unzip config.zip -d ./dutgrad-docker-env
+        run: unzip -o config.zip -d ./dutgrad-docker-env
 
       - name: Upload Config as Artifact
         uses: actions/upload-artifact@v4
