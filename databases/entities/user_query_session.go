@@ -8,8 +8,8 @@ type UserQuerySession struct {
 	SpaceID   uint        `json:"space_id" gorm:"not null;index"`
 	CreatedAt time.Time   `json:"created_at"`
 	UpdatedAt time.Time   `json:"updated_at"`
-	User      User        `json:"user" gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE;"`
-	Space     Space       `json:"space" gorm:"foreignKey:SpaceID;constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
+	User      *User       `json:"user" gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE;"`
+	Space     *Space      `json:"space" gorm:"foreignKey:SpaceID;constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 	UserQuery []UserQuery `json:"user_query" gorm:"foreignKey:QuerySessionID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 }
 
