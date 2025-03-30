@@ -1,4 +1,4 @@
-name: Test build image
+name: Build and Push Docker Image to Docker Hub (Develop)
 on:
   push:
     branches:
@@ -8,7 +8,7 @@ on:
       - develop
 
 jobs:
-  setup-env:
+  build-and-push:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -42,24 +42,8 @@ jobs:
       - name: Extract Config Files
         run: unzip -o config.zip -d ./dutgrad-docker-env
 
-      - name: Upload Config as Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: docker-env
-          path: ./dutgrad-docker-env
-
-  build-and-push:
-    runs-on: ubuntu-latest
-    needs: setup-env
-    steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
-
-      - name: Download Config Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: docker-env
-          path: ./dutgrad-docker-env
 
       - name: Move Current Repo Inside dutgrad-docker-env
         run: |
