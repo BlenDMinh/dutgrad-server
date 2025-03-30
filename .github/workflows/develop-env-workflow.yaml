@@ -74,11 +74,11 @@ jobs:
           docker build \
             --file dutgrad-docker-env/build/server/Dockerfile \
             --build-arg ENVIRONMENT=dev \
-            --tag blendminh/dutgrad-server:latest \
+            --tag blendminh/dutgrad-server:dev-latest \
             --tag blendminh/dutgrad-server:${{ github.sha }} \
             dutgrad-docker-env
 
       - name: Push Docker Image to Docker Hub
         run: |
-          docker push blendminh/dutgrad-server:latest
+          docker push blendminh/dutgrad-server:dev-latest
           docker push blendminh/dutgrad-server:${{ github.sha }}
