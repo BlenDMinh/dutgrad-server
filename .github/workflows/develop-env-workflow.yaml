@@ -45,7 +45,7 @@ jobs:
       - name: Move Current Repo Inside dutgrad-docker-env
         run: |
           mkdir -p ./dutgrad-docker-env/dutgrad-server
-          rsync -av --exclude=dutgrad-docker-env ./ ./dutgrad-docker-env/dutgrad-server/
+          rsync -av --exclude=dutgrad-docker-env --exclude=.git --exclude=databases/migrations ./ ./dutgrad-docker-env/dutgrad-server/
 
       - name: Log in to Docker Hub
         run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
