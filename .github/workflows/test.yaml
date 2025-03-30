@@ -1,0 +1,66 @@
+name: Test build image
+on:
+  push:
+    branches:
+      - develop
+  pull_request:
+    branches:
+      - develop
+
+jobs:
+  setup-env:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+    
+      - name: Clone dutgrad-docker-env Repository
+        run: git clone https://github.com/BlenDMinh/dutgrad-docker-env
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::043309325304:role/GitHubActionsS3Access
+          aws-region: ap-southeast-1
+      
+      - name: Download config.zip from S3
+        run: aws s3 cp s3://dutgrad-ci-cd-bucket/config.zip ./config.zip
+
+      - name: Extract Config Files
+        run: unzip config.zip -d ./dutgrad-docker-env
+
+      - name: Upload Config as Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: docker-env
+          path: ./dutgrad-docker-env
+
+  build-and-push:
+    runs-on: ubuntu-latest
+    needs: setup-env
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Download Config Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: docker-env
+          path: ./dutgrad-docker-env
+
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+      - name: Build Docker Image
+        run: |
+          docker build \
+            --file build/server/Dockerfile \
+            --build-arg ENVIRONMENT=dev \
+            --tag blendminh/dutgrad-server:latest \
+            --tag blendminh/dutgrad-server:${{ github.sha }} \
+            .
+
+      - name: Push Docker Image to Docker Hub
+        run: |
+          docker push blendminh/dutgrad-server:latest
+          docker push blendminh/dutgrad-server:${{ github.sha }}
