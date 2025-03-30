@@ -14,8 +14,15 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
     
-      - name: Clone dutgrad-docker-env Repository
-        run: git clone https://github.com/BlenDMinh/dutgrad-docker-env
+      - name: Set up SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+      - name: Clone Docker Repository (`dutgrad-docker-env`)
+        run: git clone git@github.com:BlenDMinh/dutgrad-docker-env.git
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
