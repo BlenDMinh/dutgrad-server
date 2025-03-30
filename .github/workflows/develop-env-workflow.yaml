@@ -42,12 +42,6 @@ jobs:
       - name: Extract Config Files
         run: unzip -o config.zip -d ./dutgrad-docker-env
 
-      - name: Upload Config as Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: docker-env
-          path: ./dutgrad-docker-env
-
       - name: Checkout Repository
         uses: actions/checkout@v3
 
