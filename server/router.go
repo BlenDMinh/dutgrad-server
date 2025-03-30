@@ -65,6 +65,12 @@ func GetRouter() *gin.Engine {
 			userQuerySessionController.RegisterCRUD(userQuerySessionGroup)
 		}
 
+		userQueryController := controllers.NewUserQueryController()
+		userQueryGroup := v1.Group("/user-query")
+		{
+			userQueryController.RegisterCRUD(userQueryGroup)
+		}
+
 	}
 
 	return router
