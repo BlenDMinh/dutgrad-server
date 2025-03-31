@@ -1,6 +1,8 @@
 package repositories
 
-import "github.com/BlenDMinh/dutgrad-server/databases/entities"
+import (
+	"github.com/BlenDMinh/dutgrad-server/databases/entities"
+)
 
 type SpaceRepository struct {
 	*CrudRepository[entities.Space, uint]
