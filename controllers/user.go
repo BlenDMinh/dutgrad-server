@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/BlenDMinh/dutgrad-server/databases/entities"
 	"github.com/BlenDMinh/dutgrad-server/models"
@@ -34,4 +35,21 @@ func (uc *UserController) GetCurrentUser(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, models.NewSuccessResponse(http.StatusOK, "User retrieved successfully", user))
+}
+
+func (c *UserController) GetUserSpaces(ctx *gin.Context) {
+	userIdParam := ctx.Param("user_id")
+	userId, err := strconv.ParseUint(userIdParam, 10, 32)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	spaces, err := c.service.(*services.UserService).GetSpacesByUserId(uint(userId))
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"spaces": spaces})
 }
