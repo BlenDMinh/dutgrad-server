@@ -52,6 +52,7 @@ func GetRouter() *gin.Engine {
 		spaceGroup := v1.Group("/spaces")
 		{
 			spaceController.RegisterCRUD(spaceGroup)
+			spaceGroup.GET("/public", spaceController.GetPublicSpaces)
 			spaceGroup.GET("/user/:user_id", userController.GetUserSpaces)
 		}
 
