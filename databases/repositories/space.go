@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"github.com/BlenDMinh/dutgrad-server/databases"
 	"github.com/BlenDMinh/dutgrad-server/databases/entities"
 )
 
@@ -12,4 +13,11 @@ func NewSpaceRepository() *SpaceRepository {
 	return &SpaceRepository{
 		CrudRepository: NewCrudRepository[entities.Space, uint](),
 	}
+}
+
+func (r *SpaceRepository) FindPublicSpaces() ([]entities.Space, error) {
+	var spaces []entities.Space
+	db := databases.GetDB()
+	err := db.Where("privacy_status = ?", true).Find(&spaces).Error
+	return spaces, err
 }
