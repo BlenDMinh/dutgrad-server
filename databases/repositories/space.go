@@ -18,6 +18,6 @@ func NewSpaceRepository() *SpaceRepository {
 func (r *SpaceRepository) FindPublicSpaces() ([]entities.Space, error) {
 	var spaces []entities.Space
 	db := databases.GetDB()
-	err := db.Where("privacy_status = ?", true).Find(&spaces).Error
+	err := db.Where("privacy_status = ?", false).Find(&spaces).Error
 	return spaces, err
 }
