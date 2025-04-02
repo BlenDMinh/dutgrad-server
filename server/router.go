@@ -66,6 +66,7 @@ func GetRouter() *gin.Engine {
 		{
 			spaceController.RegisterCRUD(spaceGroup)
 			spaceGroup.GET("/public", spaceController.GetPublicSpaces)
+			spaceGroup.GET("/me", middlewares.AuthMiddleware(), userController.GetMySpaces)
 			spaceGroup.GET("/user/:user_id", userController.GetUserSpaces)
 		}
 
