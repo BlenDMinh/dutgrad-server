@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/BlenDMinh/dutgrad-server/databases/entities"
+	"github.com/BlenDMinh/dutgrad-server/models"
 	"github.com/BlenDMinh/dutgrad-server/services"
 	"github.com/gin-gonic/gin"
 )
@@ -21,9 +22,21 @@ func NewSpaceController() *SpaceController {
 func (c *SpaceController) GetPublicSpaces(ctx *gin.Context) {
 	spaces, err := c.service.(*services.SpaceService).GetPublicSpaces()
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		errMsg := err.Error()
+		ctx.JSON(
+			http.StatusInternalServerError,
+			models.NewErrorResponse(
+				http.StatusInternalServerError,
+				"Failed to fetch public spaces",
+				&errMsg,
+			),
+		)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"public_spaces": spaces})
+	ctx.JSON(http.StatusOK, models.NewSuccessResponse(
+		http.StatusOK,
+		"Success",
+		gin.H{"public_spaces": spaces},
+	))
 }

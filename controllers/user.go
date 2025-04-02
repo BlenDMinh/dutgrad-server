@@ -41,15 +41,34 @@ func (c *UserController) GetUserSpaces(ctx *gin.Context) {
 	userIdParam := ctx.Param("user_id")
 	userId, err := strconv.ParseUint(userIdParam, 10, 32)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		errMsg := err.Error()
+		ctx.JSON(
+			http.StatusInternalServerError,
+			models.NewErrorResponse(
+				http.StatusInternalServerError,
+				"Invalid user ID",
+				&errMsg,
+			),
+		)
 		return
 	}
 
 	spaces, err := c.service.(*services.UserService).GetSpacesByUserId(uint(userId))
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		errMsg := err.Error()
+		ctx.JSON(
+			http.StatusInternalServerError,
+			models.NewErrorResponse(
+				http.StatusInternalServerError,
+				"error",
+				&errMsg,
+			),
+		)
 		return
 	}
-
-	ctx.JSON(http.StatusOK, gin.H{"spaces": spaces})
+	ctx.JSON(http.StatusOK, models.NewSuccessResponse(
+		http.StatusOK,
+		"Success",
+		gin.H{"spaces": spaces},
+	))
 }
