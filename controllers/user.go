@@ -21,7 +21,7 @@ func NewUserController() *UserController {
 }
 
 func (uc *UserController) GetCurrentUser(ctx *gin.Context) {
-	userID, exists := ctx.Get("userID")
+	userID, exists := ctx.Get("user_id")
 	if !exists {
 		ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(http.StatusInternalServerError, "User ID not found in context", nil))
 		return
@@ -35,6 +35,32 @@ func (uc *UserController) GetCurrentUser(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, models.NewSuccessResponse(http.StatusOK, "User retrieved successfully", user))
+}
+
+func (c *UserController) GetMySpaces(ctx *gin.Context) {
+	userId, exists := ctx.Get("user_id")
+	if !exists {
+		ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(http.StatusInternalServerError, "User ID not found in context", nil))
+		return
+	}
+	spaces, err := c.service.(*services.UserService).GetSpacesByUserId(userId.(uint))
+	if err != nil {
+		errMsg := err.Error()
+		ctx.JSON(
+			http.StatusInternalServerError,
+			models.NewErrorResponse(
+				http.StatusInternalServerError,
+				"error",
+				&errMsg,
+			),
+		)
+		return
+	}
+	ctx.JSON(http.StatusOK, models.NewSuccessResponse(
+		http.StatusOK,
+		"Success",
+		gin.H{"spaces": spaces},
+	))
 }
 
 func (c *UserController) GetUserSpaces(ctx *gin.Context) {
