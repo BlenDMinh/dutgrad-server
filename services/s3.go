@@ -25,7 +25,6 @@ func UploadFileToS3(filename string, file multipart.File) (string, error) {
 		Bucket: aws.String(bucket),
 		Key:    &key,
 		Body:   file,
-		ACL:    aws.String("public-read"),
 	}
 
 	_, err := s3Client.PutObject(uploadParams)
