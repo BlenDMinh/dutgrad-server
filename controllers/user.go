@@ -21,7 +21,7 @@ func NewUserController() *UserController {
 }
 
 func (uc *UserController) GetCurrentUser(ctx *gin.Context) {
-	userID, exists := ctx.Get("userID")
+	userID, exists := ctx.Get("user_id")
 	if !exists {
 		ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(http.StatusInternalServerError, "User ID not found in context", nil))
 		return
@@ -37,19 +37,64 @@ func (uc *UserController) GetCurrentUser(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, models.NewSuccessResponse(http.StatusOK, "User retrieved successfully", user))
 }
 
+func (c *UserController) GetMySpaces(ctx *gin.Context) {
+	userId, exists := ctx.Get("user_id")
+	if !exists {
+		ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(http.StatusInternalServerError, "User ID not found in context", nil))
+		return
+	}
+	spaces, err := c.service.(*services.UserService).GetSpacesByUserId(userId.(uint))
+	if err != nil {
+		errMsg := err.Error()
+		ctx.JSON(
+			http.StatusInternalServerError,
+			models.NewErrorResponse(
+				http.StatusInternalServerError,
+				"error",
+				&errMsg,
+			),
+		)
+		return
+	}
+	ctx.JSON(http.StatusOK, models.NewSuccessResponse(
+		http.StatusOK,
+		"Success",
+		gin.H{"spaces": spaces},
+	))
+}
+
 func (c *UserController) GetUserSpaces(ctx *gin.Context) {
 	userIdParam := ctx.Param("user_id")
 	userId, err := strconv.ParseUint(userIdParam, 10, 32)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		errMsg := err.Error()
+		ctx.JSON(
+			http.StatusInternalServerError,
+			models.NewErrorResponse(
+				http.StatusInternalServerError,
+				"Invalid user ID",
+				&errMsg,
+			),
+		)
 		return
 	}
 
 	spaces, err := c.service.(*services.UserService).GetSpacesByUserId(uint(userId))
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		errMsg := err.Error()
+		ctx.JSON(
+			http.StatusInternalServerError,
+			models.NewErrorResponse(
+				http.StatusInternalServerError,
+				"error",
+				&errMsg,
+			),
+		)
 		return
 	}
-
-	ctx.JSON(http.StatusOK, gin.H{"spaces": spaces})
+	ctx.JSON(http.StatusOK, models.NewSuccessResponse(
+		http.StatusOK,
+		"Success",
+		gin.H{"spaces": spaces},
+	))
 }

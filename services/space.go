@@ -14,3 +14,7 @@ func NewSpaceService() *SpaceService {
 		CrudService: *NewCrudService(repositories.NewSpaceRepository()),
 	}
 }
+
+func (s *SpaceService) GetPublicSpaces() ([]entities.Space, error) {
+	return s.repo.(*repositories.SpaceRepository).FindPublicSpaces()
+}

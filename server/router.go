@@ -1,13 +1,26 @@
 package server
 
 import (
+	"time"
+
+	"github.com/BlenDMinh/dutgrad-server/configs"
 	"github.com/BlenDMinh/dutgrad-server/controllers"
 	"github.com/BlenDMinh/dutgrad-server/middlewares"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
 func GetRouter() *gin.Engine {
+	env := configs.GetEnv()
 	router := gin.New()
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     env.AllowOrigins,
+		AllowMethods:     []string{"GET", "PUT", "PATCH", "POST", "DELETE"},
+		AllowHeaders:     []string{"Origin"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
 	router.HandleMethodNotAllowed = true
@@ -52,6 +65,8 @@ func GetRouter() *gin.Engine {
 		spaceGroup := v1.Group("/spaces")
 		{
 			spaceController.RegisterCRUD(spaceGroup)
+			spaceGroup.GET("/public", spaceController.GetPublicSpaces)
+			spaceGroup.GET("/me", middlewares.AuthMiddleware(), userController.GetMySpaces)
 			spaceGroup.GET("/user/:user_id", userController.GetUserSpaces)
 		}
 

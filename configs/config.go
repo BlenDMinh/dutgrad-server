@@ -35,6 +35,7 @@ type Config struct {
 	OAuth        OAuthConfig      `yaml:"oauth"`
 	JwtSecret    string           `yaml:"jwt_secret"`
 	WebClientURL string           `yaml:"web_client_url"`
+	AllowOrigins []string         `yaml:"allow_origins"`
 }
 
 var config Config
