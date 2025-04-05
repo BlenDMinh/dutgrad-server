@@ -19,6 +19,8 @@ var seedCmd = &cobra.Command{
 
 		seeder_list := []seeders.Seeder{
 			&seeders.SpaceRoleSeeder{},
+			&seeders.MockAccountSeeder{},
+			&seeders.SpaceSeeder{},
 		}
 
 		for _, seeder := range seeder_list {
