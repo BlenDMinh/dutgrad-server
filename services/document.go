@@ -47,5 +47,10 @@ func (s *DocumentService) UploadDocument(fileHeader *multipart.FileHeader, space
 		S3URL:    s3URL,
 	}
 
+	document, err = s.repo.Create(document)
+	if err != nil {
+		return nil, err
+	}
+
 	return document, nil
 }
