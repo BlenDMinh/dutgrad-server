@@ -59,6 +59,7 @@ func GetRouter() *gin.Engine {
 		documentGroup := v1.Group("/documents")
 		{
 			documentController.RegisterCRUD(documentGroup)
+			documentGroup.POST("/upload", middlewares.AuthMiddleware(), documentController.UploadDocument)
 		}
 
 		spaceController := controllers.NewSpaceController()

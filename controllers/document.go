@@ -59,3 +59,54 @@ func (c *DocumentController) GetBySpaceID(ctx *gin.Context) {
 		gin.H{"documents": documents},
 	))
 }
+
+func (c *DocumentController) UploadDocument(ctx *gin.Context) {
+	spaceIDStr := ctx.Request.FormValue("space_id")
+	spaceID, err := strconv.ParseUint(spaceIDStr, 10, 32)
+	if err != nil {
+		errMsg := err.Error()
+		ctx.JSON(
+			http.StatusInternalServerError,
+			models.NewErrorResponse(
+				http.StatusInternalServerError,
+				"Invalid space_id",
+				&errMsg,
+			),
+		)
+		return
+	}
+
+	file, err := ctx.FormFile("file")
+	if err != nil {
+		errMsg := err.Error()
+		ctx.JSON(
+			http.StatusInternalServerError,
+			models.NewErrorResponse(
+				http.StatusInternalServerError,
+				"Failed to get file",
+				&errMsg,
+			),
+		)
+		return
+	}
+
+	document, err := c.service.UploadDocument(file, uint(spaceID))
+	if err != nil {
+		errMsg := err.Error()
+		ctx.JSON(
+			http.StatusInternalServerError,
+			models.NewErrorResponse(
+				http.StatusInternalServerError,
+				"Failed to upload document",
+				&errMsg,
+			),
+		)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, models.NewSuccessResponse(
+		http.StatusOK,
+		"Success",
+		gin.H{"document": document},
+	))
+}
