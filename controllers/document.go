@@ -68,7 +68,7 @@ func (c *DocumentController) UploadDocument(ctx *gin.Context) {
 		ctx.JSON(
 			http.StatusInternalServerError,
 			models.NewErrorResponse(
-				http.StatusInternalServerError,
+				http.StatusBadRequest,
 				"Invalid space_id",
 				&errMsg,
 			),
@@ -82,7 +82,7 @@ func (c *DocumentController) UploadDocument(ctx *gin.Context) {
 		ctx.JSON(
 			http.StatusInternalServerError,
 			models.NewErrorResponse(
-				http.StatusInternalServerError,
+				http.StatusBadRequest,
 				"Failed to get file",
 				&errMsg,
 			),
