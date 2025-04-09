@@ -1,0 +1,57 @@
+package helpers
+
+import (
+	"crypto/sha256"
+	"encoding/hex"
+	"fmt"
+	"mime/multipart"
+	"path/filepath"
+	"time"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/s3"
+)
+
+// GetUniqueFileKey generates a unique key for a file using SHA-256 hash
+// It combines the filename and current timestamp, then hashes it
+// The file extension is preserved and appended to the hash
+func GetUniqueFileKey(filename string) string {
+	now := time.Now()
+
+	// Extract file extension
+	fileExt := filepath.Ext(filename)
+
+	// Generate a string to hash (filename + timestamp)
+	toHash := fmt.Sprintf("%s-%d-%02d-%02d-%02d-%02d-%02d",
+		filename, now.Year(), now.Month(), now.Day(),
+		now.Hour(), now.Minute(), now.Second())
+
+	// Hash the string using SHA-256
+	hasher := sha256.New()
+	hasher.Write([]byte(toHash))
+	hashedKey := hex.EncodeToString(hasher.Sum(nil))
+
+	// Create the final key with hash and file extension
+	return hashedKey + fileExt
+}
+
+// UploadToS3 uploads a file to an S3 bucket
+func UploadToS3(bucket string, key string, file multipart.File) (string, error) {
+	sess := ConnectAWS()
+	s3Client := s3.New(sess)
+
+	// Create a new S3 PutObjectInput request
+	uploadParams := &s3.PutObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+		Body:   file,
+	}
+
+	_, err := s3Client.PutObject(uploadParams)
+	if err != nil {
+		return "", fmt.Errorf("unable to upload file to S3, %v", err)
+	}
+
+	fileUrl := fmt.Sprintf("https://%s.s3.amazonaws.com/%s", bucket, key)
+	return fileUrl, nil
+}

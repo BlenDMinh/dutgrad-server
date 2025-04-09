@@ -28,6 +28,15 @@ type OAuthConfig struct {
 	Google GoogleOAuthConfig `yaml:"google"`
 }
 
+type AWSS3Config struct {
+	Bucket string `yaml:"bucket"`
+}
+
+type AWSConfig struct {
+	Region string      `yaml:"region"`
+	S3     AWSS3Config `yaml:"s3"`
+}
+
 type Config struct {
 	Port         int              `yaml:"port"`
 	MasterDBs    []MasterDBConfig `yaml:"master_db"`
@@ -36,6 +45,7 @@ type Config struct {
 	JwtSecret    string           `yaml:"jwt_secret"`
 	WebClientURL string           `yaml:"web_client_url"`
 	AllowOrigins []string         `yaml:"allow_origins"`
+	AWS          AWSConfig        `yaml:"aws"`
 }
 
 var config Config
