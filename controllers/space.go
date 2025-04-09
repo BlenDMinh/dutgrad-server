@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/BlenDMinh/dutgrad-server/databases"
 	"github.com/BlenDMinh/dutgrad-server/databases/entities"
@@ -79,4 +80,80 @@ func (c *SpaceController) CreateSpace(ctx *gin.Context) {
 	}
 
 	ctx.JSON(201, models.NewSuccessResponse(201, "Created", createdSpace))
+}
+
+func (c *SpaceController) GetMembers(ctx *gin.Context) {
+	spaceIdParam := ctx.Param("id")
+	spaceId, err := strconv.ParseUint(spaceIdParam, 10, 32)
+
+	if err != nil {
+		errMsg := err.Error()
+		ctx.JSON(
+			http.StatusInternalServerError,
+			models.NewErrorResponse(
+				http.StatusInternalServerError,
+				"invalid space id",
+				&errMsg,
+			),
+		)
+		return
+	}
+
+	members, err := c.service.(*services.SpaceService).GetMembers(uint(spaceId))
+	if err != nil {
+		errMsg := err.Error()
+		ctx.JSON(
+			http.StatusInternalServerError,
+			models.NewErrorResponse(
+				http.StatusInternalServerError,
+				"error",
+				&errMsg,
+			),
+		)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, models.NewSuccessResponse(
+		http.StatusOK,
+		"Success",
+		gin.H{"members": members},
+	))
+}
+
+func (c *SpaceController) GetInvitations(ctx *gin.Context) {
+	spaceIdParam := ctx.Param("id")
+	spaceId, err := strconv.ParseUint(spaceIdParam, 10, 32)
+
+	if err != nil {
+		errMsg := err.Error()
+		ctx.JSON(
+			http.StatusInternalServerError,
+			models.NewErrorResponse(
+				http.StatusInternalServerError,
+				"invalid space id",
+				&errMsg,
+			),
+		)
+		return
+	}
+
+	invitations, err := c.service.(*services.SpaceService).GetInvitations(uint(spaceId))
+	if err != nil {
+		errMsg := err.Error()
+		ctx.JSON(
+			http.StatusInternalServerError,
+			models.NewErrorResponse(
+				http.StatusInternalServerError,
+				"error",
+				&errMsg,
+			),
+		)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, models.NewSuccessResponse(
+		http.StatusOK,
+		"Success",
+		gin.H{"invitations": invitations},
+	))
 }

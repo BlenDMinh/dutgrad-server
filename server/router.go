@@ -71,10 +71,13 @@ func GetRouter() *gin.Engine {
 			spaceGroup.PUT("/:id", spaceController.Update)
 			spaceGroup.PATCH("/:id", spaceController.Patch)
 			spaceGroup.DELETE("/:id", spaceController.Delete)
+			spaceGroup.GET("/:id/members", spaceController.GetMembers)
+			spaceGroup.GET("/:id/invitations", spaceController.GetInvitations)
 
 			spaceGroup.GET("/public", spaceController.GetPublicSpaces)
 			spaceGroup.GET("/me", middlewares.AuthMiddleware(), userController.GetMySpaces)
 			spaceGroup.GET("/user/:user_id", userController.GetUserSpaces)
+
 		}
 
 		spaceInvitationController := controllers.NewSpaceInvitationController()

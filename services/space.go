@@ -18,3 +18,11 @@ func NewSpaceService() *SpaceService {
 func (s *SpaceService) GetPublicSpaces() ([]entities.Space, error) {
 	return s.repo.(*repositories.SpaceRepository).FindPublicSpaces()
 }
+
+func (s *SpaceService) GetMembers(spaceId uint) ([]entities.SpaceUser, error) {
+	return s.repo.(*repositories.SpaceRepository).GetMembers(spaceId)
+}
+
+func (s *SpaceService) GetInvitations(spaceId uint) ([]entities.SpaceInvitation, error) {
+	return s.repo.(*repositories.SpaceRepository).GetInvitations(spaceId)
+}
