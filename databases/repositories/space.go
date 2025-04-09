@@ -21,3 +21,17 @@ func (r *SpaceRepository) FindPublicSpaces() ([]entities.Space, error) {
 	err := db.Where("privacy_status = ?", false).Find(&spaces).Error
 	return spaces, err
 }
+
+func (r *SpaceRepository) GetMembers(spaceId uint) ([]entities.SpaceUser, error) {
+	var members []entities.SpaceUser
+	db := databases.GetDB()
+	err := db.Preload("User").Preload("SpaceRole").Where("space_id = ?", spaceId).Find(&members).Error
+	return members, err
+}
+
+func (r *SpaceRepository) GetInvitations(spaceId uint) ([]entities.SpaceInvitation, error) {
+	var invitations []entities.SpaceInvitation
+	db := databases.GetDB()
+	err := db.Preload("InvitedUser").Preload("SpaceRole").Where("space_id = ?", spaceId).Find(&invitations).Error
+	return invitations, err
+}
