@@ -26,3 +26,7 @@ func (s *SpaceService) GetMembers(spaceId uint) ([]entities.SpaceUser, error) {
 func (s *SpaceService) GetInvitations(spaceId uint) ([]entities.SpaceInvitation, error) {
 	return s.repo.(*repositories.SpaceRepository).GetInvitations(spaceId)
 }
+
+func (s *SpaceService) CreateInvitation(invitation *entities.SpaceInvitation) (*entities.SpaceInvitation, error) {
+	return s.repo.(*repositories.SpaceRepository).CreateInvitation(invitation)
+}
