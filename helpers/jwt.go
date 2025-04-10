@@ -8,12 +8,12 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func GenerateJWTToken(userID uint) (string, time.Time, error) {
+func GenerateJWTToken(userID uint) (string, *time.Time, error) {
 	expirationTime := time.Now().Add(24 * time.Hour)
 	token, exp, err := GenerateTokenForPayload(map[string]interface {}{"user_id": userID}, &expirationTime)
 
 	if err != nil {
-		return "", time.Time{}, err
+		return "", nil, err
 	}
 
 	return token, exp, nil
@@ -37,7 +37,7 @@ func VerifyJWTToken(tokenString string) (uint, error) {
 	return uint(userIDFloat), nil
 }
 
-func GenerateTokenForPayload(payload map[string]interface {}, exp *time.Time) (string, time.Time, error) {
+func GenerateTokenForPayload(payload map[string]interface {}, exp *time.Time) (string, *time.Time, error) {
 	config := configs.GetEnv()
 	jwtSecret := config.JwtSecret
 	if jwtSecret == "" {
@@ -63,10 +63,10 @@ func GenerateTokenForPayload(payload map[string]interface {}, exp *time.Time) (s
 
 	tokenString, err := token.SignedString([]byte(jwtSecret))
 	if err != nil {
-		return "", time.Time{}, err
+		return "", nil, err
 	}
 
-	return tokenString, *exp, nil	
+	return tokenString, exp, nil	
 }
 
 func VerifyTokenForPayload(tokenString string) (*map[string]interface {}, error) {
