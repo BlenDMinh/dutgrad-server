@@ -12,7 +12,7 @@ type SpaceService struct {
 
 func NewSpaceService(invitationLinkRepo repositories.SpaceInvitationLinkRepository) *SpaceService {
 	return &SpaceService{
-		CrudService: *NewCrudService(repositories.NewSpaceRepository()),
+		CrudService:        *NewCrudService(repositories.NewSpaceRepository()),
 		invitationLinkRepo: invitationLinkRepo,
 	}
 }
@@ -51,9 +51,13 @@ func (s *SpaceService) GetOrCreateSpaceInvitationLink(spaceID, spaceRoleID uint)
 		if err != nil {
 			return nil, err
 		}
-		
+
 		return invitationLink, nil
 	}
 	// If the invitation link already exists, return it
 	return invitationLink, nil
+}
+
+func (s *SpaceService) CreateInvitation(invitation *entities.SpaceInvitation) (*entities.SpaceInvitation, error) {
+	return s.repo.(*repositories.SpaceRepository).CreateInvitation(invitation)
 }

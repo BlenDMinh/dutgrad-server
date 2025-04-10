@@ -35,3 +35,11 @@ func (r *SpaceRepository) GetInvitations(spaceId uint) ([]entities.SpaceInvitati
 	err := db.Preload("InvitedUser").Preload("SpaceRole").Where("space_id = ?", spaceId).Find(&invitations).Error
 	return invitations, err
 }
+
+func (s *SpaceRepository) CreateInvitation(invitation *entities.SpaceInvitation) (*entities.SpaceInvitation, error) {
+	db := databases.GetDB()
+	if err := db.Create(invitation).Error; err != nil {
+		return nil, err
+	}
+	return invitation, nil
+}

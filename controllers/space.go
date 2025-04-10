@@ -205,7 +205,7 @@ func (c *SpaceController) GetInvitationLink(ctx *gin.Context) {
 
 	link, _, err := helpers.GenerateTokenForPayload(
 		gin.H{
-			"space_id":     invitationLink.SpaceID,
+			"space_id":      invitationLink.SpaceID,
 			"space_role_id": invitationLink.SpaceRoleID,
 		},
 		nil,
@@ -225,5 +225,77 @@ func (c *SpaceController) GetInvitationLink(ctx *gin.Context) {
 		http.StatusOK,
 		"Success",
 		gin.H{"invitation_link": link},
+	))
+}
+
+func (c *SpaceController) InviteUserToSpace(ctx *gin.Context) {
+	spaceIdParam := ctx.Param("id")
+	spaceId, err := strconv.ParseUint(spaceIdParam, 10, 64)
+
+	if err != nil {
+		errMsg := err.Error()
+		ctx.JSON(
+			http.StatusBadRequest,
+			models.NewErrorResponse(
+				http.StatusBadRequest,
+				"Invalid space id",
+				&errMsg,
+			),
+		)
+		return
+	}
+	var req struct {
+		InvitedUserID    *uint  `json:"invited_user_id"`
+		InvitedUserEmail string `json:"invited_user_email"`
+		SpaceRoleID      uint   `json:"space_role_id" binding:"required"`
+	}
+
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		errMsg := err.Error()
+		ctx.JSON(
+			http.StatusBadRequest,
+			models.NewErrorResponse(
+				http.StatusBadRequest,
+				"Invalid request body",
+				&errMsg,
+			),
+		)
+		return
+	}
+
+	inviterId, exists := ctx.Get("user_id")
+	if !exists {
+		ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(http.StatusInternalServerError, "User ID not found in context", nil))
+		return
+	}
+
+	invitation := entities.SpaceInvitation{
+		SpaceID:     uint(spaceId),
+		SpaceRoleID: req.SpaceRoleID,
+		InviterID:   inviterId.(uint),
+		Status:      "pending",
+	}
+	if req.InvitedUserID != nil {
+		invitation.InvitedUserID = *req.InvitedUserID
+	}
+
+	invite_user, err := c.service.(*services.SpaceService).CreateInvitation(&invitation)
+	if err != nil {
+		errMsg := err.Error()
+		ctx.JSON(
+			http.StatusInternalServerError,
+			models.NewErrorResponse(
+				http.StatusInternalServerError,
+				"error",
+				&errMsg,
+			),
+		)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, models.NewSuccessResponse(
+		http.StatusOK,
+		"Success",
+		gin.H{"User invited successfully": invite_user},
 	))
 }
