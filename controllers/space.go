@@ -170,6 +170,9 @@ func (c *SpaceController) GetInvitationLink(ctx *gin.Context) {
 		return
 	}
 
+	spaceIdParam := ctx.Param("id")
+	spaceId, err := strconv.ParseUint(spaceIdParam, 10, 32)
+
 	var req dtos.GetInvitationLinkRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		errMsg := err.Error()
@@ -177,11 +180,23 @@ func (c *SpaceController) GetInvitationLink(ctx *gin.Context) {
 		return
 	}
 
-	spaceId := req.SpaceID
-	spaceRoleId := req.SpaceRoleID
+	spaceRoleID := req.SpaceRoleID
+
+	if err != nil {
+		errMsg := err.Error()
+		ctx.JSON(
+			http.StatusInternalServerError,
+			models.NewErrorResponse(
+				http.StatusInternalServerError,
+				"invalid space id",
+				&errMsg,
+			),
+		)
+		return
+	}
 
 	service := c.service.(*services.SpaceService)
-	invitationLink, err := service.GetOrCreateSpaceInvitationLink(spaceId, spaceRoleId)
+	invitationLink, err := service.GetOrCreateSpaceInvitationLink(uint(spaceId), spaceRoleID)
 	if err != nil {
 		errMsg := err.Error()
 		ctx.JSON(500, models.NewErrorResponse(500, "Internal Server Error", &errMsg))
