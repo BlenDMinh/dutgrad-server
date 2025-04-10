@@ -5,13 +5,12 @@ import (
 	"time"
 
 	"github.com/BlenDMinh/dutgrad-server/configs"
-	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 )
 
 func GenerateJWTToken(userID uint) (string, time.Time, error) {
 	expirationTime := time.Now().Add(24 * time.Hour)
-	token, exp, err := GenerateTokenForPayload(gin.H{"user_id": userID}, &expirationTime)
+	token, exp, err := GenerateTokenForPayload(map[string]interface {}{"user_id": userID}, &expirationTime)
 
 	if err != nil {
 		return "", time.Time{}, err
@@ -38,7 +37,7 @@ func VerifyJWTToken(tokenString string) (uint, error) {
 	return uint(userIDFloat), nil
 }
 
-func GenerateTokenForPayload(payload gin.H, exp *time.Time) (string, time.Time, error) {
+func GenerateTokenForPayload(payload map[string]interface {}, exp *time.Time) (string, time.Time, error) {
 	config := configs.GetEnv()
 	jwtSecret := config.JwtSecret
 	if jwtSecret == "" {
@@ -70,7 +69,7 @@ func GenerateTokenForPayload(payload gin.H, exp *time.Time) (string, time.Time, 
 	return tokenString, *exp, nil	
 }
 
-func VerifyTokenForPayload(tokenString string) (*gin.H, error) {
+func VerifyTokenForPayload(tokenString string) (*map[string]interface {}, error) {
 	config := configs.GetEnv()
 	jwtSecret := config.JwtSecret
 	if jwtSecret == "" {
@@ -97,7 +96,7 @@ func VerifyTokenForPayload(tokenString string) (*gin.H, error) {
 		return nil, errors.New("invalid token claims")
 	}
 
-	payload := claims["payload"].(gin.H)
+	payload := claims["payload"].(map[string]interface {})
 
 	return &payload, nil
 }
