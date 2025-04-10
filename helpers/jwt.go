@@ -5,22 +5,59 @@ import (
 	"time"
 
 	"github.com/BlenDMinh/dutgrad-server/configs"
+	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 )
 
 func GenerateJWTToken(userID uint) (string, time.Time, error) {
+	expirationTime := time.Now().Add(24 * time.Hour)
+	token, exp, err := GenerateTokenForPayload(gin.H{"user_id": userID}, &expirationTime)
+
+	if err != nil {
+		return "", time.Time{}, err
+	}
+
+	return token, exp, nil
+}
+
+func VerifyJWTToken(tokenString string) (uint, error) {
+	claims, err := VerifyTokenForPayload(tokenString)
+	if err != nil {
+		return 0, err
+	}
+
+	if claims == nil {
+		return 0, errors.New("invalid token claims")
+	}
+
+	userIDFloat, ok := (*claims)["user_id"].(float64)
+	if !ok {
+		return 0, errors.New("invalid user ID in token")
+	}
+
+	return uint(userIDFloat), nil
+}
+
+func GenerateTokenForPayload(payload gin.H, exp *time.Time) (string, time.Time, error) {
 	config := configs.GetEnv()
 	jwtSecret := config.JwtSecret
 	if jwtSecret == "" {
 		jwtSecret = "your_default_jwt_secret"
 	}
 
-	expirationTime := time.Now().Add(24 * time.Hour)
+	var claims jwt.MapClaims
 
-	claims := jwt.MapClaims{
-		"user_id": userID,
-		"exp":     expirationTime.Unix(),
-		"iat":     time.Now().Unix(),
+	if exp == nil {
+		claims = jwt.MapClaims{
+			"payload": payload,
+			"iat":     time.Now().Unix(),
+		}
+	} else {
+		claims = jwt.MapClaims{
+			"payload": payload,
+			"exp":     exp.Unix(),
+			"iat":     time.Now().Unix(),
+		}
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -30,10 +67,10 @@ func GenerateJWTToken(userID uint) (string, time.Time, error) {
 		return "", time.Time{}, err
 	}
 
-	return tokenString, expirationTime, nil
+	return tokenString, *exp, nil	
 }
 
-func VerifyJWTToken(tokenString string) (uint, error) {
+func VerifyTokenForPayload(tokenString string) (*gin.H, error) {
 	config := configs.GetEnv()
 	jwtSecret := config.JwtSecret
 	if jwtSecret == "" {
@@ -48,22 +85,19 @@ func VerifyJWTToken(tokenString string) (uint, error) {
 	})
 
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
 	if !token.Valid {
-		return 0, errors.New("invalid token")
+		return nil, errors.New("invalid token")
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
-		return 0, errors.New("invalid token claims")
+		return nil, errors.New("invalid token claims")
 	}
 
-	userIDFloat, ok := claims["user_id"].(float64)
-	if !ok {
-		return 0, errors.New("invalid user ID in token")
-	}
+	payload := claims["payload"].(gin.H)
 
-	return uint(userIDFloat), nil
+	return &payload, nil
 }

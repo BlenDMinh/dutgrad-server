@@ -4,9 +4,13 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/BlenDMinh/dutgrad-server/configs"
 	"github.com/BlenDMinh/dutgrad-server/databases"
 	"github.com/BlenDMinh/dutgrad-server/databases/entities"
+	"github.com/BlenDMinh/dutgrad-server/databases/repositories"
+	"github.com/BlenDMinh/dutgrad-server/helpers"
 	"github.com/BlenDMinh/dutgrad-server/models"
+	"github.com/BlenDMinh/dutgrad-server/models/dtos"
 	"github.com/BlenDMinh/dutgrad-server/services"
 	"github.com/gin-gonic/gin"
 )
@@ -16,8 +20,9 @@ type SpaceController struct {
 }
 
 func NewSpaceController() *SpaceController {
+	invitationLinkRepo := repositories.NewSpaceInvitationLinkRepository()
 	return &SpaceController{
-		CrudController: *NewCrudController(services.NewSpaceService()),
+		CrudController: *NewCrudController(services.NewSpaceService(*invitationLinkRepo)),
 	}
 }
 
@@ -155,5 +160,55 @@ func (c *SpaceController) GetInvitations(ctx *gin.Context) {
 		http.StatusOK,
 		"Success",
 		gin.H{"invitations": invitations},
+	))
+}
+
+func (c *SpaceController) GetInvitationLink(ctx *gin.Context) {
+	_, exists := ctx.Get("user_id")
+	if !exists {
+		ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(http.StatusInternalServerError, "User ID not found in context", nil))
+		return
+	}
+
+	var req dtos.GetInvitationLinkRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		errMsg := err.Error()
+		ctx.JSON(400, models.NewErrorResponse(400, "Bad Request", &errMsg))
+		return
+	}
+
+	spaceId := req.SpaceID
+	spaceRoleId := req.SpaceRoleID
+
+	service := c.service.(*services.SpaceService)
+	invitationLink, err := service.GetOrCreateSpaceInvitationLink(spaceId, spaceRoleId)
+	if err != nil {
+		errMsg := err.Error()
+		ctx.JSON(500, models.NewErrorResponse(500, "Internal Server Error", &errMsg))
+		return
+	}
+
+	link, _, err := helpers.GenerateTokenForPayload(
+		gin.H{
+			"space_id":     invitationLink.SpaceID,
+			"space_role_id": invitationLink.SpaceRoleID,
+		},
+		nil,
+	)
+
+	if err != nil {
+		errMsg := err.Error()
+		ctx.JSON(500, models.NewErrorResponse(500, "Internal Server Error", &errMsg))
+		return
+	}
+
+	config := configs.GetEnv()
+
+	link = config.WebClientURL + "/invitation?token=" + link
+
+	ctx.JSON(http.StatusOK, models.NewSuccessResponse(
+		http.StatusOK,
+		"Success",
+		gin.H{"invitation_link": link},
 	))
 }
