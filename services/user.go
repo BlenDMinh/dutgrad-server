@@ -18,3 +18,7 @@ func NewUserService() *UserService {
 func (s *UserService) GetSpacesByUserId(userId uint) ([]entities.Space, error) {
 	return s.repo.(*repositories.UserRepository).GetSpacesByUserId(userId)
 }
+
+func (s *UserService) GetUserByEmail(email string) (*entities.User, error) {
+	return s.repo.(*repositories.UserRepository).GetUserByEmail(email)
+}

@@ -315,6 +315,22 @@ func (c *SpaceController) InviteUserToSpace(ctx *gin.Context) {
 	}
 	if req.InvitedUserID != nil {
 		invitation.InvitedUserID = *req.InvitedUserID
+	} else {
+		userService := services.NewUserService()
+		user, err := userService.GetUserByEmail(req.InvitedUserEmail)
+		if err != nil {
+			errMsg := err.Error()
+			ctx.JSON(
+				http.StatusInternalServerError,
+				models.NewErrorResponse(
+					http.StatusInternalServerError,
+					"error",
+					&errMsg,
+				),
+			)
+			return
+		}
+		invitation.InvitedUserID = user.ID
 	}
 
 	_, err = c.service.(*services.SpaceService).CreateInvitation(&invitation)

@@ -23,3 +23,12 @@ func (r *UserRepository) GetSpacesByUserId(userId uint) ([]entities.Space, error
 		Find(&spaces).Error
 	return spaces, err
 }
+
+func (r *UserRepository) GetUserByEmail(email string) (*entities.User, error) {
+	var user entities.User
+	db := databases.GetDB()
+	if err := db.Where("email = ?", email).First(&user).Error; err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
