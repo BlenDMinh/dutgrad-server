@@ -1,8 +1,12 @@
 package services
 
 import (
+	"fmt"
+
+	"github.com/BlenDMinh/dutgrad-server/databases"
 	"github.com/BlenDMinh/dutgrad-server/databases/entities"
 	"github.com/BlenDMinh/dutgrad-server/databases/repositories"
+	"github.com/BlenDMinh/dutgrad-server/helpers"
 )
 
 type SpaceService struct {
@@ -56,4 +60,41 @@ func (s *SpaceService) GetOrCreateSpaceInvitationLink(spaceID, spaceRoleID uint)
 	}
 	// If the invitation link already exists, return it
 	return invitationLink, nil
+}
+
+func (s *SpaceService) JoinSpaceWithToken(token string, userID uint) error {
+	payload, err := helpers.VerifyTokenForPayload(token)
+	if err != nil {
+		return err
+	}
+
+	if payload == nil {
+		return fmt.Errorf("invalid token")
+	}
+
+	parsePayload := *payload
+
+	// Check if user is already a member of the space
+	db := databases.GetDB()
+	var spaceUser entities.SpaceUser
+	err = db.Where("user_id = ? AND space_id = ?", userID, parsePayload["space_id"]).First(&spaceUser).Error
+	if err == nil {
+		return fmt.Errorf("user is already a member of this space")
+	}
+
+	spaceRoleID := parsePayload["space_role_id"].(uint)
+
+	newSpaceUser := entities.SpaceUser{
+		UserID:      userID,
+		SpaceID:     parsePayload["space_id"].(uint),
+		SpaceRoleID: &spaceRoleID,
+	}
+
+	// Create a new space user
+	err = db.Create(&newSpaceUser).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

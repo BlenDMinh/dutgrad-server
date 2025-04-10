@@ -227,3 +227,41 @@ func (c *SpaceController) GetInvitationLink(ctx *gin.Context) {
 		gin.H{"invitation_link": link},
 	))
 }
+
+func (c *SpaceController) JoinSpace(ctx *gin.Context) {
+	// Validate token parameter
+	token := ctx.Query("token")
+	if token == "" {
+		ctx.JSON(http.StatusBadRequest, models.NewErrorResponse(http.StatusBadRequest, "Token is required", nil))
+		return
+	}
+
+	// Get user ID from context
+	userID, exists := ctx.Get("user_id")
+	if !exists {
+		ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(http.StatusInternalServerError, "User ID not found in context", nil))
+		return
+	}
+
+	// Call service to handle business logic
+	err := c.service.(*services.SpaceService).JoinSpaceWithToken(token, userID.(uint))
+	if err != nil {
+		errMsg := err.Error()
+		
+		// Handle different error types with appropriate status codes
+		if errMsg == "invalid token" {
+			ctx.JSON(http.StatusUnauthorized, models.NewErrorResponse(http.StatusUnauthorized, "Invalid token", &errMsg))
+		} else if errMsg == "user is already a member of this space" {
+			ctx.JSON(http.StatusConflict, models.NewErrorResponse(http.StatusConflict, "You are already a member of this space", nil))
+		} else {
+			ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(http.StatusInternalServerError, "Failed to join space", &errMsg))
+		}
+		return
+	}
+
+	ctx.JSON(http.StatusOK, models.NewSuccessResponse(
+		http.StatusOK,
+		"Successfully joined the space",
+		nil,
+	))
+}
