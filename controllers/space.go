@@ -205,7 +205,7 @@ func (c *SpaceController) GetInvitationLink(ctx *gin.Context) {
 
 	link, _, err := helpers.GenerateTokenForPayload(
 		gin.H{
-			"space_id":     invitationLink.SpaceID,
+			"space_id":      invitationLink.SpaceID,
 			"space_role_id": invitationLink.SpaceRoleID,
 		},
 		nil,
@@ -247,7 +247,7 @@ func (c *SpaceController) JoinSpace(ctx *gin.Context) {
 	err := c.service.(*services.SpaceService).JoinSpaceWithToken(token, userID.(uint))
 	if err != nil {
 		errMsg := err.Error()
-		
+
 		// Handle different error types with appropriate status codes
 		if errMsg == "invalid token" {
 			ctx.JSON(http.StatusUnauthorized, models.NewErrorResponse(http.StatusUnauthorized, "Invalid token", &errMsg))
@@ -263,5 +263,56 @@ func (c *SpaceController) JoinSpace(ctx *gin.Context) {
 		http.StatusOK,
 		"Successfully joined the space",
 		nil,
+	))
+}
+
+func (c *SpaceController) GetUserRole(ctx *gin.Context) {
+	// Get user ID from context
+	userID, exists := ctx.Get("user_id")
+	if !exists {
+		ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(
+			http.StatusInternalServerError,
+			"User ID not found in context",
+			nil,
+		))
+		return
+	}
+
+	// Get space ID from path parameter
+	spaceIdParam := ctx.Param("id")
+	spaceId, err := strconv.ParseUint(spaceIdParam, 10, 32)
+	if err != nil {
+		errMsg := err.Error()
+		ctx.JSON(
+			http.StatusBadRequest,
+			models.NewErrorResponse(
+				http.StatusBadRequest,
+				"Invalid space ID",
+				&errMsg,
+			),
+		)
+		return
+	}
+
+	// Get user role in the space
+	role, err := c.service.(*services.SpaceService).GetUserRole(userID.(uint), uint(spaceId))
+	if err != nil {
+		errMsg := err.Error()
+		// Return 403 if user has no role in this space
+		ctx.JSON(
+			http.StatusForbidden,
+			models.NewErrorResponse(
+				http.StatusForbidden,
+				"User does not have access to this space",
+				&errMsg,
+			),
+		)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, models.NewSuccessResponse(
+		http.StatusOK,
+		"Success",
+		gin.H{"role": role},
 	))
 }
