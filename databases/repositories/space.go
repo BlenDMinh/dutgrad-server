@@ -43,3 +43,12 @@ func (s *SpaceRepository) CreateInvitation(invitation *entities.SpaceInvitation)
 	}
 	return invitation, nil
 }
+
+func (r *SpaceRepository) GetAllRoles() ([]entities.SpaceRole, error) {
+	var roles []entities.SpaceRole
+	db := databases.GetDB()
+	if err := db.Find(&roles).Error; err != nil {
+		return nil, err
+	}
+	return roles, nil
+}

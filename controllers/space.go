@@ -279,7 +279,7 @@ func (c *SpaceController) InviteUserToSpace(ctx *gin.Context) {
 		invitation.InvitedUserID = *req.InvitedUserID
 	}
 
-	invite_user, err := c.service.(*services.SpaceService).CreateInvitation(&invitation)
+	_, err = c.service.(*services.SpaceService).CreateInvitation(&invitation)
 	if err != nil {
 		errMsg := err.Error()
 		ctx.JSON(
@@ -296,6 +296,22 @@ func (c *SpaceController) InviteUserToSpace(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, models.NewSuccessResponse(
 		http.StatusOK,
 		"Success",
-		gin.H{"User invited successfully": invite_user},
+		gin.H{},
+	))
+}
+
+func (c *SpaceController) GetSpaceRoles(ctx *gin.Context) {
+	roles, err := c.service.(*services.SpaceService).GetSpaceRoles()
+	if err != nil {
+		errMsg := err.Error()
+		ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(
+			http.StatusInternalServerError, "Failed to fetch roles", &errMsg))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, models.NewSuccessResponse(
+		http.StatusOK,
+		"Success",
+		gin.H{"roles": roles},
 	))
 }

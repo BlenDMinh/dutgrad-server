@@ -44,7 +44,6 @@ func (s *SpaceService) GetOrCreateSpaceInvitationLink(spaceID, spaceRoleID uint)
 		}
 		return invitationLink, nil
 	}
-	// Update the SpaceRoleID if it is different
 	if invitationLink.SpaceRoleID != spaceRoleID {
 		invitationLink.SpaceRoleID = spaceRoleID
 		invitationLink, err := repo.Update(invitationLink)
@@ -54,10 +53,13 @@ func (s *SpaceService) GetOrCreateSpaceInvitationLink(spaceID, spaceRoleID uint)
 
 		return invitationLink, nil
 	}
-	// If the invitation link already exists, return it
 	return invitationLink, nil
 }
 
 func (s *SpaceService) CreateInvitation(invitation *entities.SpaceInvitation) (*entities.SpaceInvitation, error) {
 	return s.repo.(*repositories.SpaceRepository).CreateInvitation(invitation)
+}
+
+func (s *SpaceService) GetSpaceRoles() ([]entities.SpaceRole, error) {
+	return s.repo.(*repositories.SpaceRepository).GetAllRoles()
 }
