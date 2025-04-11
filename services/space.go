@@ -104,3 +104,17 @@ func (s *SpaceService) JoinSpaceWithToken(token string, userID uint) error {
 
 	return nil
 }
+
+func (s *SpaceService) GetUserRole(userID, spaceID uint) (*entities.SpaceRole, error) {
+	role, err := s.repo.(*repositories.SpaceRepository).GetUserRole(userID, spaceID)
+
+	if err != nil {
+		return nil, fmt.Errorf("user is not a member of this space or %v", err)
+	}
+
+	if role == nil {
+		return nil, fmt.Errorf("user has no role in this space")
+	}
+
+	return role, nil
+}

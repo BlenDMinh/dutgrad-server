@@ -17,6 +17,8 @@ type ICrudRepository[T entities.Entity, ID any] interface {
 	Delete(id ID) error
 	GetByField(fieldName string, value interface{}) ([]T, error)
 	DeleteByField(fieldName string, value interface{}) error
+	Count() (int64, error)
+	GetByFieldWithPagination(fieldName string, value interface{}, page int, pageSize int) ([]T, error)
 }
 
 type CrudRepository[T entities.Entity, ID any] struct {
@@ -106,4 +108,34 @@ func (c *CrudRepository[T, ID]) GetByField(fieldName string, value interface{}) 
 func (c *CrudRepository[T, ID]) DeleteByField(fieldName string, value interface{}) error {
 	db := databases.GetDB()
 	return db.Where(fmt.Sprintf("%s = ?", fieldName), value).Delete(new(T)).Error
+}
+
+func (c *CrudRepository[T, ID]) Count() (int64, error) {
+	db := databases.GetDB()
+	var count int64
+	err := db.Model(new(T)).Count(&count).Error
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+func (c *CrudRepository[T, ID]) GetByFieldWithPagination(fieldName string, value interface{}, page int, pageSize int) ([]T, error) {
+	if pageSize <= 0 {
+		pageSize = c.DefaultPageSize
+	}
+	if page <= 0 {
+		page = 1
+	}
+
+	db := databases.GetDB()
+	entities := []T{}
+	offset := (page - 1) * pageSize
+	dbctx := db.Where(fmt.Sprintf("%s = ?", fieldName), value).Limit(pageSize).Offset(offset).Find(&entities)
+
+	if dbctx.Error != nil {
+		return nil, dbctx.Error
+	}
+
+	return entities, nil
 }
