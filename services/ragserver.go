@@ -17,6 +17,7 @@ import (
 type RAGServerService struct {
 	BaseURL           string
 	UploadDocumentURL string
+	ChatURL           string
 }
 
 func NewRAGServerService() *RAGServerService {
@@ -24,6 +25,7 @@ func NewRAGServerService() *RAGServerService {
 	return &RAGServerService{
 		BaseURL:           config.RAGServer.BaseURL,
 		UploadDocumentURL: config.RAGServer.UploadDocumentURL,
+		ChatURL:           config.RAGServer.ChatURL,
 	}
 }
 
@@ -99,7 +101,7 @@ func (s *RAGServerService) UploadDocument(fileHeader *multipart.FileHeader, spac
 }
 
 func (s *RAGServerService) Chat(sessionID uint, spaceID uint, message string) (string, error) {
-	url := fmt.Sprintf("%s/chat", s.BaseURL)
+	url := fmt.Sprintf("%s/%s", s.BaseURL, s.ChatURL)
 
 	reqBody := map[string]interface{}{
 		"session_id": sessionID,
