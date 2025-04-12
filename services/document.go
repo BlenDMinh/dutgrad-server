@@ -5,6 +5,7 @@ import (
 
 	"github.com/BlenDMinh/dutgrad-server/databases/entities"
 	"github.com/BlenDMinh/dutgrad-server/databases/repositories"
+	"github.com/BlenDMinh/dutgrad-server/helpers"
 )
 
 type DocumentService struct {
@@ -33,7 +34,12 @@ func (s *DocumentService) UploadDocument(fileHeader *multipart.FileHeader, space
 	}
 	defer file.Close()
 
-	mimeType := fileHeader.Header.Get("Content-Type")
+	// Use the helper to detect proper MIME type
+	mimeType, err := helpers.GetMimeType(fileHeader)
+	if err != nil {
+		return nil, err
+	}
+
 	size := fileHeader.Size
 
 	s3URL, err := UploadFileToS3(fileHeader.Filename, file)
