@@ -2,6 +2,7 @@ package services
 
 import (
 	"bytes"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -62,7 +63,13 @@ func (s *RAGServerService) UploadDocument(fileHeader *multipart.FileHeader, spac
 
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 
-	httpClient := &http.Client{}
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+
+	httpClient := &http.Client{
+		Transport: tr,
+	}
 	resp, err := httpClient.Do(req)
 	if err != nil {
 		return err
