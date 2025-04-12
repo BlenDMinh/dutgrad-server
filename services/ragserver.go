@@ -3,6 +3,7 @@ package services
 import (
 	"bytes"
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -95,4 +96,70 @@ func (s *RAGServerService) UploadDocument(fileHeader *multipart.FileHeader, spac
 	}
 
 	return nil
+}
+
+func (s *RAGServerService) Chat(sessionID uint, spaceID uint, message string) (string, error) {
+	url := fmt.Sprintf("%s/chat", s.BaseURL)
+
+	reqBody := map[string]interface{}{
+		"session_id": sessionID,
+		"space_id":   spaceID,
+		"input":      message,
+	}
+
+	body, err := json.Marshal(reqBody)
+	if err != nil {
+		return "", err
+	}
+
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
+	if err != nil {
+		return "", err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+
+	httpClient := &http.Client{
+		Transport: tr,
+	}
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		respBody, _ := io.ReadAll(resp.Body)
+		return "", fmt.Errorf("failed to chat, status: %d, response: %s", resp.StatusCode, string(respBody))
+	}
+
+	// Read the response body
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("failed to read response body: %v", err)
+	}
+
+	// First, try to parse as an array of objects with "output" field
+	var responseArray []struct {
+		Output string `json:"output"`
+	}
+	err = json.Unmarshal(respBody, &responseArray)
+	if err == nil && len(responseArray) > 0 {
+		return responseArray[0].Output, nil
+	}
+
+	// If that fails, try the original format with a single "response" field
+	var responseObj struct {
+		Response string `json:"response"`
+	}
+	err = json.Unmarshal(respBody, &responseObj)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse response: %v, raw response: %s", err, string(respBody))
+	}
+
+	return responseObj.Response, nil
 }
