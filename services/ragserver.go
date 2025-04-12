@@ -11,16 +11,14 @@ import (
 )
 
 type RAGServerService struct {
-	Host              string
-	Port              int
+	BaseURL           string
 	UploadDocumentURL string
 }
 
 func NewRAGServerService() *RAGServerService {
 	config := configs.GetEnv()
 	return &RAGServerService{
-		Host:              config.RAGServer.Host,
-		Port:              config.RAGServer.Port,
+		BaseURL:           config.RAGServer.BaseURL,
 		UploadDocumentURL: config.RAGServer.UploadDocumentURL,
 	}
 }
@@ -55,7 +53,7 @@ func (s *RAGServerService) UploadDocument(fileHeader *multipart.FileHeader, spac
 		return err
 	}
 
-	url := fmt.Sprintf("%s:%d%s", s.Host, s.Port, s.UploadDocumentURL)
+	url := fmt.Sprintf("%s%s", s.BaseURL, s.UploadDocumentURL)
 
 	req, err := http.NewRequest("POST", url, body)
 	if err != nil {

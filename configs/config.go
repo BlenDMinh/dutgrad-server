@@ -38,8 +38,7 @@ type AWSConfig struct {
 }
 
 type RAGServerConfig struct {
-	Host              string `yaml:"host"`
-	Port              int    `yaml:"port"`
+	BaseURL           string `yaml:"base_url"`
 	UploadDocumentURL string `yaml:"upload_document_url"`
 }
 type Config struct {
