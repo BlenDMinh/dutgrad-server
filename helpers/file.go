@@ -4,7 +4,9 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"io"
 	"mime/multipart"
+	"net/http"
 	"path/filepath"
 	"time"
 
@@ -54,4 +56,58 @@ func UploadToS3(bucket string, key string, file multipart.File) (string, error) 
 
 	fileUrl := fmt.Sprintf("https://%s.s3.amazonaws.com/%s", bucket, key)
 	return fileUrl, nil
+}
+
+// GetMimeType detects the MIME type of a file using content detection
+// It takes a file header, opens the file, and detects its MIME type
+// Returns the detected MIME type as a string
+func GetMimeType(fileHeader *multipart.FileHeader) (string, error) {
+	file, err := fileHeader.Open()
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	// Read the first 512 bytes to detect content type
+	buffer := make([]byte, 512)
+	_, err = file.Read(buffer)
+	if err != nil && err != io.EOF {
+		return "", err
+	}
+
+	// Reset file position
+	file.Seek(0, io.SeekStart)
+
+	// Detect content type
+	contentType := http.DetectContentType(buffer)
+
+	// For certain file types, http.DetectContentType might not be accurate enough
+	// Use file extension as a fallback for common document types
+	if contentType == "application/octet-stream" {
+		ext := filepath.Ext(fileHeader.Filename)
+		switch ext {
+		case ".pdf":
+			return "application/pdf", nil
+		case ".doc":
+			return "application/msword", nil
+		case ".docx":
+			return "application/vnd.openxmlformats-officedocument.wordprocessingml.document", nil
+		case ".xls":
+			return "application/vnd.ms-excel", nil
+		case ".xlsx":
+			return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", nil
+		case ".ppt":
+			return "application/vnd.ms-powerpoint", nil
+		case ".pptx":
+			return "application/vnd.openxmlformats-officedocument.presentationml.presentation", nil
+		case ".txt":
+			return "text/plain", nil
+		case ".csv":
+			return "text/csv", nil
+		case ".md":
+			return "text/markdown", nil
+		}
+	}
+
+	return contentType, nil
 }

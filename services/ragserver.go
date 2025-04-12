@@ -7,8 +7,10 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+	"net/textproto"
 
 	"github.com/BlenDMinh/dutgrad-server/configs"
+	"github.com/BlenDMinh/dutgrad-server/helpers"
 )
 
 type RAGServerService struct {
@@ -31,10 +33,21 @@ func (s *RAGServerService) UploadDocument(fileHeader *multipart.FileHeader, spac
 	}
 	defer file.Close()
 
+	// Get the proper MIME type
+	mimeType, err := helpers.GetMimeType(fileHeader)
+	if err != nil {
+		return err
+	}
+
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
 
-	part, err := writer.CreateFormFile("file", fileHeader.Filename)
+	// Create form file part with proper content type
+	h := make(textproto.MIMEHeader)
+	h.Set("Content-Disposition", fmt.Sprintf(`form-data; name="file"; filename="%s"`, fileHeader.Filename))
+	h.Set("Content-Type", mimeType)
+
+	part, err := writer.CreatePart(h)
 	if err != nil {
 		return err
 	}
