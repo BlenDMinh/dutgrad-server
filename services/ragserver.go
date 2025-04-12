@@ -101,7 +101,7 @@ func (s *RAGServerService) UploadDocument(fileHeader *multipart.FileHeader, spac
 }
 
 func (s *RAGServerService) Chat(sessionID uint, spaceID uint, message string) (string, error) {
-	url := fmt.Sprintf("%s/%s", s.BaseURL, s.ChatURL)
+	url := fmt.Sprintf("%s%s", s.BaseURL, s.ChatURL)
 
 	reqBody := map[string]interface{}{
 		"session_id": sessionID,
