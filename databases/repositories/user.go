@@ -32,3 +32,13 @@ func (r *UserRepository) GetUserByEmail(email string) (*entities.User, error) {
 	}
 	return &user, nil
 }
+func (r *UserRepository) GetInvitationsByUserId(InvitedUserId uint) ([]entities.SpaceInvitation, error) {
+	var invitations []entities.SpaceInvitation
+	db := databases.GetDB()
+	err := db.Preload("Space").Preload("Inviter").
+		Where("invited_user_id = ?", InvitedUserId).Find(&invitations).Error
+	if err != nil {
+		return nil, err
+	}
+	return invitations, nil
+}

@@ -98,3 +98,31 @@ func (c *UserController) GetUserSpaces(ctx *gin.Context) {
 		gin.H{"spaces": spaces},
 	))
 }
+
+func (c *UserController) GetMyInvitations(ctx *gin.Context) {
+	userId, exists := ctx.Get("user_id")
+	if !exists {
+		ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(http.StatusInternalServerError, "User ID not found in context", nil))
+		return
+	}
+
+	invitations, err := c.service.(*services.UserService).GetInvitationsByUserId(userId.(uint))
+	if err != nil {
+		errMsg := err.Error()
+		ctx.JSON(
+			http.StatusInternalServerError,
+			models.NewErrorResponse(
+				http.StatusInternalServerError,
+				"Failed to retrieve invitations",
+				&errMsg,
+			),
+		)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, models.NewSuccessResponse(
+		http.StatusOK,
+		"Invitations retrieved successfully",
+		gin.H{"invitations": invitations},
+	))
+}

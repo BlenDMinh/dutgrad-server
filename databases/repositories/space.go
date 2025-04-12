@@ -40,7 +40,6 @@ func (r *SpaceRepository) GetUserRole(userID, spaceID uint) (*entities.SpaceRole
 	db := databases.GetDB()
 	var spaceUser entities.SpaceUser
 
-	// Find the space user relation with preloaded role
 	err := db.Where("user_id = ? AND space_id = ?", userID, spaceID).
 		Preload("SpaceRole").
 		First(&spaceUser).Error

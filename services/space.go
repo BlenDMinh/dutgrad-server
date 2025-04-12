@@ -68,53 +68,52 @@ func (s *SpaceService) GetSpaceRoles() ([]entities.SpaceRole, error) {
 	return s.repo.(*repositories.SpaceRepository).GetAllRoles()
 }
 
-func (s *SpaceService) JoinSpaceWithToken(token string, userID uint) error {
+func (s *SpaceService) JoinSpaceWithToken(token string, userID uint) (uint, error) {
 	payload, err := helpers.VerifyTokenForPayload(token)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	if payload == nil {
-		return fmt.Errorf("invalid token")
+		return 0, fmt.Errorf("invalid token")
 	}
 
 	parsePayload := *payload
 
-	// Check if user is already a member of the space
 	db := databases.GetDB()
 	var spaceUser entities.SpaceUser
 	err = db.Where("user_id = ? AND space_id = ?", userID, parsePayload["space_id"]).First(&spaceUser).Error
 	if err == nil {
-		return fmt.Errorf("user is already a member of this space")
+		return 0, fmt.Errorf("user is already a member of this space")
 	}
 
-	spaceRoleID := parsePayload["space_role_id"].(uint)
+	spaceRoleIDFloat := parsePayload["space_role_id"].(float64)
+	spaceRoleID := uint(spaceRoleIDFloat)
+
+	spaceIDFloat := parsePayload["space_id"].(float64)
+	spaceID := uint(spaceIDFloat)
 
 	newSpaceUser := entities.SpaceUser{
 		UserID:      userID,
-		SpaceID:     parsePayload["space_id"].(uint),
+		SpaceID:     spaceID,
 		SpaceRoleID: &spaceRoleID,
 	}
 
-	// Create a new space user
 	err = db.Create(&newSpaceUser).Error
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	return nil
+	return spaceID, nil
 }
 
 func (s *SpaceService) GetUserRole(userID, spaceID uint) (*entities.SpaceRole, error) {
 	role, err := s.repo.(*repositories.SpaceRepository).GetUserRole(userID, spaceID)
-
 	if err != nil {
 		return nil, fmt.Errorf("user is not a member of this space or %v", err)
 	}
-
 	if role == nil {
 		return nil, fmt.Errorf("user has no role in this space")
 	}
-
 	return role, nil
 }
