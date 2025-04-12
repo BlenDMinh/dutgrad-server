@@ -105,12 +105,14 @@ func GetRouter() *gin.Engine {
 		userQuerySessionGroup := v1.Group("/user-query-sessions")
 		{
 			userQuerySessionController.RegisterCRUD(userQuerySessionGroup)
+			userQuerySessionGroup.POST("/begin-chat-session", middlewares.AuthMiddleware(), userQuerySessionController.BeginChatSession)
 		}
 
 		userQueryController := controllers.NewUserQueryController()
 		userQueryGroup := v1.Group("/user-query")
 		{
 			userQueryController.RegisterCRUD(userQueryGroup)
+			userQueryGroup.POST("/ask", middlewares.AuthMiddleware(), userQueryController.Ask)
 		}
 
 	}
