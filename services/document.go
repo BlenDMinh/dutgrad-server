@@ -9,14 +9,16 @@ import (
 
 type DocumentService struct {
 	CrudService[entities.Document, uint]
-	repo *repositories.DocumentRepository
+	repo             *repositories.DocumentRepository
+	ragServerService *RAGServerService
 }
 
 func NewDocumentService() *DocumentService {
 	repo := repositories.NewDocumentRepository()
 	return &DocumentService{
-		CrudService: *NewCrudService(repo),
-		repo:        repo,
+		CrudService:      *NewCrudService(repo),
+		repo:             repo,
+		ragServerService: NewRAGServerService(),
 	}
 }
 
@@ -49,6 +51,12 @@ func (s *DocumentService) UploadDocument(fileHeader *multipart.FileHeader, space
 
 	document, err = s.repo.Create(document)
 	if err != nil {
+		return nil, err
+	}
+
+	err = s.ragServerService.UploadDocument(fileHeader, spaceID, document.ID)
+	if err != nil {
+		s.repo.Delete(document.ID)
 		return nil, err
 	}
 
