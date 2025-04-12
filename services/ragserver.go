@@ -17,6 +17,7 @@ import (
 type RAGServerService struct {
 	BaseURL           string
 	UploadDocumentURL string
+	ChatURL           string
 }
 
 func NewRAGServerService() *RAGServerService {
@@ -24,6 +25,7 @@ func NewRAGServerService() *RAGServerService {
 	return &RAGServerService{
 		BaseURL:           config.RAGServer.BaseURL,
 		UploadDocumentURL: config.RAGServer.UploadDocumentURL,
+		ChatURL:           config.RAGServer.ChatURL,
 	}
 }
 
@@ -99,7 +101,7 @@ func (s *RAGServerService) UploadDocument(fileHeader *multipart.FileHeader, spac
 }
 
 func (s *RAGServerService) Chat(sessionID uint, spaceID uint, message string) (string, error) {
-	url := fmt.Sprintf("%s/chat", s.BaseURL)
+	url := fmt.Sprintf("%s/%s", s.BaseURL, s.ChatURL)
 
 	reqBody := map[string]interface{}{
 		"session_id": sessionID,
@@ -144,22 +146,14 @@ func (s *RAGServerService) Chat(sessionID uint, spaceID uint, message string) (s
 	}
 
 	// First, try to parse as an array of objects with "output" field
-	var responseArray []struct {
+	var response struct {
 		Output string `json:"output"`
 	}
-	err = json.Unmarshal(respBody, &responseArray)
-	if err == nil && len(responseArray) > 0 {
-		return responseArray[0].Output, nil
-	}
 
-	// If that fails, try the original format with a single "response" field
-	var responseObj struct {
-		Response string `json:"response"`
-	}
-	err = json.Unmarshal(respBody, &responseObj)
+	err = json.Unmarshal(respBody, &response)
 	if err != nil {
 		return "", fmt.Errorf("failed to parse response: %v, raw response: %s", err, string(respBody))
 	}
 
-	return responseObj.Response, nil
+	return response.Output, nil
 }
