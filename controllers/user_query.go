@@ -57,7 +57,7 @@ func (c *UserQueryController) Ask(ctx *gin.Context) {
 	}
 
 	ragService := services.NewRAGServerService()
-	answer, err := ragService.Chat(req.QuerySessionID, session.ID, req.Query)
+	answer, err := ragService.Chat(req.QuerySessionID, session.SpaceID, req.Query)
 	if err != nil {
 		errMsg := err.Error()
 		ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(
@@ -74,6 +74,9 @@ func (c *UserQueryController) Ask(ctx *gin.Context) {
 	}
 
 	query, err = c.service.Create(query)
+
+	query.UserQuerySession = *session
+
 	if err != nil {
 		errMsg := err.Error()
 		ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(
