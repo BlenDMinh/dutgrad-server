@@ -98,7 +98,7 @@ func GetRouter() *gin.Engine {
 			spaceInvitationGroup.PATCH("/:id", spaceInvitationController.Patch)
 			spaceInvitationGroup.DELETE("/:id", spaceInvitationController.Delete)
 			spaceInvitationGroup.PUT("/:id/accept", middlewares.AuthMiddleware(), spaceInvitationController.AcceptInvitation)
-
+			spaceInvitationGroup.PUT("/:id/reject", middlewares.AuthMiddleware(), spaceInvitationController.RejectInvitation)
 		}
 
 		spaceDocumentsGroup := v1.Group("space/:space_id/documents")
