@@ -61,7 +61,7 @@ func (c *CrudController[T, ID]) parseID(ctx *gin.Context) (ID, error) {
 
 func (c *CrudController[T, ID]) Retrieve(ctx *gin.Context) {
 	pageStr := ctx.DefaultQuery("page", "1")
-	pageSizeStr := ctx.DefaultQuery("pageSize", "20")
+	pageSizeStr := ctx.DefaultQuery("page-size", "20")
 
 	page, _ := strconv.Atoi(pageStr)
 	pageSize, _ := strconv.Atoi(pageSizeStr)
@@ -74,7 +74,15 @@ func (c *CrudController[T, ID]) Retrieve(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(200, models.NewSuccessResponse(200, "Retrieve", entities))
+	total, err := c.service.Count()
+
+	if err != nil {
+		errMsg := err.Error()
+		ctx.JSON(500, models.NewErrorResponse(500, "Internal Server Error", &errMsg))
+		return
+	}
+
+	ctx.JSON(200, models.NewPaginationResponse(200, "Retrieve", entities, int64(page), int64(pageSize), total))
 }
 
 func (c *CrudController[T, ID]) RetrieveOne(ctx *gin.Context) {

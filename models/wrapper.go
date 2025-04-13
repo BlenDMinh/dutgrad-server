@@ -7,11 +7,31 @@ type ResponseWrapper struct {
 	Data    interface{} `json:"data,omitempty"`
 }
 
+type PaginationResponse struct {
+	ResponseWrapper
+	Page     int64 `json:"page"`
+	PageSize int64 `json:"page_size"`
+	Total    int64 `json:"total"`
+}
+
 func NewSuccessResponse(status int, message string, data interface{}) *ResponseWrapper {
 	return &ResponseWrapper{
 		Status:  status,
 		Message: message,
 		Data:    data,
+	}
+}
+
+func NewPaginationResponse(status int, message string, data interface{}, page, pageSize, total int64) *PaginationResponse {
+	return &PaginationResponse{
+		ResponseWrapper: ResponseWrapper{
+			Status:  status,
+			Message: message,
+			Data:    data,
+		},
+		Page:     page,
+		PageSize: pageSize,
+		Total:    total,
 	}
 }
 

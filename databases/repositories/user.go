@@ -23,3 +23,22 @@ func (r *UserRepository) GetSpacesByUserId(userId uint) ([]entities.Space, error
 		Find(&spaces).Error
 	return spaces, err
 }
+
+func (r *UserRepository) GetUserByEmail(email string) (*entities.User, error) {
+	var user entities.User
+	db := databases.GetDB()
+	if err := db.Where("email = ?", email).First(&user).Error; err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+func (r *UserRepository) GetInvitationsByUserId(InvitedUserId uint) ([]entities.SpaceInvitation, error) {
+	var invitations []entities.SpaceInvitation
+	db := databases.GetDB()
+	err := db.Preload("Space").Preload("Inviter").
+		Where("invited_user_id = ?", InvitedUserId).Find(&invitations).Error
+	if err != nil {
+		return nil, err
+	}
+	return invitations, nil
+}

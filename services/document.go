@@ -5,18 +5,21 @@ import (
 
 	"github.com/BlenDMinh/dutgrad-server/databases/entities"
 	"github.com/BlenDMinh/dutgrad-server/databases/repositories"
+	"github.com/BlenDMinh/dutgrad-server/helpers"
 )
 
 type DocumentService struct {
 	CrudService[entities.Document, uint]
-	repo *repositories.DocumentRepository
+	repo             *repositories.DocumentRepository
+	ragServerService *RAGServerService
 }
 
 func NewDocumentService() *DocumentService {
 	repo := repositories.NewDocumentRepository()
 	return &DocumentService{
-		CrudService: *NewCrudService(repo),
-		repo:        repo,
+		CrudService:      *NewCrudService(repo),
+		repo:             repo,
+		ragServerService: NewRAGServerService(),
 	}
 }
 
@@ -31,7 +34,12 @@ func (s *DocumentService) UploadDocument(fileHeader *multipart.FileHeader, space
 	}
 	defer file.Close()
 
-	mimeType := fileHeader.Header.Get("Content-Type")
+	// Use the helper to detect proper MIME type
+	mimeType, err := helpers.GetMimeType(fileHeader)
+	if err != nil {
+		return nil, err
+	}
+
 	size := fileHeader.Size
 
 	s3URL, err := UploadFileToS3(fileHeader.Filename, file)
@@ -49,6 +57,12 @@ func (s *DocumentService) UploadDocument(fileHeader *multipart.FileHeader, space
 
 	document, err = s.repo.Create(document)
 	if err != nil {
+		return nil, err
+	}
+
+	err = s.ragServerService.UploadDocument(fileHeader, spaceID, document.ID)
+	if err != nil {
+		s.repo.Delete(document.ID)
 		return nil, err
 	}
 

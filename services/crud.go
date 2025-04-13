@@ -20,6 +20,7 @@ type ICrudService[T entities.Entity, ID any] interface {
 	Delete(id ID) error
 	GetByField(fieldName string, value interface{}) ([]T, error)
 	DeleteByField(fieldName string, value interface{}) error
+	Count() (int64, error)
 }
 
 type CrudService[T entities.Entity, ID any] struct {
@@ -144,4 +145,8 @@ func (s *CrudService[T, ID]) GetByField(fieldName string, value interface{}) ([]
 
 func (s *CrudService[T, ID]) DeleteByField(fieldName string, value interface{}) error {
 	return s.repo.DeleteByField(fieldName, value)
+}
+
+func (s *CrudService[T, ID]) Count() (int64, error) {
+	return s.repo.Count()
 }

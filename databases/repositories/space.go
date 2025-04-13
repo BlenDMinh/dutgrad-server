@@ -35,3 +35,39 @@ func (r *SpaceRepository) GetInvitations(spaceId uint) ([]entities.SpaceInvitati
 	err := db.Preload("InvitedUser").Preload("SpaceRole").Where("space_id = ?", spaceId).Find(&invitations).Error
 	return invitations, err
 }
+
+func (r *SpaceRepository) GetUserRole(userID, spaceID uint) (*entities.SpaceRole, error) {
+	db := databases.GetDB()
+	var spaceUser entities.SpaceUser
+
+	err := db.Where("user_id = ? AND space_id = ?", userID, spaceID).
+		Preload("SpaceRole").
+		First(&spaceUser).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	if spaceUser.SpaceRoleID == nil {
+		return nil, nil
+	}
+
+	return &spaceUser.SpaceRole, nil
+}
+
+func (s *SpaceRepository) CreateInvitation(invitation *entities.SpaceInvitation) (*entities.SpaceInvitation, error) {
+	db := databases.GetDB()
+	if err := db.Create(invitation).Error; err != nil {
+		return nil, err
+	}
+	return invitation, nil
+}
+
+func (r *SpaceRepository) GetAllRoles() ([]entities.SpaceRole, error) {
+	var roles []entities.SpaceRole
+	db := databases.GetDB()
+	if err := db.Find(&roles).Error; err != nil {
+		return nil, err
+	}
+	return roles, nil
+}

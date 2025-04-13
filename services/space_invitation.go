@@ -14,3 +14,11 @@ func NewSpaceInvitationService() *SpaceInvitationService {
 		CrudService: *NewCrudService(repositories.NewSpaceInvitationRepository()),
 	}
 }
+
+func (s *SpaceInvitationService) AcceptInvitation(invitationId uint, userId uint) error {
+	return s.repo.(*repositories.SpaceInvitationRepository).AcceptInvitation(invitationId, userId)
+}
+
+func (s *SpaceInvitationService) RejectInvitation(invitationId uint, userId uint) error {
+	return s.repo.(*repositories.SpaceInvitationRepository).RejectInvitation(invitationId, userId)
+}

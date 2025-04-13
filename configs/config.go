@@ -37,6 +37,11 @@ type AWSConfig struct {
 	S3     AWSS3Config `yaml:"s3"`
 }
 
+type RAGServerConfig struct {
+	BaseURL           string `yaml:"base_url"`
+	UploadDocumentURL string `yaml:"upload_document_url"`
+	ChatURL           string `yaml:"chat_url"`
+}
 type Config struct {
 	Port         int              `yaml:"port"`
 	MasterDBs    []MasterDBConfig `yaml:"master_db"`
@@ -46,6 +51,7 @@ type Config struct {
 	WebClientURL string           `yaml:"web_client_url"`
 	AllowOrigins []string         `yaml:"allow_origins"`
 	AWS          AWSConfig        `yaml:"aws"`
+	RAGServer    RAGServerConfig  `yaml:"rag_server"`
 }
 
 var config Config
