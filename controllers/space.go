@@ -229,26 +229,22 @@ func (c *SpaceController) GetInvitationLink(ctx *gin.Context) {
 }
 
 func (c *SpaceController) JoinSpace(ctx *gin.Context) {
-	// Validate token parameter
 	token := ctx.Query("token")
 	if token == "" {
 		ctx.JSON(http.StatusBadRequest, models.NewErrorResponse(http.StatusBadRequest, "Token is required", nil))
 		return
 	}
 
-	// Get user ID from context
 	userID, exists := ctx.Get("user_id")
 	if !exists {
 		ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(http.StatusInternalServerError, "User ID not found in context", nil))
 		return
 	}
 
-	// Call service to handle business logic
-	err := c.service.(*services.SpaceService).JoinSpaceWithToken(token, userID.(uint))
+	spaceId, err := c.service.(*services.SpaceService).JoinSpaceWithToken(token, userID.(uint))
 	if err != nil {
 		errMsg := err.Error()
 
-		// Handle different error types with appropriate status codes
 		if errMsg == "invalid token" {
 			ctx.JSON(http.StatusUnauthorized, models.NewErrorResponse(http.StatusUnauthorized, "Invalid token", &errMsg))
 		} else if errMsg == "user is already a member of this space" {
@@ -262,12 +258,13 @@ func (c *SpaceController) JoinSpace(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, models.NewSuccessResponse(
 		http.StatusOK,
 		"Successfully joined the space",
-		nil,
+		gin.H{
+			"space_id": spaceId,
+		},
 	))
 }
 
 func (c *SpaceController) GetUserRole(ctx *gin.Context) {
-	// Get user ID from context
 	userID, exists := ctx.Get("user_id")
 	if !exists {
 		ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(
@@ -278,7 +275,6 @@ func (c *SpaceController) GetUserRole(ctx *gin.Context) {
 		return
 	}
 
-	// Get space ID from path parameter
 	spaceIdParam := ctx.Param("id")
 	spaceId, err := strconv.ParseUint(spaceIdParam, 10, 32)
 	if err != nil {
@@ -294,11 +290,9 @@ func (c *SpaceController) GetUserRole(ctx *gin.Context) {
 		return
 	}
 
-	// Get user role in the space
 	role, err := c.service.(*services.SpaceService).GetUserRole(userID.(uint), uint(spaceId))
 	if err != nil {
 		errMsg := err.Error()
-		// Return 403 if user has no role in this space
 		ctx.JSON(
 			http.StatusForbidden,
 			models.NewErrorResponse(

@@ -40,6 +40,12 @@ func GetRouter() *gin.Engine {
 			userController.RegisterCRUD(userGroup)
 		}
 
+		userInvitationController := controllers.NewUserController()
+		userInvitationGroup := v1.Group("")
+		{
+			userInvitationGroup.GET("invitations/me", middlewares.AuthMiddleware(), userInvitationController.GetMyInvitations)
+		}
+
 		authGroup := v1.Group("/auth")
 		{
 			authController := controllers.NewAuthController()
@@ -77,17 +83,22 @@ func GetRouter() *gin.Engine {
 			spaceGroup.POST("/:id/invitations", middlewares.AuthMiddleware(), spaceController.InviteUserToSpace)
 			spaceGroup.GET("/roles", spaceController.GetSpaceRoles)
 			spaceGroup.GET("/:id/user-role", middlewares.AuthMiddleware(), spaceController.GetUserRole)
-
+			spaceGroup.POST("/join", middlewares.AuthMiddleware(), spaceController.JoinSpace)
 			spaceGroup.GET("/public", spaceController.GetPublicSpaces)
 			spaceGroup.GET("/me", middlewares.AuthMiddleware(), userController.GetMySpaces)
 			spaceGroup.GET("/user/:user_id", userController.GetUserSpaces)
-
 		}
 
 		spaceInvitationController := controllers.NewSpaceInvitationController()
 		spaceInvitationGroup := v1.Group("/space-invitations")
 		{
-			spaceInvitationController.RegisterCRUD(spaceInvitationGroup)
+			spaceInvitationGroup.GET("", spaceInvitationController.Retrieve)
+			spaceInvitationGroup.GET("/:id", spaceInvitationController.RetrieveOne)
+			spaceInvitationGroup.PUT("/:id", spaceInvitationController.Update)
+			spaceInvitationGroup.PATCH("/:id", spaceInvitationController.Patch)
+			spaceInvitationGroup.DELETE("/:id", spaceInvitationController.Delete)
+			spaceInvitationGroup.PUT("/:id/accept", middlewares.AuthMiddleware(), spaceInvitationController.AcceptInvitation)
+
 		}
 
 		spaceDocumentsGroup := v1.Group("space/:space_id/documents")
@@ -114,7 +125,6 @@ func GetRouter() *gin.Engine {
 			userQueryController.RegisterCRUD(userQueryGroup)
 			userQueryGroup.POST("/ask", middlewares.AuthMiddleware(), userQueryController.Ask)
 		}
-
 	}
 
 	return router

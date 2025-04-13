@@ -30,7 +30,6 @@ func NewRedisService() *RedisService {
 		DB:       config.DB,
 	})
 
-	// Test the connection
 	ctx := context.Background()
 	if err := client.Ping(ctx).Err(); err != nil {
 		log.Printf("Failed to connect to Redis: %v", err)
