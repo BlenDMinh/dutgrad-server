@@ -84,6 +84,7 @@ func GetRouter() *gin.Engine {
 			spaceGroup.GET("/roles", spaceController.GetSpaceRoles)
 			spaceGroup.GET("/:id/user-role", middlewares.AuthMiddleware(), spaceController.GetUserRole)
 			spaceGroup.POST("/join", middlewares.AuthMiddleware(), spaceController.JoinSpace)
+			spaceGroup.POST("/:id/join-public", middlewares.AuthMiddleware(), spaceController.JoinPublicSpace)
 			spaceGroup.GET("/public", spaceController.GetPublicSpaces)
 			spaceGroup.GET("/me", middlewares.AuthMiddleware(), userController.GetMySpaces)
 			spaceGroup.GET("/user/:user_id", userController.GetUserSpaces)

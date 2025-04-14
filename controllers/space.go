@@ -3,6 +3,7 @@ package controllers
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/BlenDMinh/dutgrad-server/configs"
 	"github.com/BlenDMinh/dutgrad-server/databases"
@@ -378,14 +379,51 @@ func (c *SpaceController) InviteUserToSpace(ctx *gin.Context) {
 		invitation.InvitedUserID = user.ID
 	}
 
-	_, err = c.service.(*services.SpaceService).CreateInvitation(&invitation)
+	isMember, err := c.service.(*services.SpaceService).IsMemberOfSpace(invitation.InvitedUserID, uint(spaceId))
 	if err != nil {
 		errMsg := err.Error()
 		ctx.JSON(
 			http.StatusInternalServerError,
 			models.NewErrorResponse(
 				http.StatusInternalServerError,
-				"error",
+				"Failed to check membership",
+				&errMsg,
+			),
+		)
+		return
+	}
+
+	if isMember {
+		ctx.JSON(
+			http.StatusBadRequest,
+			models.NewErrorResponse(
+				http.StatusBadRequest,
+				"User is already a member of this space",
+				nil,
+			),
+		)
+		return
+	}
+
+	_, err = c.service.(*services.SpaceService).CreateInvitation(&invitation)
+	if err != nil {
+		errMsg := err.Error()
+		if strings.Contains(errMsg, "uniq_user_space_role") {
+			ctx.JSON(
+				http.StatusBadRequest,
+				models.NewErrorResponse(
+					http.StatusBadRequest,
+					"User is already a member of this space",
+					&errMsg,
+				),
+			)
+			return
+		}
+		ctx.JSON(
+			http.StatusInternalServerError,
+			models.NewErrorResponse(
+				http.StatusInternalServerError,
+				"Unexpected server error",
 				&errMsg,
 			),
 		)
@@ -412,5 +450,44 @@ func (c *SpaceController) GetSpaceRoles(ctx *gin.Context) {
 		http.StatusOK,
 		"Success",
 		gin.H{"roles": roles},
+	))
+}
+
+func (c *SpaceController) JoinPublicSpace(ctx *gin.Context) {
+	userIDValue, exists := ctx.Get("user_id")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, models.NewErrorResponse(http.StatusUnauthorized, "User ID not found in context", nil))
+		return
+	}
+	userID := userIDValue.(uint)
+
+	spaceIdParam := ctx.Param("id")
+	spaceID, err := strconv.ParseUint(spaceIdParam, 10, 32)
+	if err != nil {
+		errMsg := err.Error()
+		ctx.JSON(http.StatusBadRequest, models.NewErrorResponse(http.StatusBadRequest, "Invalid space ID", &errMsg))
+		return
+	}
+
+	err = c.service.(*services.SpaceService).JoinPublicSpace(uint(spaceID), userID)
+	if err != nil {
+		errMsg := err.Error()
+		statusCode := http.StatusInternalServerError
+		switch errMsg {
+		case "space not found":
+			statusCode = http.StatusNotFound
+		case "space is not public":
+			statusCode = http.StatusForbidden
+		case "user is already a member of this space":
+			statusCode = http.StatusConflict
+		}
+		ctx.JSON(statusCode, models.NewErrorResponse(statusCode, errMsg, nil))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, models.NewSuccessResponse(
+		http.StatusOK,
+		"Successfully joined the public space",
+		gin.H{},
 	))
 }

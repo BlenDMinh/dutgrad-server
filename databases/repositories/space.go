@@ -1,6 +1,8 @@
 package repositories
 
 import (
+	"errors"
+
 	"github.com/BlenDMinh/dutgrad-server/databases"
 	"github.com/BlenDMinh/dutgrad-server/databases/entities"
 )
@@ -70,4 +72,45 @@ func (r *SpaceRepository) GetAllRoles() ([]entities.SpaceRole, error) {
 		return nil, err
 	}
 	return roles, nil
+}
+
+func (s *SpaceRepository) JoinPublicSpace(spaceID uint, userID uint) error {
+	db := databases.GetDB()
+	var space entities.Space
+	if err := db.First(&space, spaceID).Error; err != nil {
+		return errors.New("space not found")
+	}
+	var count int64
+	db.Model(&entities.SpaceUser{}).
+		Where("space_id = ? AND user_id = ?", spaceID, userID).
+		Count(&count)
+	if count > 0 {
+		return errors.New("user is already a member of this space")
+	}
+
+	roleID := uint(entities.Viewer)
+	spaceUser := entities.SpaceUser{
+		UserID:      userID,
+		SpaceID:     spaceID,
+		SpaceRoleID: &roleID,
+	}
+	if err := db.Create(&spaceUser).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *SpaceRepository) IsMemberOfSpace(userID uint, spaceID uint) (bool, error) {
+	var count int64
+	db := databases.GetDB()
+	err := db.Model(&entities.SpaceUser{}).
+		Where("user_id = ? AND space_id = ?", userID, spaceID).
+		Count(&count).Error
+
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
 }

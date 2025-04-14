@@ -40,15 +40,9 @@ func (r *SpaceInvitationRepository) AcceptInvitation(invitationId uint, userId u
 }
 
 func (r *SpaceInvitationRepository) RejectInvitation(invitationId uint, userId uint) error {
-	var invitation entities.SpaceInvitation
 	db := databases.GetDB()
 
-	if err := db.First(&invitation, "id = ? AND invited_user_id = ?", invitationId, userId).Error; err != nil {
-		return err
-	}
-
-	invitation.Status = "rejected"
-	if err := db.Save(&invitation).Error; err != nil {
+	if err := db.Where("id = ? AND invited_user_id = ?", invitationId, userId).Delete(&entities.SpaceInvitation{}).Error; err != nil {
 		return err
 	}
 
