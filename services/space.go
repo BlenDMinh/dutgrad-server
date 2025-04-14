@@ -117,3 +117,11 @@ func (s *SpaceService) GetUserRole(userID, spaceID uint) (*entities.SpaceRole, e
 	}
 	return role, nil
 }
+
+func (s *SpaceService) JoinPublicSpace(spaceID uint, userID uint) error {
+	return s.repo.(*repositories.SpaceRepository).JoinPublicSpace(spaceID, userID)
+}
+
+func (s *SpaceService) IsMemberOfSpace(userID uint, spaceID uint) (bool, error) {
+	return s.repo.(*repositories.SpaceRepository).IsMemberOfSpace(userID, spaceID)
+}
