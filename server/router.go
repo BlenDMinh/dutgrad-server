@@ -64,8 +64,13 @@ func GetRouter() *gin.Engine {
 		documentController := controllers.NewDocumentController()
 		documentGroup := v1.Group("/documents")
 		{
-			documentController.RegisterCRUD(documentGroup)
+			documentGroup.GET("", documentController.Retrieve)
+			documentGroup.GET("/:id", documentController.RetrieveOne)
+			documentGroup.PUT("/:id", documentController.Update)
+			documentGroup.PATCH("/:id", documentController.Patch)
+			// documentGroup.DELETE("/:id", documentController.Delete)
 			documentGroup.POST("/upload", middlewares.AuthMiddleware(), documentController.UploadDocument)
+			documentGroup.DELETE("/:id", middlewares.AuthMiddleware(), documentController.DeleteDocument)
 		}
 
 		spaceController := controllers.NewSpaceController()
