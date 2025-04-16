@@ -110,3 +110,48 @@ func (c *DocumentController) UploadDocument(ctx *gin.Context) {
 		gin.H{"document": document},
 	))
 }
+
+func (c *DocumentController) DeleteDocument(ctx *gin.Context) {
+	userIDInterface, exists := ctx.Get("user_id")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, models.NewErrorResponse(http.StatusUnauthorized, "Unauthorized", nil))
+		return
+	}
+	userID := userIDInterface.(uint)
+
+	docIDStr := ctx.Param("id")
+	docID, err := strconv.ParseUint(docIDStr, 10, 32)
+	if err != nil {
+		errMsg := err.Error()
+		ctx.JSON(http.StatusBadRequest, models.NewErrorResponse(http.StatusBadRequest, "Invalid document ID", &errMsg))
+		return
+	}
+
+	document, err := c.service.GetById(uint(docID))
+	if err != nil {
+		errMsg := err.Error()
+		ctx.JSON(http.StatusNotFound, models.NewErrorResponse(http.StatusNotFound, "Document not found", &errMsg))
+		return
+	}
+
+	role, err := c.service.GetUserRoleInSpace(userID, document.SpaceID)
+	if err != nil {
+		errMsg := err.Error()
+		ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(http.StatusInternalServerError, "Failed to get user role", &errMsg))
+		return
+	}
+
+	if role != "owner" && role != "editor" {
+		ctx.JSON(http.StatusForbidden, models.NewErrorResponse(http.StatusForbidden, "You are not allowed to delete this document", nil))
+		return
+	}
+
+	err = c.service.DeleteDocument(uint(docID))
+	if err != nil {
+		errMsg := err.Error()
+		ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(http.StatusInternalServerError, "Failed to delete document", &errMsg))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, models.NewSuccessResponse(http.StatusOK, "Document deleted successfully", gin.H{}))
+}
