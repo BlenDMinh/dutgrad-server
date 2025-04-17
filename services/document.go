@@ -68,3 +68,11 @@ func (s *DocumentService) UploadDocument(fileHeader *multipart.FileHeader, space
 
 	return document, nil
 }
+
+func (s *DocumentService) GetUserRoleInSpace(userID, spaceID uint) (string, error) {
+	return s.repo.GetUserRoleInSpace(userID, spaceID)
+}
+
+func (s *DocumentService) DeleteDocument(documentID uint) error {
+	return s.repo.DeleteDocumentByID(documentID)
+}
