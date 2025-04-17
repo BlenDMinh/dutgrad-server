@@ -186,7 +186,7 @@ func (c *CrudController[T, ID]) Delete(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(200, models.NewSuccessResponse(200, "Deleted", nil))
+	ctx.JSON(200, models.NewSuccessResponse(200, "Deleted", gin.H{}))
 }
 
 func (c *CrudController[T, ID]) RegisterCRUD(router gin.IRouter) {
