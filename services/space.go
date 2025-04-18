@@ -125,3 +125,12 @@ func (s *SpaceService) JoinPublicSpace(spaceID uint, userID uint) error {
 func (s *SpaceService) IsMemberOfSpace(userID uint, spaceID uint) (bool, error) {
 	return s.repo.(*repositories.SpaceRepository).IsMemberOfSpace(userID, spaceID)
 }
+
+func (s *SpaceService) CountSpacesByUserID(userID uint) (int64, error) {
+	return s.repo.(*repositories.SpaceRepository).CountSpacesByUserID(userID)
+
+}
+
+func (s *SpaceService) GetPopularSpaces(order string) ([]entities.Space, error) {
+	return s.repo.(*repositories.SpaceRepository).GetPopularSpaces(order)
+}

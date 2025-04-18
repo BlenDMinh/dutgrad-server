@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/BlenDMinh/dutgrad-server/databases/entities"
@@ -63,4 +64,37 @@ func (c *UserQuerySessionController) BeginChatSession(ctx *gin.Context) {
 		"Session created successfully",
 		session,
 	))
+}
+
+func (c *UserQuerySessionController) GetMyChatSessions(ctx *gin.Context) {
+	userID, exists := ctx.Get("user_id")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	sessions, err := c.service.(*services.UserQuerySessionService).GetChatSessionsByUserID(userID.(uint))
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch sessions"})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"data": sessions})
+}
+
+func (c *UserQuerySessionController) CountMyChatSessions(ctx *gin.Context) {
+	userID, exists := ctx.Get("user_id")
+	if !exists {
+		ctx.Status(http.StatusUnauthorized)
+		return
+	}
+
+	count, err := c.service.(*services.UserQuerySessionService).CountChatSessionsByUserID(userID.(uint))
+	if err != nil {
+		ctx.Status(http.StatusInternalServerError)
+		return
+	}
+
+	ctx.Header("X-Total-Count", fmt.Sprintf("%d", count))
+	ctx.Status(http.StatusOK)
 }

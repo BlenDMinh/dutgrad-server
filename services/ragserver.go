@@ -36,7 +36,6 @@ func (s *RAGServerService) UploadDocument(fileHeader *multipart.FileHeader, spac
 	}
 	defer file.Close()
 
-	// Get the proper MIME type
 	mimeType, err := helpers.GetMimeType(fileHeader)
 	if err != nil {
 		return err
@@ -45,7 +44,6 @@ func (s *RAGServerService) UploadDocument(fileHeader *multipart.FileHeader, spac
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
 
-	// Create form file part with proper content type
 	h := make(textproto.MIMEHeader)
 	h.Set("Content-Disposition", fmt.Sprintf(`form-data; name="file"; filename="%s"`, fileHeader.Filename))
 	h.Set("Content-Type", mimeType)
@@ -139,13 +137,11 @@ func (s *RAGServerService) Chat(sessionID uint, spaceID uint, message string) (s
 		return "", fmt.Errorf("failed to chat, status: %d, response: %s", resp.StatusCode, string(respBody))
 	}
 
-	// Read the response body
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", fmt.Errorf("failed to read response body: %v", err)
 	}
 
-	// First, try to parse as an array of objects with "output" field
 	var response struct {
 		Output string `json:"output"`
 	}

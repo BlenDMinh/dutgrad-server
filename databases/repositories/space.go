@@ -114,3 +114,29 @@ func (s *SpaceRepository) IsMemberOfSpace(userID uint, spaceID uint) (bool, erro
 
 	return count > 0, nil
 }
+
+func (s *SpaceRepository) CountSpacesByUserID(userID uint) (int64, error) {
+	var count int64
+	err := databases.GetDB().
+		Table("space_users").
+		Where("space_users.user_id = ?", userID).
+		Count(&count).Error
+	return count, err
+}
+
+func (r *SpaceRepository) GetPopularSpaces(order string) ([]entities.Space, error) {
+	var spaces []entities.Space
+	db := databases.GetDB()
+
+	if order == "member_count" {
+		err := db.Model(&entities.Space{}).
+			Select("spaces.*, COUNT(space_users.user_id) as member_count").
+			Joins("LEFT JOIN space_users ON space_users.space_id = spaces.id").
+			Group("spaces.id").
+			Order("member_count DESC").
+			Find(&spaces).Error
+		return spaces, err
+	}
+
+	return []entities.Space{}, nil
+}
