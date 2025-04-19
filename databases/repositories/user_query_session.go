@@ -3,6 +3,7 @@ package repositories
 import (
 	"github.com/BlenDMinh/dutgrad-server/databases"
 	"github.com/BlenDMinh/dutgrad-server/databases/entities"
+	"gorm.io/gorm"
 )
 
 type UserQuerySessionRepository struct {
@@ -26,8 +27,9 @@ func (s *UserQuerySessionRepository) GetByUserID(userID uint) ([]entities.UserQu
 	var sessions []entities.UserQuerySession
 	db := databases.GetDB()
 	err := db.Where("user_id = ?", userID).
-		Preload("ChatHistories").
-		Order("chat_histories.created_at DESC").
+		Preload("ChatHistories", func(db *gorm.DB) *gorm.DB {
+			return db.Order("created_at DESC")
+		}).
 		Find(&sessions).
 		Error
 	return sessions, err
