@@ -27,6 +27,9 @@ func (s *UserQuerySessionRepository) GetByUserID(userID uint) ([]entities.UserQu
 	var sessions []entities.UserQuerySession
 	db := databases.GetDB()
 	err := db.Where("user_id = ?", userID).
+		Joins("LEFT JOIN chat_histories ON chat_histories.session_id = user_query_sessions.id").
+		Group("user_query_sessions.id").
+		Having("COUNT(chat_histories.id) > 0").
 		Preload("ChatHistories", func(db *gorm.DB) *gorm.DB {
 			return db.Order("created_at DESC")
 		}).
