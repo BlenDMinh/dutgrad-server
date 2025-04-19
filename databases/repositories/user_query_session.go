@@ -3,7 +3,6 @@ package repositories
 import (
 	"github.com/BlenDMinh/dutgrad-server/databases"
 	"github.com/BlenDMinh/dutgrad-server/databases/entities"
-	"gorm.io/gorm"
 )
 
 type UserQuerySessionRepository struct {
@@ -30,9 +29,8 @@ func (s *UserQuerySessionRepository) GetByUserID(userID uint) ([]entities.UserQu
 		Joins("LEFT JOIN chat_histories ON chat_histories.session_id = user_query_sessions.id").
 		Group("user_query_sessions.id").
 		Having("COUNT(chat_histories.id) > 0").
-		Preload("ChatHistories", func(db *gorm.DB) *gorm.DB {
-			return db.Order("created_at DESC")
-		}).
+		Order("MAX(chat_histories.created_at) DESC").
+		Preload("ChatHistories").
 		Find(&sessions).
 		Error
 	return sessions, err
