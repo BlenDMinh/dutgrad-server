@@ -69,17 +69,30 @@ func (c *UserQuerySessionController) BeginChatSession(ctx *gin.Context) {
 func (c *UserQuerySessionController) GetMyChatSessions(ctx *gin.Context) {
 	userID, exists := ctx.Get("user_id")
 	if !exists {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		ctx.JSON(http.StatusUnauthorized, models.NewErrorResponse(
+			http.StatusUnauthorized,
+			"User ID not found in context",
+			nil,
+		))
 		return
 	}
 
 	sessions, err := c.service.(*services.UserQuerySessionService).GetChatSessionsByUserID(userID.(uint))
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch sessions"})
+		errMsg := err.Error()
+		ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(
+			http.StatusInternalServerError,
+			"Failed to fetch sessions",
+			&errMsg,
+		))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"data": sessions})
+	ctx.JSON(http.StatusOK, models.NewSuccessResponse(
+		http.StatusOK,
+		"Fetched sessions successfully",
+		sessions,
+	))
 }
 
 func (c *UserQuerySessionController) CountMyChatSessions(ctx *gin.Context) {
