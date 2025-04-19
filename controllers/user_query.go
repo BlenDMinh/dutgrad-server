@@ -44,7 +44,6 @@ func (c *UserQueryController) Ask(ctx *gin.Context) {
 
 	sessionService := services.NewUserQuerySessionService()
 
-	// Check if session exists
 	session, err := sessionService.GetById(req.QuerySessionID)
 	if err != nil {
 		errMsg := err.Error()

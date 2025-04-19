@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -489,5 +490,53 @@ func (c *SpaceController) JoinPublicSpace(ctx *gin.Context) {
 		http.StatusOK,
 		"Successfully joined the public space",
 		gin.H{},
+	))
+}
+
+func (c *SpaceController) CountMySpaces(ctx *gin.Context) {
+	userID, exists := ctx.Get("user_id")
+	if !exists {
+		ctx.Status(http.StatusInternalServerError)
+		return
+	}
+
+	count, err := c.service.(*services.SpaceService).CountSpacesByUserID(userID.(uint))
+	if err != nil {
+		ctx.Status(http.StatusInternalServerError)
+		return
+	}
+
+	ctx.Header("X-Space-Count", fmt.Sprintf("%d", count))
+	ctx.Status(http.StatusOK)
+}
+
+func (c *SpaceController) GetPopularSpaces(ctx *gin.Context) {
+	order := ctx.DefaultQuery("order", "member_count")
+
+	if order != "member_count" {
+		ctx.JSON(http.StatusBadRequest, models.NewErrorResponse(
+			http.StatusBadRequest,
+			"Invalid order parameter. Only 'member_count' is supported.",
+			nil,
+		))
+		return
+	}
+
+	popular_spaces, err := c.service.(*services.SpaceService).GetPopularSpaces(order)
+
+	if err != nil {
+		errMsg := err.Error()
+		ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(
+			http.StatusInternalServerError,
+			"Failed to get popular spaces",
+			&errMsg,
+		))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, models.NewSuccessResponse(
+		http.StatusOK,
+		"Popular spaces retrieved successfully",
+		gin.H{"popular_spaces": popular_spaces},
 	))
 }

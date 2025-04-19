@@ -91,7 +91,9 @@ func GetRouter() *gin.Engine {
 			spaceGroup.POST("/join", middlewares.AuthMiddleware(), spaceController.JoinSpace)
 			spaceGroup.POST("/:id/join-public", middlewares.AuthMiddleware(), spaceController.JoinPublicSpace)
 			spaceGroup.GET("/public", spaceController.GetPublicSpaces)
+			spaceGroup.GET("/popular", spaceController.GetPopularSpaces)
 			spaceGroup.GET("/me", middlewares.AuthMiddleware(), userController.GetMySpaces)
+			spaceGroup.HEAD("/count/me", middlewares.AuthMiddleware(), spaceController.CountMySpaces)
 			spaceGroup.GET("/user/:user_id", userController.GetUserSpaces)
 		}
 
@@ -123,6 +125,8 @@ func GetRouter() *gin.Engine {
 		{
 			userQuerySessionController.RegisterCRUD(userQuerySessionGroup)
 			userQuerySessionGroup.POST("/begin-chat-session", middlewares.AuthMiddleware(), userQuerySessionController.BeginChatSession)
+			userQuerySessionGroup.GET("/me", middlewares.AuthMiddleware(), userQuerySessionController.GetMyChatSessions)
+			userQuerySessionGroup.HEAD("/me", middlewares.AuthMiddleware(), userQuerySessionController.CountMyChatSessions)
 		}
 
 		userQueryController := controllers.NewUserQueryController()
