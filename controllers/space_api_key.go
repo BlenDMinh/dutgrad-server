@@ -7,6 +7,7 @@ import (
 
 	"github.com/BlenDMinh/dutgrad-server/databases/entities"
 	"github.com/BlenDMinh/dutgrad-server/helpers"
+	"github.com/BlenDMinh/dutgrad-server/models"
 	"github.com/BlenDMinh/dutgrad-server/services"
 	"github.com/gin-gonic/gin"
 )
@@ -50,7 +51,23 @@ func (ctrl *SpaceApiKeyController) Create(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, created)
+	token, _, err := helpers.GenerateTokenForPayload(map[string]interface{}{
+		"space_id": created.SpaceID,
+		"key_id":   created.ID,
+	}, nil)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate JWT"})
+		return
+	}
+
+	response := gin.H{
+		"id":          created.ID,
+		"name":        created.Name,
+		"description": created.Description,
+		"space_id":    created.SpaceID,
+		"token":       token,
+	}
+	c.JSON(201, models.NewSuccessResponse(201, "Created", response))
 }
 
 func (ctrl *SpaceApiKeyController) List(c *gin.Context) {
@@ -66,7 +83,11 @@ func (ctrl *SpaceApiKeyController) List(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, items)
+	c.JSON(http.StatusOK, models.NewSuccessResponse(
+		http.StatusOK,
+		"Success",
+		gin.H{"API": items},
+	))
 }
 
 func (ctrl *SpaceApiKeyController) GetOne(c *gin.Context) {
@@ -100,7 +121,11 @@ func (ctrl *SpaceApiKeyController) GetOne(c *gin.Context) {
 		"token":       token,
 	}
 
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, models.NewSuccessResponse(
+		http.StatusOK,
+		"Success",
+		gin.H{"API": response},
+	))
 }
 
 func (ctrl *SpaceApiKeyController) Delete(c *gin.Context) {
@@ -123,10 +148,10 @@ func (ctrl *SpaceApiKeyController) Delete(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "API key deleted successfully"})
+	c.JSON(http.StatusOK, models.NewSuccessResponse(http.StatusOK, "API key deleted successfully", gin.H{}))
 }
 
-func VerifyBearerToken(tokenString string) (*entities.SpaceAPIKey, error) {
+func VerifySpaceAPIKey(tokenString string) (*entities.SpaceAPIKey, error) {
 	payload, err := helpers.VerifyTokenForPayload(tokenString)
 	if err != nil {
 		return nil, err

@@ -100,8 +100,8 @@ func GetRouter() *gin.Engine {
 		apiKeyGroup := v1.Group("spaces/:id/api-keys")
 		{
 			apiKeyGroup.POST("", middlewares.AuthMiddleware(), apiKeyController.Create)
-			apiKeyGroup.GET("", apiKeyController.List)
-			apiKeyGroup.GET("/:keyId", apiKeyController.GetOne)
+			apiKeyGroup.GET("", middlewares.AuthMiddleware(), apiKeyController.List)
+			apiKeyGroup.GET("/:keyId", middlewares.AuthMiddleware(), apiKeyController.GetOne)
 			apiKeyGroup.DELETE("/:keyId", middlewares.AuthMiddleware(), apiKeyController.Delete)
 		}
 
