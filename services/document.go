@@ -34,7 +34,6 @@ func (s *DocumentService) UploadDocument(fileHeader *multipart.FileHeader, space
 	}
 	defer file.Close()
 
-	// Use the helper to detect proper MIME type
 	mimeType, err := helpers.GetMimeType(fileHeader)
 	if err != nil {
 		return nil, err
