@@ -4,7 +4,7 @@ import "time"
 
 type UserQuerySession struct {
 	ID            uint          `json:"id" gorm:"primaryKey"`
-	UserID        uint          `json:"user_id" gorm:"not null;index"`
+	UserID        *uint         `json:"user_id" gorm:"index"`
 	SpaceID       uint          `json:"space_id" gorm:"not null;index"`
 	CreatedAt     time.Time     `json:"created_at"`
 	UpdatedAt     time.Time     `json:"updated_at"`

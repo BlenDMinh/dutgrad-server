@@ -131,6 +131,7 @@ func (r *SpaceRepository) GetPopularSpaces(order string) ([]entities.Space, erro
 	if order == "member_count" {
 		err := db.Model(&entities.Space{}).
 			Select("spaces.*, COUNT(space_users.user_id) as member_count").
+			Where("privacy_status = ?", false).
 			Joins("LEFT JOIN space_users ON space_users.space_id = spaces.id").
 			Group("spaces.id").
 			Order("member_count DESC").
