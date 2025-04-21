@@ -32,6 +32,7 @@ func (r *UserRepository) GetUserByEmail(email string) (*entities.User, error) {
 	}
 	return &user, nil
 }
+
 func (r *UserRepository) GetInvitationsByUserId(InvitedUserId uint) ([]entities.SpaceInvitation, error) {
 	var invitations []entities.SpaceInvitation
 	db := databases.GetDB()
