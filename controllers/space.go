@@ -590,7 +590,7 @@ func (c *SpaceController) Chat(ctx *gin.Context) {
 	}
 
 	ragService := services.NewRAGServerService()
-	answer, err := ragService.Chat(req.QuerySessionID, session.SpaceID, req.Query)
+	answer, err := ragService.Chat(session.ID, session.SpaceID, req.Query)
 	if err != nil {
 		errMsg := err.Error()
 		ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(
