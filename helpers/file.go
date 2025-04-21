@@ -49,9 +49,6 @@ func UploadToS3(bucket string, key string, file multipart.File) (string, error) 
 	return fileUrl, nil
 }
 
-// GetMimeType detects the MIME type of a file using content detection
-// It takes a file header, opens the file, and detects its MIME type
-// Returns the detected MIME type as a string
 func GetMimeType(fileHeader *multipart.FileHeader) (string, error) {
 	file, err := fileHeader.Open()
 	if err != nil {
@@ -59,21 +56,16 @@ func GetMimeType(fileHeader *multipart.FileHeader) (string, error) {
 	}
 	defer file.Close()
 
-	// Read the first 512 bytes to detect content type
 	buffer := make([]byte, 512)
 	_, err = file.Read(buffer)
 	if err != nil && err != io.EOF {
 		return "", err
 	}
 
-	// Reset file position
 	file.Seek(0, io.SeekStart)
 
-	// Detect content type
 	contentType := http.DetectContentType(buffer)
 
-	// For certain file types, http.DetectContentType might not be accurate enough
-	// Use file extension as a fallback for common document types
 	if contentType == "application/octet-stream" {
 		ext := filepath.Ext(fileHeader.Filename)
 		switch ext {
