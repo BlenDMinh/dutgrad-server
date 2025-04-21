@@ -43,8 +43,10 @@ func (c *UserQuerySessionController) BeginChatSession(ctx *gin.Context) {
 		return
 	}
 
+	var userIDNum uint = userID.(uint)
+
 	session := &entities.UserQuerySession{
-		UserID:  userID.(uint),
+		UserID:  &userIDNum,
 		SpaceID: req.SpaceID,
 	}
 
