@@ -68,7 +68,6 @@ func GetRouter() *gin.Engine {
 			documentGroup.GET("/:id", documentController.RetrieveOne)
 			documentGroup.PUT("/:id", documentController.Update)
 			documentGroup.PATCH("/:id", documentController.Patch)
-			// documentGroup.DELETE("/:id", documentController.Delete)
 			documentGroup.POST("/upload", middlewares.AuthMiddleware(), documentController.UploadDocument)
 			documentGroup.DELETE("/:id", middlewares.AuthMiddleware(), documentController.DeleteDocument)
 		}
@@ -95,6 +94,15 @@ func GetRouter() *gin.Engine {
 			spaceGroup.GET("/me", middlewares.AuthMiddleware(), userController.GetMySpaces)
 			spaceGroup.HEAD("/count/me", middlewares.AuthMiddleware(), spaceController.CountMySpaces)
 			spaceGroup.GET("/user/:user_id", userController.GetUserSpaces)
+		}
+
+		apiKeyController := controllers.NewSpaceApiKeyController()
+		apiKeyGroup := v1.Group("spaces/:id/api-keys")
+		{
+			apiKeyGroup.POST("", middlewares.AuthMiddleware(), apiKeyController.Create)
+			apiKeyGroup.GET("", apiKeyController.List)
+			apiKeyGroup.GET("/:keyId", apiKeyController.GetOne)
+			apiKeyGroup.DELETE("/:keyId", middlewares.AuthMiddleware(), apiKeyController.Delete)
 		}
 
 		spaceInvitationController := controllers.NewSpaceInvitationController()
