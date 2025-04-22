@@ -540,3 +540,74 @@ func (c *SpaceController) GetPopularSpaces(ctx *gin.Context) {
 		gin.H{"popular_spaces": popular_spaces},
 	))
 }
+
+func (c *SpaceController) Chat(ctx *gin.Context) {
+	spaceIdParam := ctx.Param("id")
+	spaceId, err := strconv.ParseUint(spaceIdParam, 10, 32)
+
+	if err != nil {
+		errMsg := err.Error()
+		ctx.JSON(
+			http.StatusInternalServerError,
+			models.NewErrorResponse(
+				http.StatusInternalServerError,
+				"invalid space id",
+				&errMsg,
+			),
+		)
+		return
+	}
+	var req dtos.ApiChatRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		errMsg := err.Error()
+		ctx.JSON(http.StatusBadRequest, models.NewErrorResponse(
+			http.StatusBadRequest,
+			"Invalid request",
+			&errMsg,
+		))
+		return
+	}
+
+	sessionService := services.NewUserQuerySessionService()
+
+	session, err := sessionService.GetById(req.QuerySessionID)
+	if err != nil {
+		session, err = sessionService.Create(&entities.UserQuerySession{
+			SpaceID: uint(spaceId),
+		})
+		if err != nil {
+			errMsg := err.Error()
+			ctx.JSON(
+				http.StatusInternalServerError,
+				models.NewErrorResponse(
+					http.StatusInternalServerError,
+					"error",
+					&errMsg,
+				),
+			)
+			return
+		}
+	}
+
+	ragService := services.NewRAGServerService()
+	answer, err := ragService.Chat(session.ID, session.SpaceID, req.Query)
+	if err != nil {
+		errMsg := err.Error()
+		ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(
+			http.StatusInternalServerError,
+			"Failed to get answer",
+			&errMsg,
+		))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, models.NewSuccessResponse(
+		http.StatusOK,
+		"Answer retrieved successfully",
+		&gin.H{
+			"session_id": session.ID,
+			"query":      req.Query,
+			"answer":     answer,
+		},
+	))
+}

@@ -94,6 +94,7 @@ func GetRouter() *gin.Engine {
 			spaceGroup.GET("/me", middlewares.AuthMiddleware(), userController.GetMySpaces)
 			spaceGroup.HEAD("/count/me", middlewares.AuthMiddleware(), spaceController.CountMySpaces)
 			spaceGroup.GET("/user/:user_id", userController.GetUserSpaces)
+			spaceGroup.POST("/:id/chat", middlewares.RequireApiKey(), spaceController.Chat)
 		}
 
 		apiKeyController := controllers.NewSpaceApiKeyController()
