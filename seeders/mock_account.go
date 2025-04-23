@@ -1,9 +1,9 @@
 package seeders
 
 import (
+	"fmt"
 	"log"
 
-	"fmt"
 	"github.com/BlenDMinh/dutgrad-server/databases"
 	"github.com/BlenDMinh/dutgrad-server/databases/entities"
 	"github.com/BlenDMinh/dutgrad-server/models/dtos"
@@ -29,16 +29,44 @@ func (s *MockAccountSeeder) Seed() error {
 		return err
 	}
 
+	dbtx := databases.GetDB()
+	tierID := uint(3)
+	user.TierID = &tierID
+	if err := dbtx.Save(&user).Error; err != nil {
+		log.Println("Error assigning tier to user:", err)
+		return err
+	}
+
 	userSpaces := []entities.Space{}
 	for i := 0; i < 3; i++ {
 		userSpaces = append(userSpaces, entities.Space{
 			Name:          "Own Test Space " + fmt.Sprint(i+1),
 			Description:   "Own Test Space " + fmt.Sprint(i+1) + " Description",
 			PrivacyStatus: false,
+			DocumentLimit: func() int {
+				if i == 0 {
+					return 20
+				} else {
+					return 10
+				}
+			}(),
+			FileSizeLimitKb: func() int {
+				if i == 0 {
+					return 10240
+				} else {
+					return 5120
+				}
+			}(),
+			ApiCallLimit: func() int {
+				if i == 0 {
+					return 200
+				} else {
+					return 100
+				}
+			}(),
 		})
 	}
 
-	dbtx := databases.GetDB()
 	dbtx.Model(&entities.Space{}).Create(&userSpaces)
 	if dbtx.Error != nil {
 		log.Println("Error creating spaces:", dbtx.Error)

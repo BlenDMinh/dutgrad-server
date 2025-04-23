@@ -1,8 +1,10 @@
 package services
 
 import (
+	"fmt"
 	"mime/multipart"
 
+	"github.com/BlenDMinh/dutgrad-server/databases"
 	"github.com/BlenDMinh/dutgrad-server/databases/entities"
 	"github.com/BlenDMinh/dutgrad-server/databases/repositories"
 	"github.com/BlenDMinh/dutgrad-server/helpers"
@@ -27,7 +29,36 @@ func (s *DocumentService) GetDocumentsBySpaceID(spaceID uint) ([]entities.Docume
 	return s.repo.GetBySpaceID(spaceID)
 }
 
+func (s *DocumentService) CheckDocumentLimits(spaceID uint, fileSize int64) error {
+	db := databases.GetDB()
+
+	var space entities.Space
+	if err := db.First(&space, spaceID).Error; err != nil {
+		return fmt.Errorf("failed to find space: %v", err)
+	}
+
+	var count int64
+	if err := db.Model(&entities.Document{}).Where("space_id = ?", spaceID).Count(&count).Error; err != nil {
+		return fmt.Errorf("failed to count documents: %v", err)
+	}
+
+	if count >= int64(space.DocumentLimit) {
+		return fmt.Errorf("document limit reached: this space can only have %d documents", space.DocumentLimit)
+	}
+
+	fileSizeKB := fileSize / 1024
+	if fileSizeKB > int64(space.FileSizeLimitKb) {
+		return fmt.Errorf("file size exceeds the limit of %d KB for this space", space.FileSizeLimitKb)
+	}
+
+	return nil
+}
+
 func (s *DocumentService) UploadDocument(fileHeader *multipart.FileHeader, spaceID uint) (*entities.Document, error) {
+	if err := s.CheckDocumentLimits(spaceID, fileHeader.Size); err != nil {
+		return nil, err
+	}
+
 	file, err := fileHeader.Open()
 	if err != nil {
 		return nil, err

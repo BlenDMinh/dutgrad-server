@@ -134,3 +134,55 @@ func (s *SpaceService) CountSpacesByUserID(userID uint) (int64, error) {
 func (s *SpaceService) GetPopularSpaces(order string) ([]entities.Space, error) {
 	return s.repo.(*repositories.SpaceRepository).GetPopularSpaces(order)
 }
+
+func (s *SpaceService) CheckSpaceCreationLimit(userID uint) error {
+	db := databases.GetDB()
+
+	var user entities.User
+	if err := db.Preload("Tier").Where("id = ?", userID).First(&user).Error; err != nil {
+		return err
+	}
+
+	count, err := s.CountSpacesByUserID(userID)
+	if err != nil {
+		return err
+	}
+
+	spaceLimit := 5
+
+	if user.Tier != nil {
+		spaceLimit = user.Tier.SpaceLimit
+	}
+
+	if count >= int64(spaceLimit) {
+		return fmt.Errorf("space limit reached: you can only create %d spaces with your current tier", spaceLimit)
+	}
+
+	return nil
+}
+
+func (s *SpaceService) CreateSpace(space *entities.Space, userID uint) (*entities.Space, error) {
+	if err := s.CheckSpaceCreationLimit(userID); err != nil {
+		return nil, err
+	}
+
+	createdSpace, err := s.Create(space)
+	if err != nil {
+		return nil, err
+	}
+
+	ownerRoleID := uint(entities.Owner)
+
+	spaceUser := entities.SpaceUser{
+		UserID:      userID,
+		SpaceID:     createdSpace.ID,
+		SpaceRoleID: &ownerRoleID,
+	}
+
+	db := databases.GetDB()
+	if err := db.Create(&spaceUser).Error; err != nil {
+		return nil, fmt.Errorf("failed to add user as owner: %v", err)
+	}
+
+	return createdSpace, nil
+}
