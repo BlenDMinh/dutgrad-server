@@ -1,6 +1,8 @@
 package repositories
 
 import (
+	"strings"
+
 	"github.com/BlenDMinh/dutgrad-server/databases"
 	"github.com/BlenDMinh/dutgrad-server/databases/entities"
 )
@@ -42,4 +44,23 @@ func (r *UserRepository) GetInvitationsByUserId(InvitedUserId uint) ([]entities.
 		return nil, err
 	}
 	return invitations, nil
+}
+
+func (r *UserRepository) SearchUsers(query string) ([]entities.User, error) {
+	var users []entities.User
+	db := databases.GetDB()
+
+	if strings.Contains(query, "@") {
+		err := db.Where("email = ?", query).Find(&users).Error
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		err := db.Where("username ILIKE ?", "%"+query+"%").Find(&users).Error
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return users, nil
 }
