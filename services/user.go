@@ -27,7 +27,6 @@ func (s *UserService) GetInvitationsByUserId(InvitedUserId uint) ([]entities.Spa
 	return s.repo.(*repositories.UserRepository).GetInvitationsByUserId(InvitedUserId)
 }
 
-// SearchUsers searches for users by query string (auto-detects email vs username search)
 func (s *UserService) SearchUsers(query string) ([]entities.User, error) {
 	return s.repo.(*repositories.UserRepository).SearchUsers(query)
 }
