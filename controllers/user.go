@@ -126,3 +126,39 @@ func (c *UserController) GetMyInvitations(ctx *gin.Context) {
 		gin.H{"invitations": invitations},
 	))
 }
+
+// SearchUsers handles searching for users by username pattern or exact email
+func (c *UserController) SearchUsers(ctx *gin.Context) {
+	query := ctx.Query("query")
+	if query == "" {
+		ctx.JSON(
+			http.StatusBadRequest,
+			models.NewErrorResponse(
+				http.StatusBadRequest,
+				"Search query cannot be empty",
+				nil,
+			),
+		)
+		return
+	}
+
+	users, err := c.service.(*services.UserService).SearchUsers(query)
+	if err != nil {
+		errMsg := err.Error()
+		ctx.JSON(
+			http.StatusInternalServerError,
+			models.NewErrorResponse(
+				http.StatusInternalServerError,
+				"Failed to search users",
+				&errMsg,
+			),
+		)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, models.NewSuccessResponse(
+		http.StatusOK,
+		"Users retrieved successfully",
+		gin.H{"users": users},
+	))
+}
