@@ -1,6 +1,7 @@
 package services
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/BlenDMinh/dutgrad-server/databases"
@@ -185,4 +186,44 @@ func (s *SpaceService) CreateSpace(space *entities.Space, userID uint) (*entitie
 	}
 
 	return createdSpace, nil
+}
+
+func (s *SpaceService) UpdateMemberRole(spaceID, memberID, roleID, updatedBy uint) error {
+	return s.repo.(*repositories.SpaceRepository).UpdateMemberRole(spaceID, memberID, roleID, updatedBy)
+}
+
+func (s *SpaceService) RemoveMember(spaceID, memberID, requestingUserID uint) error {
+	requestingUserRole, err := s.GetUserRole(requestingUserID, spaceID)
+	if err != nil {
+		return err
+	}
+
+	if requestingUserRole.ID != uint(entities.Owner) {
+		return errors.New("only space owners can remove members")
+	}
+
+	if memberID == requestingUserID {
+		return errors.New("you cannot remove yourself from the space")
+	}
+
+	isMember, err := s.repo.(*repositories.SpaceRepository).IsMemberOfSpace(memberID, spaceID)
+	if err != nil {
+		return err
+	}
+
+	if isMember {
+		memberRole, err := s.GetUserRole(memberID, spaceID)
+		if err != nil {
+			return err
+		}
+
+		if memberRole.ID == uint(entities.Owner) {
+			return errors.New("cannot remove a space owner")
+		}
+
+		return s.repo.(*repositories.SpaceRepository).RemoveMember(spaceID, memberID)
+	}
+
+	invitationService := NewSpaceInvitationService()
+	return invitationService.CancelInvitation(spaceID, memberID)
 }

@@ -601,3 +601,134 @@ func (c *SpaceController) Chat(ctx *gin.Context) {
 		},
 	))
 }
+
+func (c *SpaceController) UpdateUserRole(ctx *gin.Context) {
+	spaceIdParam := ctx.Param("id")
+	spaceId, err := strconv.ParseUint(spaceIdParam, 10, 32)
+	if err != nil {
+		errMsg := err.Error()
+		ctx.JSON(http.StatusBadRequest, models.NewErrorResponse(
+			http.StatusBadRequest,
+			"Invalid space ID",
+			&errMsg,
+		))
+		return
+	}
+
+	memberIdParam := ctx.Param("memberId")
+	memberId, err := strconv.ParseUint(memberIdParam, 10, 32)
+	if err != nil {
+		errMsg := err.Error()
+		ctx.JSON(http.StatusBadRequest, models.NewErrorResponse(
+			http.StatusBadRequest,
+			"Invalid member ID",
+			&errMsg,
+		))
+		return
+	}
+
+	var req struct {
+		RoleID uint `json:"role_id" binding:"required"`
+	}
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		errMsg := err.Error()
+		ctx.JSON(http.StatusBadRequest, models.NewErrorResponse(
+			http.StatusBadRequest,
+			"Invalid request body",
+			&errMsg,
+		))
+		return
+	}
+
+	userID, exists := ctx.Get("user_id")
+	if !exists {
+		ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(
+			http.StatusInternalServerError,
+			"User ID not found in context",
+			nil,
+		))
+		return
+	}
+
+	service := c.service.(*services.SpaceService)
+	err = service.UpdateMemberRole(uint(spaceId), uint(memberId), req.RoleID, userID.(uint))
+	if err != nil {
+		errMsg := err.Error()
+		ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(
+			http.StatusInternalServerError,
+			"Failed to update user role",
+			&errMsg,
+		))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, models.NewSuccessResponse(
+		http.StatusOK,
+		"User role updated successfully",
+		gin.H{},
+	))
+}
+
+func (c *SpaceController) RemoveMember(ctx *gin.Context) {
+	spaceIdParam := ctx.Param("id")
+	spaceId, err := strconv.ParseUint(spaceIdParam, 10, 32)
+	if err != nil {
+		errMsg := err.Error()
+		ctx.JSON(http.StatusBadRequest, models.NewErrorResponse(
+			http.StatusBadRequest,
+			"Invalid space ID",
+			&errMsg,
+		))
+		return
+	}
+
+	memberIdParam := ctx.Param("memberId")
+	memberId, err := strconv.ParseUint(memberIdParam, 10, 32)
+	if err != nil {
+		errMsg := err.Error()
+		ctx.JSON(http.StatusBadRequest, models.NewErrorResponse(
+			http.StatusBadRequest,
+			"Invalid member ID",
+			&errMsg,
+		))
+		return
+	}
+
+	userID, exists := ctx.Get("user_id")
+	if !exists {
+		ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(
+			http.StatusInternalServerError,
+			"User ID not found in context",
+			nil,
+		))
+		return
+	}
+
+	service := c.service.(*services.SpaceService)
+	err = service.RemoveMember(uint(spaceId), uint(memberId), userID.(uint))
+	if err != nil {
+		errMsg := err.Error()
+		statusCode := http.StatusInternalServerError
+		
+		if strings.Contains(errMsg, "only space owners can remove members") ||
+		   strings.Contains(errMsg, "cannot remove a space owner") ||
+		   strings.Contains(errMsg, "you cannot remove yourself") {
+			statusCode = http.StatusForbidden
+		} else if strings.Contains(errMsg, "not a member of this space") {
+			statusCode = http.StatusNotFound
+		}
+		
+		ctx.JSON(statusCode, models.NewErrorResponse(
+			statusCode,
+			errMsg,
+			nil,
+		))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, models.NewSuccessResponse(
+		http.StatusOK,
+		"Member removed successfully",
+		gin.H{},
+	))
+}
