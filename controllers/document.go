@@ -3,6 +3,7 @@ package controllers
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/BlenDMinh/dutgrad-server/databases/entities"
 	"github.com/BlenDMinh/dutgrad-server/models"
@@ -93,10 +94,16 @@ func (c *DocumentController) UploadDocument(ctx *gin.Context) {
 	document, err := c.service.UploadDocument(file, uint(spaceID))
 	if err != nil {
 		errMsg := err.Error()
+		statusCode := http.StatusInternalServerError
+
+		if strings.Contains(errMsg, "document limit reached") || strings.Contains(errMsg, "file size exceeds the limit") {
+			statusCode = http.StatusTooManyRequests
+		}
+
 		ctx.JSON(
-			http.StatusInternalServerError,
+			statusCode,
 			models.NewErrorResponse(
-				http.StatusInternalServerError,
+				statusCode,
 				"Failed to upload document",
 				&errMsg,
 			),
