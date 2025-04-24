@@ -3,6 +3,7 @@ package repositories
 import (
 	"github.com/BlenDMinh/dutgrad-server/databases"
 	"github.com/BlenDMinh/dutgrad-server/databases/entities"
+	"strings"
 )
 
 type UserRepository struct {
@@ -42,4 +43,27 @@ func (r *UserRepository) GetInvitationsByUserId(InvitedUserId uint) ([]entities.
 		return nil, err
 	}
 	return invitations, nil
+}
+
+// SearchUsers searches for users by query, automatically determining if it's an email or username
+func (r *UserRepository) SearchUsers(query string) ([]entities.User, error) {
+	var users []entities.User
+	db := databases.GetDB()
+
+	// If query contains "@", treat it as an email search
+	if strings.Contains(query, "@") {
+		// Exact match for email
+		err := db.Where("email = ?", query).Find(&users).Error
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		// Pattern match for username
+		err := db.Where("username LIKE ?", "%"+query+"%").Find(&users).Error
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return users, nil
 }

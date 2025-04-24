@@ -22,6 +22,12 @@ func (s *UserService) GetSpacesByUserId(userId uint) ([]entities.Space, error) {
 func (s *UserService) GetUserByEmail(email string) (*entities.User, error) {
 	return s.repo.(*repositories.UserRepository).GetUserByEmail(email)
 }
+
 func (s *UserService) GetInvitationsByUserId(InvitedUserId uint) ([]entities.SpaceInvitation, error) {
 	return s.repo.(*repositories.UserRepository).GetInvitationsByUserId(InvitedUserId)
+}
+
+// SearchUsers searches for users by query string (auto-detects email vs username search)
+func (s *UserService) SearchUsers(query string) ([]entities.User, error) {
+	return s.repo.(*repositories.UserRepository).SearchUsers(query)
 }

@@ -37,6 +37,7 @@ func GetRouter() *gin.Engine {
 		userGroup := v1.Group("/user")
 		{
 			userGroup.GET("/me", middlewares.AuthMiddleware(), userController.GetCurrentUser)
+			userGroup.GET("/search", middlewares.AuthMiddleware(), userController.SearchUsers)
 			userController.RegisterCRUD(userGroup)
 		}
 
