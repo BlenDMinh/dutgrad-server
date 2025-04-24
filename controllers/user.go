@@ -127,7 +127,6 @@ func (c *UserController) GetMyInvitations(ctx *gin.Context) {
 	))
 }
 
-// SearchUsers handles searching for users by username pattern or exact email
 func (c *UserController) SearchUsers(ctx *gin.Context) {
 	query := ctx.Query("query")
 	if query == "" {
