@@ -22,17 +22,16 @@ func (r *SpaceInvitationRepository) AcceptInvitation(invitationId uint, userId u
 		return err
 	}
 
-	invitation.Status = "accepted"
-	if err := db.Save(&invitation).Error; err != nil {
-		return err
-	}
-
 	member := entities.SpaceUser{
 		UserID:      userId,
 		SpaceID:     invitation.SpaceID,
 		SpaceRoleID: &invitation.SpaceRoleID,
 	}
 	if err := db.Create(&member).Error; err != nil {
+		return err
+	}
+
+	if err := db.Delete(&invitation).Error; err != nil {
 		return err
 	}
 
@@ -46,5 +45,14 @@ func (r *SpaceInvitationRepository) RejectInvitation(invitationId uint, userId u
 		return err
 	}
 
+	return nil
+}
+
+func (r *SpaceInvitationRepository) CancelInvitation(spaceID uint, invitedUserID uint) error {
+	db := databases.GetDB()
+	if err := db.Where("space_id = ? AND invited_user_id = ?", spaceID, invitedUserID).
+		Unscoped().Delete(&entities.SpaceInvitation{}).Error; err != nil {
+		return err
+	}
 	return nil
 }

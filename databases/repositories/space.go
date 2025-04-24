@@ -141,3 +141,34 @@ func (r *SpaceRepository) GetPopularSpaces(order string) ([]entities.Space, erro
 
 	return []entities.Space{}, nil
 }
+
+func (r *SpaceRepository) UpdateMemberRole(spaceID, memberID, roleID, updatedBy uint) error {
+	db := databases.GetDB()
+
+	var spaceUser entities.SpaceUser
+	if err := db.Where("space_id = ? AND user_id = ?", spaceID, memberID).First(&spaceUser).Error; err != nil {
+		return errors.New("member not found in the space")
+	}
+
+	spaceUser.SpaceRoleID = &roleID
+	if err := db.Save(&spaceUser).Error; err != nil {
+		return errors.New("failed to update member role")
+	}
+
+	return nil
+}
+
+func (r *SpaceRepository) RemoveMember(spaceID, memberID uint) error {
+	db := databases.GetDB()
+
+	var spaceUser entities.SpaceUser
+	if err := db.Where("space_id = ? AND user_id = ?", spaceID, memberID).First(&spaceUser).Error; err != nil {
+		return errors.New("member not found in the space")
+	}
+
+	if err := db.Delete(&spaceUser).Error; err != nil {
+		return errors.New("failed to remove member from the space")
+	}
+
+	return nil
+}
