@@ -1,10 +1,13 @@
 package repositories
 
 import (
+	"errors"
 	"strings"
+	"time"
 
 	"github.com/BlenDMinh/dutgrad-server/databases"
 	"github.com/BlenDMinh/dutgrad-server/databases/entities"
+	"github.com/BlenDMinh/dutgrad-server/models/dtos"
 )
 
 type UserRepository struct {
@@ -63,4 +66,67 @@ func (r *UserRepository) SearchUsers(query string) ([]entities.User, error) {
 	}
 
 	return users, nil
+}
+
+func (r *UserRepository) GetUserTier(userID uint) (*entities.Tier, error) {
+	db := databases.GetDB()
+	var user entities.User
+
+	if err := db.Preload("Tier").First(&user, userID).Error; err != nil {
+		return nil, err
+	}
+
+	if user.TierID == nil || user.Tier == nil {
+		return nil, errors.New("user has no tier information")
+	}
+
+	return user.Tier, nil
+}
+
+func (s *UserRepository) GetUserTierUsage(userID uint) (*dtos.TierUsageResponse, error) {
+	tier, err := s.GetUserTier(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	db := databases.GetDB()
+	var response dtos.TierUsageResponse
+	response.Tier = tier
+	response.Usage = &dtos.TierUsage{}
+
+	err = db.Model(&entities.SpaceUser{}).
+		Where("user_id = ?", userID).
+		Count(&response.Usage.SpaceCount).Error
+	if err != nil {
+		return nil, err
+	}
+
+	err = db.Model(&entities.Document{}).
+		Joins("JOIN space_users ON space_users.space_id = documents.space_id").
+		Where("space_users.user_id = ?", userID).
+		Count(&response.Usage.DocumentCount).Error
+	if err != nil {
+		return nil, err
+	}
+
+	err = db.Model(&entities.ChatHistory{}).
+		Joins("JOIN user_query_sessions ON user_query_sessions.id = chat_histories.session_id").
+		Where("user_query_sessions.user_id = ?", userID).
+		Count(&response.Usage.QueryHistoryCount).Error
+	if err != nil {
+		return nil, err
+	}
+
+	today := time.Now().Format("2006-01-02")
+	err = db.Model(&entities.ChatHistory{}).
+		Joins("JOIN user_query_sessions ON user_query_sessions.id = chat_histories.session_id").
+		Where("user_query_sessions.user_id = ? AND DATE(chat_histories.created_at) = ?", userID, today).
+		Count(&response.Usage.TodayQueryCount).Error
+	if err != nil {
+		return nil, err
+	}
+
+	response.Usage.TodayApiCallCount = 0
+
+	return &response, nil
 }

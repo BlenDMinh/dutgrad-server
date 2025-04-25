@@ -1,8 +1,10 @@
 package services
 
 import (
+	"github.com/BlenDMinh/dutgrad-server/databases"
 	"github.com/BlenDMinh/dutgrad-server/databases/entities"
 	"github.com/BlenDMinh/dutgrad-server/databases/repositories"
+	"github.com/BlenDMinh/dutgrad-server/models/dtos"
 )
 
 type UserService struct {
@@ -29,4 +31,19 @@ func (s *UserService) GetInvitationsByUserId(InvitedUserId uint) ([]entities.Spa
 
 func (s *UserService) SearchUsers(query string) ([]entities.User, error) {
 	return s.repo.(*repositories.UserRepository).SearchUsers(query)
+}
+
+func (s *UserService) GetUserTier(userID uint) (*entities.Tier, error) {
+	db := databases.GetDB()
+	var user entities.User
+
+	if err := db.Preload("Tier").First(&user, userID).Error; err != nil {
+		return nil, err
+	}
+
+	return user.Tier, nil
+}
+
+func (s *UserService) GetUserTierUsage(userID uint) (*dtos.TierUsageResponse, error) {
+	return s.repo.(*repositories.UserRepository).GetUserTierUsage(userID)
 }
