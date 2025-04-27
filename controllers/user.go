@@ -161,3 +161,36 @@ func (c *UserController) SearchUsers(ctx *gin.Context) {
 		gin.H{"users": users},
 	))
 }
+
+func (c *UserController) GetUserTier(ctx *gin.Context) {
+	userID, exists := ctx.Get("user_id")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, models.NewErrorResponse(
+			http.StatusUnauthorized,
+			"User ID not found in context",
+			nil,
+		))
+		return
+	}
+
+	service := c.service.(*services.UserService)
+	tierUsage, err := service.GetUserTierUsage(userID.(uint))
+	if err != nil {
+		errMsg := err.Error()
+		ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(
+			http.StatusInternalServerError,
+			"Failed to fetch user tier and usage",
+			&errMsg,
+		))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, models.NewSuccessResponse(
+		http.StatusOK,
+		"User tier and usage fetched successfully",
+		gin.H{
+			"tier":  tierUsage.Tier,
+			"usage": tierUsage.Usage,
+		},
+	))
+}
