@@ -1,0 +1,18 @@
+package oauth
+
+import (
+	"golang.org/x/oauth2"
+)
+
+type OAuthUserInfo struct {
+	Email    string
+	Username string
+	ID       string
+	Provider string
+}
+
+type OAuthProvider interface {
+	GetConfig() *oauth2.Config
+	GetUserInfo(token *oauth2.Token) (*OAuthUserInfo, error)
+	GetProviderName() string
+}
