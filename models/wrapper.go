@@ -4,7 +4,7 @@ type ResponseWrapper struct {
 	Status  int         `json:"status"`
 	Message string      `json:"message"`
 	Error   *string     `json:"error,omitempty"`
-	Data    interface{} `json:"data,omitempty"`
+	Data    interface{} `json:"data"`
 }
 
 type PaginationResponse struct {
@@ -40,5 +40,6 @@ func NewErrorResponse(status int, message string, err *string) *ResponseWrapper 
 		Status:  status,
 		Message: message,
 		Error:   err,
+		Data:    nil,
 	}
 }

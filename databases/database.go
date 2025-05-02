@@ -14,6 +14,11 @@ import (
 
 var db *gorm.DB
 
+// Transaction represents a database transaction
+type Transaction struct {
+	DB *gorm.DB
+}
+
 func connect(driver string, dsn string) *gorm.DB {
 	var _db *gorm.DB
 	var err error
