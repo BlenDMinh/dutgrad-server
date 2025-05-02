@@ -28,7 +28,11 @@ func NewSpaceController() *SpaceController {
 }
 
 func (c *SpaceController) GetPublicSpaces(ctx *gin.Context) {
-	spaces, err := c.service.(*services.SpaceService).GetPublicSpaces()
+	// Get pagination parameters from the request
+	params := helpers.GetPaginationParams(ctx, repositories.DefaultPageSize)
+
+	// Get paginated public spaces
+	result, err := c.service.(*services.SpaceService).GetPublicSpaces(params.Page, params.PageSize)
 	if err != nil {
 		errMsg := err.Error()
 		ctx.JSON(
@@ -45,7 +49,17 @@ func (c *SpaceController) GetPublicSpaces(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, models.NewSuccessResponse(
 		http.StatusOK,
 		"Success",
-		gin.H{"public_spaces": spaces},
+		gin.H{
+			"public_spaces": result.Data,
+			"pagination": gin.H{
+				"current_page": result.Page,
+				"page_size":    result.PageSize,
+				"total_pages":  result.TotalPages,
+				"total_items":  result.TotalItems,
+				"has_next":     result.HasNext,
+				"has_prev":     result.HasPrev,
+			},
+		},
 	))
 }
 
@@ -709,15 +723,15 @@ func (c *SpaceController) RemoveMember(ctx *gin.Context) {
 	if err != nil {
 		errMsg := err.Error()
 		statusCode := http.StatusInternalServerError
-		
+
 		if strings.Contains(errMsg, "only space owners can remove members") ||
-		   strings.Contains(errMsg, "cannot remove a space owner") ||
-		   strings.Contains(errMsg, "you cannot remove yourself") {
+			strings.Contains(errMsg, "cannot remove a space owner") ||
+			strings.Contains(errMsg, "you cannot remove yourself") {
 			statusCode = http.StatusForbidden
 		} else if strings.Contains(errMsg, "not a member of this space") {
 			statusCode = http.StatusNotFound
 		}
-		
+
 		ctx.JSON(statusCode, models.NewErrorResponse(
 			statusCode,
 			errMsg,

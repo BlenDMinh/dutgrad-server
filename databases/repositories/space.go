@@ -9,19 +9,37 @@ import (
 
 type SpaceRepository struct {
 	*CrudRepository[entities.Space, uint]
+	DefaultPageSize int
 }
 
 func NewSpaceRepository() *SpaceRepository {
 	return &SpaceRepository{
-		CrudRepository: NewCrudRepository[entities.Space, uint](),
+		CrudRepository:  NewCrudRepository[entities.Space, uint](),
+		DefaultPageSize: 10,
 	}
 }
 
-func (r *SpaceRepository) FindPublicSpaces() ([]entities.Space, error) {
+func (r *SpaceRepository) FindPublicSpaces(page int, pageSize int) ([]entities.Space, error) {
 	var spaces []entities.Space
 	db := databases.GetDB()
-	err := db.Where("privacy_status = ?", false).Find(&spaces).Error
+
+	if pageSize <= 0 {
+		pageSize = r.DefaultPageSize
+	}
+	if page <= 0 {
+		page = 1
+	}
+
+	offset := (page - 1) * pageSize
+	err := db.Where("privacy_status = ?", false).Limit(pageSize).Offset(offset).Find(&spaces).Error
 	return spaces, err
+}
+
+func (r *SpaceRepository) CountPublicSpaces() (int64, error) {
+	var count int64
+	db := databases.GetDB()
+	err := db.Model(&entities.Space{}).Where("privacy_status = ?", false).Count(&count).Error
+	return count, err
 }
 
 func (r *SpaceRepository) GetMembers(spaceId uint) ([]entities.SpaceUser, error) {

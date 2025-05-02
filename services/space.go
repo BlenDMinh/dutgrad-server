@@ -22,8 +22,19 @@ func NewSpaceService(invitationLinkRepo repositories.SpaceInvitationLinkReposito
 	}
 }
 
-func (s *SpaceService) GetPublicSpaces() ([]entities.Space, error) {
-	return s.repo.(*repositories.SpaceRepository).FindPublicSpaces()
+func (s *SpaceService) GetPublicSpaces(page int, pageSize int) (*helpers.PaginationResult, error) {
+	spaces, err := s.repo.(*repositories.SpaceRepository).FindPublicSpaces(page, pageSize)
+	if err != nil {
+		return nil, err
+	}
+
+	count, err := s.repo.(*repositories.SpaceRepository).CountPublicSpaces()
+	if err != nil {
+		return nil, err
+	}
+
+	result := helpers.CreatePaginationResult(spaces, page, pageSize, count)
+	return &result, nil
 }
 
 func (s *SpaceService) GetMembers(spaceId uint) ([]entities.SpaceUser, error) {

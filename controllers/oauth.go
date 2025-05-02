@@ -16,10 +16,17 @@ import (
 	"github.com/google/uuid"
 )
 
+// Improved state handling with constants for security
+const (
+	StateTokenExpiration = 10 * time.Minute
+	MFATokenExpiration   = 5 * time.Minute
+)
+
 type OAuthController struct {
 	providers    map[string]oauth.OAuthProvider
 	authService  *services.AuthService
 	redisService *services.RedisService
+	mfaService   *services.MFAService
 }
 
 func NewOAuthController() *OAuthController {
@@ -31,6 +38,7 @@ func NewOAuthController() *OAuthController {
 		providers:    providers,
 		authService:  &services.AuthService{},
 		redisService: services.NewRedisService(),
+		mfaService:   services.NewMFAService(),
 	}
 }
 
@@ -38,14 +46,18 @@ func (c *OAuthController) HandleOAuthCallback(ctx *gin.Context, providerName str
 	provider, exists := c.providers[providerName]
 	if !exists {
 		ctx.Redirect(http.StatusTemporaryRedirect,
-			fmt.Sprintf("%s/auth/error", configs.GetEnv().WebClientURL))
+			fmt.Sprintf("%s/auth/error?code=invalid_provider&message=%s",
+				configs.GetEnv().WebClientURL,
+				"Provider not supported"))
 		return
 	}
 
 	code := ctx.Query("code")
 	if code == "" {
 		ctx.Redirect(http.StatusTemporaryRedirect,
-			fmt.Sprintf("%s/auth/error", configs.GetEnv().WebClientURL))
+			fmt.Sprintf("%s/auth/error?code=missing_code&message=%s",
+				configs.GetEnv().WebClientURL,
+				"Authorization code missing"))
 		return
 	}
 
@@ -53,7 +65,9 @@ func (c *OAuthController) HandleOAuthCallback(ctx *gin.Context, providerName str
 	if err != nil {
 		log.Printf("Code exchange error: %v", err)
 		ctx.Redirect(http.StatusTemporaryRedirect,
-			fmt.Sprintf("%s/auth/error", configs.GetEnv().WebClientURL))
+			fmt.Sprintf("%s/auth/error?code=exchange_failed&message=%s",
+				configs.GetEnv().WebClientURL,
+				"Failed to exchange authorization code"))
 		return
 	}
 
@@ -61,7 +75,9 @@ func (c *OAuthController) HandleOAuthCallback(ctx *gin.Context, providerName str
 	if err != nil {
 		log.Printf("Failed to get user info: %v", err)
 		ctx.Redirect(http.StatusTemporaryRedirect,
-			fmt.Sprintf("%s/auth/error", configs.GetEnv().WebClientURL))
+			fmt.Sprintf("%s/auth/error?code=user_info_failed&message=%s",
+				configs.GetEnv().WebClientURL,
+				"Failed to retrieve user information"))
 		return
 	}
 
@@ -76,10 +92,55 @@ func (c *OAuthController) HandleOAuthCallback(ctx *gin.Context, providerName str
 	if err != nil {
 		log.Printf("Authentication error: %v", err)
 		ctx.Redirect(http.StatusTemporaryRedirect,
-			fmt.Sprintf("%s/auth/error", configs.GetEnv().WebClientURL))
+			fmt.Sprintf("%s/auth/error?code=auth_failed&message=%s",
+				configs.GetEnv().WebClientURL,
+				"Authentication failed"))
 		return
 	}
 
+	// Check if MFA is enabled for the user
+	mfaEnabled, err := c.mfaService.GetUserMFAStatus(user.ID)
+	if err != nil {
+		log.Printf("Failed to check MFA status: %v", err)
+		ctx.Redirect(http.StatusTemporaryRedirect,
+			fmt.Sprintf("%s/auth/error?code=mfa_check_failed&message=%s",
+				configs.GetEnv().WebClientURL,
+				"Failed to check MFA status"))
+		return
+	}
+
+	if mfaEnabled {
+		// Generate temporary token for MFA verification
+		tempToken, _, err := c.mfaService.CreateTempToken(user.ID)
+		if err != nil {
+			log.Printf("Failed to create MFA temp token: %v", err)
+			ctx.Redirect(http.StatusTemporaryRedirect,
+				fmt.Sprintf("%s/auth/error?code=mfa_token_failed&message=%s",
+					configs.GetEnv().WebClientURL,
+					"Failed to create MFA token"))
+			return
+		}
+
+		// Store the temp token in Redis with expiration
+		if err := c.redisService.Set(tempToken, user.ID, MFATokenExpiration); err != nil {
+			log.Printf("Redis error: %v", err)
+			ctx.Redirect(http.StatusTemporaryRedirect,
+				fmt.Sprintf("%s/auth/error?code=redis_error&message=%s",
+					configs.GetEnv().WebClientURL,
+					"Internal server error"))
+			return
+		}
+
+		// Redirect to MFA verification page
+		mfaURL := fmt.Sprintf("%s/auth/mfa?state=%s",
+			configs.GetEnv().WebClientURL,
+			tempToken)
+
+		ctx.Redirect(http.StatusTemporaryRedirect, mfaURL)
+		return
+	}
+
+	// If MFA is not enabled, proceed with normal login flow
 	stateToken := uuid.New().String()
 	authResponse := dtos.AuthResponse{
 		Token:     jwt_token,
@@ -88,10 +149,12 @@ func (c *OAuthController) HandleOAuthCallback(ctx *gin.Context, providerName str
 		Expires:   expiresAt,
 	}
 
-	if err := c.redisService.Set(stateToken, authResponse, 5*time.Minute); err != nil {
+	if err := c.redisService.Set(stateToken, authResponse, StateTokenExpiration); err != nil {
 		log.Printf("Redis error: %v", err)
 		ctx.Redirect(http.StatusTemporaryRedirect,
-			fmt.Sprintf("%s/auth/error", configs.GetEnv().WebClientURL))
+			fmt.Sprintf("%s/auth/error?code=redis_error&message=%s",
+				configs.GetEnv().WebClientURL,
+				"Internal server error"))
 		return
 	}
 
