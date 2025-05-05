@@ -17,7 +17,7 @@ func NewUserService() *UserService {
 	}
 }
 
-func (s *UserService) GetSpacesByUserId(userId uint) ([]entities.Space, error) {
+func (s *UserService) GetSpacesByUserId(userId uint) ([]dtos.UserSpaceDTO, error) {
 	return s.repo.(*repositories.UserRepository).GetSpacesByUserId(userId)
 }
 

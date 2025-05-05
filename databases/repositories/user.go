@@ -20,13 +20,34 @@ func NewUserRepository() *UserRepository {
 	}
 }
 
-func (r *UserRepository) GetSpacesByUserId(userId uint) ([]entities.Space, error) {
-	var spaces []entities.Space
+func (r *UserRepository) GetSpacesByUserId(userId uint) ([]dtos.UserSpaceDTO, error) {
 	db := databases.GetDB()
-	err := db.Joins("JOIN space_users ON space_users.space_id = spaces.id").
-		Where("space_users.user_id = ?", userId).
-		Find(&spaces).Error
-	return spaces, err
+	var spaceUsers []entities.SpaceUser
+	err := db.Preload("Space").Preload("SpaceRole").
+		Where("user_id = ?", userId).
+		Find(&spaceUsers).Error
+
+	if err != nil {
+		return nil, err
+	}
+	userSpaces := make([]dtos.UserSpaceDTO, 0, len(spaceUsers))
+	for _, su := range spaceUsers {
+		userSpace := dtos.UserSpaceDTO{
+			ID:              su.Space.ID,
+			Name:            su.Space.Name,
+			Description:     su.Space.Description,
+			PrivacyStatus:   su.Space.PrivacyStatus,
+			DocumentLimit:   su.Space.DocumentLimit,
+			FileSizeLimitKb: su.Space.FileSizeLimitKb,
+			ApiCallLimit:    su.Space.ApiCallLimit,
+			CreatedAt:       su.Space.CreatedAt,
+			UpdatedAt:       su.Space.UpdatedAt,
+			Role:            su.SpaceRole,
+		}
+		userSpaces = append(userSpaces, userSpace)
+	}
+
+	return userSpaces, nil
 }
 
 func (r *UserRepository) GetByEmail(email string) (*entities.User, error) {
