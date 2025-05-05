@@ -56,6 +56,7 @@ func (c *UserController) GetMySpaces(ctx *gin.Context) {
 		)
 		return
 	}
+
 	ctx.JSON(http.StatusOK, models.NewSuccessResponse(
 		http.StatusOK,
 		"Success",
