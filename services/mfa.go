@@ -21,7 +21,6 @@ import (
 	"gorm.io/gorm"
 )
 
-// MFAService handles multi-factor authentication operations
 type MFAService struct {
 	redisService       *RedisService
 	userRepo           *repositories.UserRepository
@@ -29,7 +28,6 @@ type MFAService struct {
 	authCredentialRepo *repositories.UserAuthCredentialRepository
 }
 
-// NewMFAService creates a new MFA service
 func NewMFAService() *MFAService {
 	return &MFAService{
 		redisService:       NewRedisService(),
@@ -39,26 +37,20 @@ func NewMFAService() *MFAService {
 	}
 }
 
-// GenerateMFASetup creates a new MFA setup for the user
 func (s *MFAService) GenerateMFASetup(userID uint) (*dtos.MFASetupResponse, error) {
-	// Get user info
 	user, err := s.userRepo.GetById(userID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Check if user already has MFA
 	existingMFA, err := s.userMFARepo.GetByUserID(userID)
 	if err == nil {
-		// MFA already exists
 		if existingMFA.Verified {
 			return nil, errors.New("MFA is already enabled for this account")
 		}
-		// Delete existing unverified MFA
 		s.userMFARepo.DeleteByUserID(userID)
 	}
 
-	// Generate new TOTP configuration
 	key, err := totp.Generate(totp.GenerateOpts{
 		Issuer:      "DUTGrad",
 		AccountName: *user.Email,
@@ -67,13 +59,11 @@ func (s *MFAService) GenerateMFASetup(userID uint) (*dtos.MFASetupResponse, erro
 		return nil, errors.New("failed to generate MFA secret")
 	}
 
-	// Generate backup codes
 	backupCodes, err := s.generateBackupCodes(10)
 	if err != nil {
 		return nil, errors.New("failed to generate backup codes")
 	}
 
-	// Store MFA information
 	mfa := entities.UserMFA{
 		UserID:      userID,
 		Secret:      key.Secret(),

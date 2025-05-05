@@ -7,7 +7,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// PaginationResult represents the result of pagination
 type PaginationResult struct {
 	Data       interface{} `json:"data"`
 	Page       int         `json:"page"`
@@ -18,13 +17,11 @@ type PaginationResult struct {
 	HasPrev    bool        `json:"has_prev"`
 }
 
-// PaginationParams represents pagination parameters
 type PaginationParams struct {
 	Page     int
 	PageSize int
 }
 
-// GetPaginationParams extracts pagination parameters from the request
 func GetPaginationParams(ctx *gin.Context, defaultPageSize int) PaginationParams {
 	page, err := strconv.Atoi(ctx.DefaultQuery("page", "1"))
 	if err != nil || page < 1 {
@@ -42,7 +39,6 @@ func GetPaginationParams(ctx *gin.Context, defaultPageSize int) PaginationParams
 	}
 }
 
-// CreatePaginationResult creates a pagination result
 func CreatePaginationResult(data interface{}, page, pageSize int, totalItems int64) PaginationResult {
 	totalPages := int(math.Ceil(float64(totalItems) / float64(pageSize)))
 

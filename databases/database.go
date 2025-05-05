@@ -14,7 +14,6 @@ import (
 
 var db *gorm.DB
 
-// Transaction represents a database transaction
 type Transaction struct {
 	DB *gorm.DB
 }

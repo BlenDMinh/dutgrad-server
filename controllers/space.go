@@ -28,10 +28,7 @@ func NewSpaceController() *SpaceController {
 }
 
 func (c *SpaceController) GetPublicSpaces(ctx *gin.Context) {
-	// Get pagination parameters from the request
 	params := helpers.GetPaginationParams(ctx, repositories.DefaultPageSize)
-
-	// Get paginated public spaces
 	result, err := c.service.(*services.SpaceService).GetPublicSpaces(params.Page, params.PageSize)
 	if err != nil {
 		errMsg := err.Error()

@@ -58,7 +58,6 @@ func (ac *AuthController) Register(ctx *gin.Context) {
 	}))
 }
 
-// Login handles user login with MFA support
 func (ac *AuthController) Login(ctx *gin.Context) {
 	var req dtos.LoginRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -67,7 +66,6 @@ func (ac *AuthController) Login(ctx *gin.Context) {
 		return
 	}
 
-	// First check if user has MFA enabled
 	user, requiresMFA, err := ac.mfaService.FirstFactorAuth(req.Email, req.Password)
 	if err != nil {
 		errMsg := err.Error()
@@ -75,7 +73,6 @@ func (ac *AuthController) Login(ctx *gin.Context) {
 		return
 	}
 
-	// If MFA is not required, proceed with normal login
 	if !requiresMFA {
 		token, expiresAt, err := ac.mfaService.CompleteLogin(user.ID)
 		if err != nil {
@@ -92,7 +89,6 @@ func (ac *AuthController) Login(ctx *gin.Context) {
 		return
 	}
 
-	// If MFA is required, create a temporary token and ask for MFA code
 	tempToken, expiresAt, err := ac.mfaService.CreateTempToken(user.ID)
 	if err != nil {
 		errMsg := err.Error()
@@ -165,13 +161,9 @@ func (ac *AuthController) VerifyMFA(ctx *gin.Context) {
 	}))
 }
 
-// MFA Management endpoints
-
-// GetMFAStatus gets the MFA status for the current user
 func (ac *AuthController) GetMFAStatus(ctx *gin.Context) {
 	userID := ctx.GetUint("user_id")
 
-	// Get MFA status
 	mfaEnabled, err := ac.mfaService.GetUserMFAStatus(userID)
 	if err != nil {
 		errMsg := err.Error()
@@ -184,13 +176,8 @@ func (ac *AuthController) GetMFAStatus(ctx *gin.Context) {
 	}))
 }
 
-// SetupMFA starts the MFA setup process
 func (ac *AuthController) SetupMFA(ctx *gin.Context) {
 	userID := ctx.GetUint("user_id")
-
-	// No need to validate request body since we don't need passwords anymore
-
-	// Generate MFA setup - no password needed
 	setupResponse, err := ac.mfaService.GenerateMFASetup(userID)
 	if err != nil {
 		errMsg := err.Error()
@@ -201,7 +188,6 @@ func (ac *AuthController) SetupMFA(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, models.NewSuccessResponse(http.StatusOK, "MFA setup initialized", setupResponse))
 }
 
-// ConfirmMFA verifies and enables MFA for a user
 func (ac *AuthController) ConfirmMFA(ctx *gin.Context) {
 	userID := ctx.GetUint("user_id")
 
@@ -212,7 +198,6 @@ func (ac *AuthController) ConfirmMFA(ctx *gin.Context) {
 		return
 	}
 
-	// Verify MFA setup
 	if err := ac.mfaService.VerifyMFASetup(userID, req.Code); err != nil {
 		errMsg := err.Error()
 		ctx.JSON(http.StatusBadRequest, models.NewErrorResponse(http.StatusBadRequest, "Failed to verify MFA setup", &errMsg))
@@ -222,13 +207,9 @@ func (ac *AuthController) ConfirmMFA(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, models.NewSuccessResponse(http.StatusOK, "MFA has been enabled successfully", nil))
 }
 
-// DisableMFA disables MFA for a user
 func (ac *AuthController) DisableMFA(ctx *gin.Context) {
 	userID := ctx.GetUint("user_id")
 
-	// No need to validate request body since we don't need passwords anymore
-
-	// Disable MFA - no password needed
 	if err := ac.mfaService.DisableMFA(userID); err != nil {
 		errMsg := err.Error()
 		ctx.JSON(http.StatusBadRequest, models.NewErrorResponse(http.StatusBadRequest, "Failed to disable MFA", &errMsg))

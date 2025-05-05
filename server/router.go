@@ -57,7 +57,6 @@ func GetRouter() *gin.Engine {
 			authGroup.POST("/exchange-state", authController.ExchangeState)
 			authGroup.POST("/verify-mfa", authController.VerifyMFA)
 
-			// MFA management routes (require authentication)
 			mfaManagementGroup := authGroup.Group("/mfa")
 			mfaManagementGroup.Use(middlewares.AuthMiddleware())
 			{

@@ -13,7 +13,6 @@ type UserAuthCredential struct {
 	UpdatedAt    time.Time `json:"updated_at"`
 }
 
-// GetIdType returns the type of the ID field
 func (u UserAuthCredential) GetIdType() string {
 	return "uint"
 }
