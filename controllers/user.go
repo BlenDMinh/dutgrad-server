@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/BlenDMinh/dutgrad-server/databases/entities"
+	"github.com/BlenDMinh/dutgrad-server/databases/repositories"
 	"github.com/BlenDMinh/dutgrad-server/models"
 	"github.com/BlenDMinh/dutgrad-server/services"
 	"github.com/gin-gonic/gin"
@@ -56,10 +57,38 @@ func (c *UserController) GetMySpaces(ctx *gin.Context) {
 		)
 		return
 	}
+
+	spaceService := services.NewSpaceService(*repositories.NewSpaceInvitationLinkRepository())
+
+	var enrichedSpaces []gin.H
+	for _, space := range spaces {
+		role, err := spaceService.GetUserRole(userId.(uint), space.ID)
+
+		spaceWithRole := gin.H{
+			"id":             space.ID,
+			"name":           space.Name,
+			"description":    space.Description,
+			"privacy_status": space.PrivacyStatus,
+			"created_at":     space.CreatedAt,
+			"updated_at":     space.UpdatedAt,
+			"_role":          nil,
+		}
+
+		if err == nil && role != nil {
+			spaceWithRole["_role"] = gin.H{
+				"id":         role.ID,
+				"name":       role.Name,
+				"permission": role.Permission,
+			}
+		}
+
+		enrichedSpaces = append(enrichedSpaces, spaceWithRole)
+	}
+
 	ctx.JSON(http.StatusOK, models.NewSuccessResponse(
 		http.StatusOK,
 		"Success",
-		gin.H{"spaces": spaces},
+		gin.H{"spaces": enrichedSpaces},
 	))
 }
 
