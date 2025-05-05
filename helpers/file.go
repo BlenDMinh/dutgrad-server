@@ -66,7 +66,7 @@ func GetMimeType(fileHeader *multipart.FileHeader) (string, error) {
 
 	contentType := http.DetectContentType(buffer)
 
-	if contentType == "application/octet-stream" {
+	if contentType == "application/octet-stream" || contentType == "application/zip" || contentType == "application/x-zip-compressed" {
 		ext := filepath.Ext(fileHeader.Filename)
 		switch ext {
 		case ".pdf":
