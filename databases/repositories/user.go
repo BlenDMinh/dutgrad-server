@@ -10,19 +10,16 @@ import (
 	"github.com/BlenDMinh/dutgrad-server/models/dtos"
 )
 
-// UserRepository handles database operations for users
 type UserRepository struct {
 	*CrudRepository[entities.User, uint]
 }
 
-// NewUserRepository creates a new user repository
 func NewUserRepository() *UserRepository {
 	return &UserRepository{
 		CrudRepository: NewCrudRepository[entities.User, uint](),
 	}
 }
 
-// GetSpacesByUserId retrieves spaces by user ID
 func (r *UserRepository) GetSpacesByUserId(userId uint) ([]entities.Space, error) {
 	var spaces []entities.Space
 	db := databases.GetDB()
@@ -32,7 +29,6 @@ func (r *UserRepository) GetSpacesByUserId(userId uint) ([]entities.Space, error
 	return spaces, err
 }
 
-// GetByEmail gets a user by email
 func (r *UserRepository) GetByEmail(email string) (*entities.User, error) {
 	db := databases.GetDB()
 	var user entities.User
@@ -42,13 +38,11 @@ func (r *UserRepository) GetByEmail(email string) (*entities.User, error) {
 	return &user, nil
 }
 
-// UpdateMFAStatus updates the MFA status for a user
 func (r *UserRepository) UpdateMFAStatus(userID uint, enabled bool) error {
 	db := databases.GetDB()
 	return db.Model(&entities.User{}).Where("id = ?", userID).Update("mfa_enabled", enabled).Error
 }
 
-// Transaction executes db operations in a transaction
 func (r *UserRepository) Transaction(fn func(*databases.Transaction) error) error {
 	db := databases.GetDB()
 	tx := db.Begin()
@@ -67,7 +61,6 @@ func (r *UserRepository) Transaction(fn func(*databases.Transaction) error) erro
 	return tx.Commit().Error
 }
 
-// GetUserByEmail retrieves a user by email
 func (r *UserRepository) GetUserByEmail(email string) (*entities.User, error) {
 	var user entities.User
 	db := databases.GetDB()
@@ -77,7 +70,6 @@ func (r *UserRepository) GetUserByEmail(email string) (*entities.User, error) {
 	return &user, nil
 }
 
-// GetInvitationsByUserId retrieves invitations by user ID
 func (r *UserRepository) GetInvitationsByUserId(InvitedUserId uint) ([]entities.SpaceInvitation, error) {
 	var invitations []entities.SpaceInvitation
 	db := databases.GetDB()
@@ -89,7 +81,6 @@ func (r *UserRepository) GetInvitationsByUserId(InvitedUserId uint) ([]entities.
 	return invitations, nil
 }
 
-// SearchUsers searches users by query
 func (r *UserRepository) SearchUsers(query string) ([]entities.User, error) {
 	var users []entities.User
 	db := databases.GetDB()
@@ -109,7 +100,6 @@ func (r *UserRepository) SearchUsers(query string) ([]entities.User, error) {
 	return users, nil
 }
 
-// GetUserTier retrieves the tier of a user
 func (r *UserRepository) GetUserTier(userID uint) (*entities.Tier, error) {
 	db := databases.GetDB()
 	var user entities.User
@@ -125,7 +115,6 @@ func (r *UserRepository) GetUserTier(userID uint) (*entities.Tier, error) {
 	return user.Tier, nil
 }
 
-// GetUserTierUsage retrieves the tier usage of a user
 func (s *UserRepository) GetUserTierUsage(userID uint) (*dtos.TierUsageResponse, error) {
 	tier, err := s.GetUserTier(userID)
 	if err != nil {

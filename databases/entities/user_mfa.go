@@ -18,15 +18,12 @@ type UserMFA struct {
 	UpdatedAt   time.Time   `json:"updated_at"`
 }
 
-// GetIdType returns the type of the ID field
 func (u UserMFA) GetIdType() string {
 	return "uint"
 }
 
-// BackupCodes is a custom type for storing an array of backup codes
 type BackupCodes []string
 
-// Value implements the driver.Valuer interface for BackupCodes
 func (bc BackupCodes) Value() (driver.Value, error) {
 	if bc == nil {
 		return "[]", nil
@@ -34,7 +31,6 @@ func (bc BackupCodes) Value() (driver.Value, error) {
 	return json.Marshal(bc)
 }
 
-// Scan implements the sql.Scanner interface for BackupCodes
 func (bc *BackupCodes) Scan(value interface{}) error {
 	if value == nil {
 		*bc = BackupCodes{}

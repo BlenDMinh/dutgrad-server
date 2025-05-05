@@ -16,7 +16,6 @@ import (
 	"github.com/google/uuid"
 )
 
-// Improved state handling with constants for security
 const (
 	StateTokenExpiration = 10 * time.Minute
 	MFATokenExpiration   = 5 * time.Minute
@@ -98,7 +97,6 @@ func (c *OAuthController) HandleOAuthCallback(ctx *gin.Context, providerName str
 		return
 	}
 
-	// Check if MFA is enabled for the user
 	mfaEnabled, err := c.mfaService.GetUserMFAStatus(user.ID)
 	if err != nil {
 		log.Printf("Failed to check MFA status: %v", err)
@@ -110,7 +108,6 @@ func (c *OAuthController) HandleOAuthCallback(ctx *gin.Context, providerName str
 	}
 
 	if mfaEnabled {
-		// Generate temporary token for MFA verification
 		tempToken, _, err := c.mfaService.CreateTempToken(user.ID)
 		if err != nil {
 			log.Printf("Failed to create MFA temp token: %v", err)
@@ -121,7 +118,6 @@ func (c *OAuthController) HandleOAuthCallback(ctx *gin.Context, providerName str
 			return
 		}
 
-		// Store the temp token in Redis with expiration
 		if err := c.redisService.Set(tempToken, user.ID, MFATokenExpiration); err != nil {
 			log.Printf("Redis error: %v", err)
 			ctx.Redirect(http.StatusTemporaryRedirect,
@@ -131,7 +127,6 @@ func (c *OAuthController) HandleOAuthCallback(ctx *gin.Context, providerName str
 			return
 		}
 
-		// Redirect to MFA verification page
 		mfaURL := fmt.Sprintf("%s/auth/mfa?state=%s",
 			configs.GetEnv().WebClientURL,
 			tempToken)
@@ -140,7 +135,6 @@ func (c *OAuthController) HandleOAuthCallback(ctx *gin.Context, providerName str
 		return
 	}
 
-	// If MFA is not enabled, proceed with normal login flow
 	stateToken := uuid.New().String()
 	authResponse := dtos.AuthResponse{
 		Token:     jwt_token,
