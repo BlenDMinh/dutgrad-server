@@ -63,7 +63,7 @@ func (s *RAGServerService) UploadDocument(fileHeader *multipart.FileHeader, spac
 	if err = writer.WriteField("docId", fmt.Sprintf("%d", docId)); err != nil {
 		return err
 	}
-	if err = writer.WriteField("filePath", fmt.Sprintf("%d", filePath)); err != nil {
+	if err = writer.WriteField("filePath", filePath); err != nil {
 		return err
 	}
 
