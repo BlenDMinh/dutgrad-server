@@ -1,6 +1,9 @@
 package repositories
 
 import (
+	"encoding/json"
+	"fmt"
+
 	"github.com/BlenDMinh/dutgrad-server/databases"
 	"github.com/BlenDMinh/dutgrad-server/databases/entities"
 )
@@ -46,4 +49,39 @@ func (s *UserQuerySessionRepository) GetTempMessageByID(id uint) (*string, error
 		return nil, err
 	}
 	return session.TempMessage, nil
+}
+
+func (s *UserQuerySessionRepository) GetChatHistoryBySessionID(sessionID uint) ([]map[string]interface{}, error) {
+	var chatHistories []entities.ChatHistory
+	db := databases.GetDB()
+
+	err := db.Where("session_id = ?", sessionID).
+		Order("created_at ASC").
+		Find(&chatHistories).
+		Error
+
+	if err != nil {
+		return nil, err
+	}
+	var result []map[string]interface{}
+	for _, history := range chatHistories {
+		var dbMessage map[string]interface{}
+		if err := json.Unmarshal(history.Message, &dbMessage); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal message: %v", err)
+		}
+
+		messageType, _ := dbMessage["type"].(string)
+		content, _ := dbMessage["content"].(string)
+
+		message := map[string]interface{}{
+			"id":        fmt.Sprintf("%d", history.ID),
+			"content":   content,
+			"isUser":    messageType == "human",
+			"timestamp": history.CreatedAt,
+		}
+
+		result = append(result, message)
+	}
+
+	return result, nil
 }
