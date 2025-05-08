@@ -35,3 +35,14 @@ func (s *UserQuerySessionRepository) GetByUserID(userID uint) ([]entities.UserQu
 		Error
 	return sessions, err
 }
+
+func (s *UserQuerySessionRepository) GetTempMessageByID(id uint) (*string, error) {
+	var session entities.UserQuerySession
+	db := databases.GetDB()
+	err := db.Select("temp_message").Where("id = ?", id).First(&session).Error
+
+	if err != nil {
+		return nil, err
+	}
+	return session.TempMessage, nil
+}
