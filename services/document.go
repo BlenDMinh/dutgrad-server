@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"mime/multipart"
 
+	"github.com/BlenDMinh/dutgrad-server/configs"
 	"github.com/BlenDMinh/dutgrad-server/databases"
 	"github.com/BlenDMinh/dutgrad-server/databases/entities"
 	"github.com/BlenDMinh/dutgrad-server/databases/repositories"
@@ -90,7 +91,11 @@ func (s *DocumentService) UploadDocument(fileHeader *multipart.FileHeader, space
 		return nil, err
 	}
 
-	err = s.ragServerService.UploadDocument(fileHeader, spaceID, document.ID)
+	env := configs.GetEnv()
+
+	filePath := fmt.Sprintf("%s/documents/view?id=%d", env.WebClientURL, document.ID)
+
+	err = s.ragServerService.UploadDocument(fileHeader, spaceID, document.ID, filePath)
 	if err != nil {
 		s.repo.Delete(document.ID)
 		return nil, err
