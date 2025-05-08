@@ -25,7 +25,8 @@ func (s *UserQuerySessionRepository) CountByUserID(userID uint) (int64, error) {
 func (s *UserQuerySessionRepository) GetByUserID(userID uint) ([]entities.UserQuerySession, error) {
 	var sessions []entities.UserQuerySession
 	db := databases.GetDB()
-	err := db.Where("user_id = ?", userID).
+	err := db.Where("user_query_sessions.user_id = ?", userID).
+		Joins("INNER JOIN space_users ON space_users.space_id = user_query_sessions.space_id AND space_users.user_id = ?", userID).
 		Joins("LEFT JOIN chat_histories ON chat_histories.session_id = user_query_sessions.id").
 		Group("user_query_sessions.id").
 		Having("COUNT(chat_histories.id) > 0").
