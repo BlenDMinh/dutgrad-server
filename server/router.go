@@ -150,6 +150,7 @@ func GetRouter() *gin.Engine {
 			userQuerySessionGroup.POST("/begin-chat-session", middlewares.AuthMiddleware(), userQuerySessionController.BeginChatSession)
 			userQuerySessionGroup.GET("/me", middlewares.AuthMiddleware(), userQuerySessionController.GetMyChatSessions)
 			userQuerySessionGroup.HEAD("/me", middlewares.AuthMiddleware(), userQuerySessionController.CountMyChatSessions)
+			userQuerySessionGroup.HEAD("/:id/temp-message", middlewares.AuthMiddleware(), userQuerySessionController.GetTempMessageByID)
 		}
 
 		userQueryController := controllers.NewUserQueryController()

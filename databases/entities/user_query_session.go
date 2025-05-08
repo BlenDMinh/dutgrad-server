@@ -12,6 +12,7 @@ type UserQuerySession struct {
 	Space         *Space        `json:"space" gorm:"foreignKey:SpaceID;constraint:OnUpdate:CASCADE, OnDelete:CASCADE;"`
 	UserQuery     []UserQuery   `json:"user_query" gorm:"foreignKey:QuerySessionID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
 	ChatHistories []ChatHistory `json:"chat_histories" gorm:"foreignKey:SessionID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	TempMessage   *string       `json:"temp_message" gorm:"type:text"`
 }
 
 func (u UserQuerySession) GetIdType() string {

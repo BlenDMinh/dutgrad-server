@@ -23,3 +23,7 @@ func (s *UserQuerySessionService) GetChatSessionsByUserID(userID uint) ([]entiti
 func (s *UserQuerySessionService) CountChatSessionsByUserID(userID uint) (int64, error) {
 	return s.repo.(*repositories.UserQuerySessionRepository).CountByUserID(userID)
 }
+
+func (s *UserQuerySessionService) GetTempMessageByID(id uint) (*string, error) {
+	return s.repo.(*repositories.UserQuerySessionRepository).GetTempMessageByID(id)
+}
