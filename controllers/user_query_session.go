@@ -3,6 +3,7 @@ package controllers
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/BlenDMinh/dutgrad-server/databases/entities"
 	"github.com/BlenDMinh/dutgrad-server/models"
@@ -112,4 +113,45 @@ func (c *UserQuerySessionController) CountMyChatSessions(ctx *gin.Context) {
 
 	ctx.Header("X-Total-Count", fmt.Sprintf("%d", count))
 	ctx.Status(http.StatusOK)
+}
+
+func (c *UserQuerySessionController) GetTempMessageByID(ctx *gin.Context) {
+	sessionID, exists := ctx.Params.Get("id")
+	if !exists {
+		ctx.JSON(http.StatusBadRequest, models.NewErrorResponse(
+			http.StatusBadRequest,
+			"Invalid session ID",
+			nil,
+		))
+		return
+	}
+
+	sessionIDNum, err := strconv.ParseUint(sessionID, 10, 32)
+
+	if err != nil {
+		errMsg := err.Error()
+		ctx.JSON(http.StatusBadRequest, models.NewErrorResponse(
+			http.StatusBadRequest,
+			"Invalid session ID",
+			&errMsg,
+		))
+		return
+	}
+
+	tempMessage, err := c.service.(*services.UserQuerySessionService).GetTempMessageByID(uint(sessionIDNum))
+	if err != nil {
+		errMsg := err.Error()
+		ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(
+			http.StatusInternalServerError,
+			"Failed to fetch temp message",
+			&errMsg,
+		))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, models.NewSuccessResponse(
+		http.StatusOK,
+		"Fetched temp message successfully",
+		tempMessage,
+	))
 }
