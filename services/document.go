@@ -103,5 +103,15 @@ func (s *DocumentService) GetUserRoleInSpace(userID, spaceID uint) (string, erro
 }
 
 func (s *DocumentService) DeleteDocument(documentID uint) error {
+	document, err := s.GetById(documentID)
+	if err != nil {
+		return err
+	}
+
+	err = s.ragServerService.RemoveDocument(documentID, document.SpaceID)
+	if err != nil {
+		return fmt.Errorf("failed to remove document from RAG server: %v", err)
+	}
+
 	return s.repo.DeleteDocumentByID(documentID)
 }

@@ -13,12 +13,14 @@ import (
 type SpaceService struct {
 	CrudService[entities.Space, uint]
 	invitationLinkRepo repositories.SpaceInvitationLinkRepository
+	ragServerService   *RAGServerService
 }
 
 func NewSpaceService(invitationLinkRepo repositories.SpaceInvitationLinkRepository) *SpaceService {
 	return &SpaceService{
 		CrudService:        *NewCrudService(repositories.NewSpaceRepository()),
 		invitationLinkRepo: invitationLinkRepo,
+		ragServerService:   NewRAGServerService(),
 	}
 }
 
@@ -236,4 +238,12 @@ func (s *SpaceService) RemoveMember(spaceID, memberID, requestingUserID uint) er
 
 	invitationService := NewSpaceInvitationService()
 	return invitationService.CancelInvitation(spaceID, memberID)
+}
+
+func (s *SpaceService) Delete(id uint) error {
+	err := s.ragServerService.RemoveSpace(id)
+	if err != nil {
+		return fmt.Errorf("failed to remove space from RAG server: %v", err)
+	}
+	return s.repo.Delete(id)
 }
