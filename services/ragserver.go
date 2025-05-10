@@ -173,7 +173,7 @@ func (s *RAGServerService) RemoveDocument(docId uint, spaceID uint) error {
 		return err
 	}
 
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
+	req, err := http.NewRequest("DELETE", url, bytes.NewBuffer(body))
 	if err != nil {
 		return err
 	}
@@ -213,7 +213,7 @@ func (s *RAGServerService) RemoveSpace(spaceID uint) error {
 		return err
 	}
 
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
+	req, err := http.NewRequest("DELETE", url, bytes.NewBuffer(body))
 	if err != nil {
 		return err
 	}
