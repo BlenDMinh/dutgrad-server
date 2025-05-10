@@ -164,8 +164,8 @@ func (s *RAGServerService) RemoveDocument(docId uint, spaceID uint) error {
 	url := fmt.Sprintf("%s%s", s.BaseURL, s.RemoveDocURL)
 
 	reqBody := map[string]interface{}{
-		"doc_id":   docId,
-		"space_id": spaceID,
+		"docId":   docId,
+		"spaceId": spaceID,
 	}
 
 	body, err := json.Marshal(reqBody)
@@ -205,7 +205,7 @@ func (s *RAGServerService) RemoveSpace(spaceID uint) error {
 	url := fmt.Sprintf("%s%s", s.BaseURL, s.RemoveSpaceURL)
 
 	reqBody := map[string]interface{}{
-		"space_id": spaceID,
+		"spaceId": spaceID,
 	}
 
 	body, err := json.Marshal(reqBody)
