@@ -8,7 +8,6 @@ import (
 	"github.com/BlenDMinh/dutgrad-server/databases"
 	"github.com/BlenDMinh/dutgrad-server/databases/entities"
 	"github.com/BlenDMinh/dutgrad-server/databases/repositories"
-	"github.com/BlenDMinh/dutgrad-server/helpers"
 )
 
 type DocumentService struct {
@@ -55,7 +54,7 @@ func (s *DocumentService) CheckDocumentLimits(spaceID uint, fileSize int64) erro
 	return nil
 }
 
-func (s *DocumentService) UploadDocument(fileHeader *multipart.FileHeader, spaceID uint) (*entities.Document, error) {
+func (s *DocumentService) UploadDocument(fileHeader *multipart.FileHeader, spaceID uint, mimeType string) (*entities.Document, error) {
 	if err := s.CheckDocumentLimits(spaceID, fileHeader.Size); err != nil {
 		return nil, err
 	}
@@ -65,11 +64,6 @@ func (s *DocumentService) UploadDocument(fileHeader *multipart.FileHeader, space
 		return nil, err
 	}
 	defer file.Close()
-
-	mimeType, err := helpers.GetMimeType(fileHeader)
-	if err != nil {
-		return nil, err
-	}
 
 	size := fileHeader.Size
 
