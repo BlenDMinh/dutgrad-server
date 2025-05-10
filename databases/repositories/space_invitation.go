@@ -56,3 +56,12 @@ func (r *SpaceInvitationRepository) CancelInvitation(spaceID uint, invitedUserID
 	}
 	return nil
 }
+
+func (s *SpaceInvitationRepository) CountInvitationByUserID(userID uint) (int64, error) {
+	var count int64
+	err := databases.GetDB().
+		Model(&entities.SpaceInvitation{}).
+		Where("invited_user_id = ? AND status = ?", userID, entities.InvitationStatusPending).
+		Count(&count).Error
+	return count, err
+}

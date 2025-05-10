@@ -119,10 +119,10 @@ func GetRouter() *gin.Engine {
 			apiKeyGroup.GET("/:keyId", middlewares.AuthMiddleware(), apiKeyController.GetOne)
 			apiKeyGroup.DELETE("/:keyId", middlewares.AuthMiddleware(), apiKeyController.Delete)
 		}
-
 		spaceInvitationController := controllers.NewSpaceInvitationController()
 		spaceInvitationGroup := v1.Group("/space-invitations")
 		{
+			spaceInvitationGroup.GET("/count", middlewares.AuthMiddleware(), spaceInvitationController.GetInvitationCount)
 			spaceInvitationGroup.GET("", spaceInvitationController.Retrieve)
 			spaceInvitationGroup.GET("/:id", spaceInvitationController.RetrieveOne)
 			spaceInvitationGroup.PUT("/:id", spaceInvitationController.Update)
