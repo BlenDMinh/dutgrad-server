@@ -33,7 +33,7 @@ func NewRAGServerService() *RAGServerService {
 	}
 }
 
-func (s *RAGServerService) UploadDocument(fileHeader *multipart.FileHeader, spaceID uint, docId uint, filePath string) error {
+func (s *RAGServerService) UploadDocument(fileHeader *multipart.FileHeader, spaceID uint, docId uint, filePath string, desc string) error {
 	file, err := fileHeader.Open()
 	if err != nil {
 		return err
@@ -68,6 +68,9 @@ func (s *RAGServerService) UploadDocument(fileHeader *multipart.FileHeader, spac
 		return err
 	}
 	if err = writer.WriteField("filePath", filePath); err != nil {
+		return err
+	}
+	if err = writer.WriteField("desc", desc); err != nil {
 		return err
 	}
 
