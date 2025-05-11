@@ -79,3 +79,24 @@ func (c *SpaceInvitationController) RejectInvitation(ctx *gin.Context) {
 		gin.H{"ok": "yes"},
 	))
 }
+
+func (c *SpaceInvitationController) GetInvitationCount(ctx *gin.Context) {
+	userID, exists := ctx.Get("user_id")
+	if !exists {
+		ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(http.StatusInternalServerError, "User ID not found in context", nil))
+		return
+	}
+
+	count, err := c.service.(*services.SpaceInvitationService).CountInvitationByUserID(userID.(uint))
+	if err != nil {
+		errMsg := err.Error()
+		ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(http.StatusInternalServerError, "Failed to get invitation count", &errMsg))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, models.NewSuccessResponse(
+		http.StatusOK,
+		"Invitation count retrieved successfully",
+		gin.H{"count": count},
+	))
+}

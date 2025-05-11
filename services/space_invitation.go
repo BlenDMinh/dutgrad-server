@@ -26,3 +26,7 @@ func (s *SpaceInvitationService) RejectInvitation(invitationId uint, userId uint
 func (s *SpaceInvitationService) CancelInvitation(spaceID uint, invitedUserID uint) error {
 	return s.repo.(*repositories.SpaceInvitationRepository).CancelInvitation(spaceID, invitedUserID)
 }
+
+func (s *SpaceInvitationService) CountInvitationByUserID(userID uint) (int64, error) {
+	return s.repo.(*repositories.SpaceInvitationRepository).CountInvitationByUserID(userID)
+}
