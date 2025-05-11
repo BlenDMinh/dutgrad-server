@@ -6,6 +6,7 @@ type Document struct {
 	ID               uint      `gorm:"primaryKey" json:"id"`
 	SpaceID          uint      `gorm:"not null;index" json:"space_id"`
 	Name             string    `gorm:"type:varchar(255)" json:"name"`
+	Description      string    `gorm:"type:varchar(1024)" json:"description"`
 	MimeType         string    `gorm:"column:mime_type;type:varchar(255)" json:"mime_type"`
 	Size             int64     `gorm:"column:size;not null" json:"size"`
 	ProcessingStatus int       `gorm:"default:0" json:"processing_status"`

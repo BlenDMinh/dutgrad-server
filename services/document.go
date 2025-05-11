@@ -54,7 +54,7 @@ func (s *DocumentService) CheckDocumentLimits(spaceID uint, fileSize int64) erro
 	return nil
 }
 
-func (s *DocumentService) UploadDocument(fileHeader *multipart.FileHeader, spaceID uint, mimeType string) (*entities.Document, error) {
+func (s *DocumentService) UploadDocument(fileHeader *multipart.FileHeader, spaceID uint, mimeType string, description string) (*entities.Document, error) {
 	if err := s.CheckDocumentLimits(spaceID, fileHeader.Size); err != nil {
 		return nil, err
 	}
@@ -73,11 +73,12 @@ func (s *DocumentService) UploadDocument(fileHeader *multipart.FileHeader, space
 	}
 
 	document := &entities.Document{
-		SpaceID:  spaceID,
-		Name:     fileHeader.Filename,
-		MimeType: mimeType,
-		Size:     size,
-		S3URL:    s3URL,
+		SpaceID:     spaceID,
+		Name:        fileHeader.Filename,
+		Description: description,
+		MimeType:    mimeType,
+		Size:        size,
+		S3URL:       s3URL,
 	}
 
 	document, err = s.repo.Create(document)

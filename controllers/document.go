@@ -92,8 +92,9 @@ func (c *DocumentController) UploadDocument(ctx *gin.Context) {
 	}
 
 	mimeType := ctx.Request.Header.Get("Mime-Type")
+	description := ctx.Request.FormValue("description")
 
-	document, err := c.service.UploadDocument(file, uint(spaceID), mimeType)
+	document, err := c.service.UploadDocument(file, uint(spaceID), mimeType, description)
 	if err != nil {
 		errMsg := err.Error()
 		statusCode := http.StatusInternalServerError
