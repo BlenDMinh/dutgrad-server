@@ -90,7 +90,7 @@ func (s *DocumentService) UploadDocument(fileHeader *multipart.FileHeader, space
 
 	filePath := fmt.Sprintf("%s/documents/view?id=%d", env.WebClientURL, document.ID)
 
-	err = s.ragServerService.UploadDocument(fileHeader, spaceID, document.ID, filePath)
+	err = s.ragServerService.UploadDocument(fileHeader, spaceID, document.ID, filePath, description)
 	if err != nil {
 		s.repo.Delete(document.ID)
 		return nil, err
