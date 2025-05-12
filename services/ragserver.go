@@ -11,6 +11,8 @@ import (
 	"net/textproto"
 
 	"github.com/BlenDMinh/dutgrad-server/configs"
+	"github.com/BlenDMinh/dutgrad-server/databases"
+	"github.com/BlenDMinh/dutgrad-server/databases/entities"
 	"github.com/BlenDMinh/dutgrad-server/helpers"
 )
 
@@ -111,10 +113,16 @@ func (s *RAGServerService) UploadDocument(fileHeader *multipart.FileHeader, spac
 func (s *RAGServerService) Chat(sessionID uint, spaceID uint, message string) (string, error) {
 	url := fmt.Sprintf("%s%s", s.BaseURL, s.ChatURL)
 
+	var space entities.Space
+	if err := databases.GetDB().Where("id = ?", spaceID).First(&space).Error; err != nil {
+		return "", fmt.Errorf("failed to get space: %v", err)
+	}
+
 	reqBody := map[string]interface{}{
-		"session_id": sessionID,
-		"space_id":   spaceID,
-		"input":      message,
+		"session_id":    sessionID,
+		"space_id":      spaceID,
+		"input":         message,
+		"system_prompt": space.SystemPrompt,
 	}
 
 	body, err := json.Marshal(reqBody)
