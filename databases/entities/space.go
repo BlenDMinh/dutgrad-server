@@ -7,6 +7,7 @@ type Space struct {
 	Name            string             `gorm:"type:varchar(255);not null" json:"name"`
 	Description     string             `gorm:"type:text" json:"description"`
 	PrivacyStatus   bool               `json:"privacy_status"`
+	SystemPrompt    string             `gorm:"type:varchar(1024)" json:"system_prompt"`
 	DocumentLimit   int                `json:"document_limit" gorm:"default:10"`
 	FileSizeLimitKb int                `json:"file_size_limit_kb" gorm:"default:5120"`
 	ApiCallLimit    int                `json:"api_call_limit" gorm:"default:100"`
