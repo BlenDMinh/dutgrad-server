@@ -85,3 +85,14 @@ func (s *UserQuerySessionRepository) GetChatHistoryBySessionID(sessionID uint) (
 
 	return result, nil
 }
+
+func (s *UserQuerySessionRepository) ClearChatHistory(sessionID uint) error {
+	db := databases.GetDB()
+
+	err := db.Where("session_id = ?", sessionID).Delete(&entities.ChatHistory{}).Error
+	if err != nil {
+		return fmt.Errorf("failed to clear chat history: %v", err)
+	}
+
+	return nil
+}

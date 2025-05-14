@@ -241,9 +241,23 @@ func (s *SpaceService) RemoveMember(spaceID, memberID, requestingUserID uint) er
 }
 
 func (s *SpaceService) Delete(id uint) error {
-	err := s.ragServerService.RemoveSpace(id)
+	documentService := NewDocumentService()
+	documents, err := documentService.GetDocumentsBySpaceID(id)
+	if err != nil {
+		return fmt.Errorf("failed to get documents in space: %v", err)
+	}
+
+	for _, doc := range documents {
+		err := documentService.DeleteDocument(doc.ID)
+		if err != nil {
+			return fmt.Errorf("failed to delete document %d: %v", doc.ID, err)
+		}
+	}
+
+	err = s.ragServerService.RemoveSpace(id)
 	if err != nil {
 		return fmt.Errorf("failed to remove space from RAG server: %v", err)
 	}
+
 	return s.repo.Delete(id)
 }

@@ -205,3 +205,53 @@ func (c *UserQuerySessionController) GetChatHistory(ctx *gin.Context) {
 		history,
 	))
 }
+
+func (c *UserQuerySessionController) ClearChatHistory(ctx *gin.Context) {
+	sessionID, exists := ctx.Params.Get("id")
+	if !exists {
+		ctx.JSON(http.StatusBadRequest, models.NewErrorResponse(
+			http.StatusBadRequest,
+			"Invalid session ID",
+			nil,
+		))
+		return
+	}
+
+	sessionIDNum, err := strconv.ParseUint(sessionID, 10, 32)
+	if err != nil {
+		errMsg := err.Error()
+		ctx.JSON(http.StatusBadRequest, models.NewErrorResponse(
+			http.StatusBadRequest,
+			"Invalid session ID",
+			&errMsg,
+		))
+		return
+	}
+
+	userID, exists := ctx.Get("user_id")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, models.NewErrorResponse(
+			http.StatusUnauthorized,
+			"User ID not found in context",
+			nil,
+		))
+		return
+	}
+
+	err = c.service.(*services.UserQuerySessionService).ClearChatHistoryBySessionID(uint(sessionIDNum), userID.(uint))
+	if err != nil {
+		errMsg := err.Error()
+		ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(
+			http.StatusInternalServerError,
+			"Failed to clear chat history",
+			&errMsg,
+		))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, models.NewSuccessResponse(
+		http.StatusOK,
+		"Chat history cleared successfully",
+		nil,
+	))
+}
