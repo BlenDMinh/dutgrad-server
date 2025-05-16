@@ -8,6 +8,7 @@ import (
 	"github.com/BlenDMinh/dutgrad-server/databases"
 	"github.com/BlenDMinh/dutgrad-server/databases/entities"
 	"github.com/BlenDMinh/dutgrad-server/databases/repositories"
+	"github.com/BlenDMinh/dutgrad-server/helpers"
 )
 
 type DocumentService struct {
@@ -112,6 +113,12 @@ func (s *DocumentService) DeleteDocument(documentID uint) error {
 	err = s.ragServerService.RemoveDocument(documentID, document.SpaceID)
 	if err != nil {
 		return fmt.Errorf("failed to remove document from RAG server: %v", err)
+	}
+
+	config := configs.GetEnv()
+	err = helpers.DeleteFromS3(config.AWS.S3.Bucket, document.S3URL)
+	if err != nil {
+		return fmt.Errorf("failed to delete file from S3: %v", err)
 	}
 
 	return s.repo.DeleteDocumentByID(documentID)

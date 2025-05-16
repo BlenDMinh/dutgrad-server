@@ -1,6 +1,8 @@
 package services
 
 import (
+	"fmt"
+
 	"github.com/BlenDMinh/dutgrad-server/databases/entities"
 	"github.com/BlenDMinh/dutgrad-server/databases/repositories"
 )
@@ -30,4 +32,17 @@ func (s *UserQuerySessionService) GetTempMessageByID(id uint) (*string, error) {
 
 func (s *UserQuerySessionService) GetChatHistoryBySessionID(sessionID uint, userID uint) ([]map[string]interface{}, error) {
 	return s.repo.(*repositories.UserQuerySessionRepository).GetChatHistoryBySessionID(sessionID)
+}
+
+func (s *UserQuerySessionService) ClearChatHistoryBySessionID(sessionID uint, userID uint) error {
+	session, err := s.GetById(sessionID)
+	if err != nil {
+		return fmt.Errorf("failed to find session: %v", err)
+	}
+
+	if session.UserID == nil || *session.UserID != userID {
+		return fmt.Errorf("unauthorized: you can only clear chat history for your own sessions")
+	}
+
+	return s.repo.(*repositories.UserQuerySessionRepository).ClearChatHistory(sessionID)
 }
