@@ -1,0 +1,73 @@
+{"Time":"2025-05-21T20:54:33.4129392+07:00","Action":"start","Package":"command-line-arguments"}
+{"Time":"2025-05-21T20:54:35.1173536+07:00","Action":"run","Package":"command-line-arguments","Test":"TestMFAStatus"}
+{"Time":"2025-05-21T20:54:35.1173536+07:00","Action":"output","Package":"command-line-arguments","Test":"TestMFAStatus","Output":"=== RUN   TestMFAStatus\n"}
+{"Time":"2025-05-21T20:54:35.1173536+07:00","Action":"output","Package":"command-line-arguments","Test":"TestMFAStatus","Output":"[GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.\n"}
+{"Time":"2025-05-21T20:54:35.1173536+07:00","Action":"output","Package":"command-line-arguments","Test":"TestMFAStatus","Output":"\n"}
+{"Time":"2025-05-21T20:54:35.1173536+07:00","Action":"output","Package":"command-line-arguments","Test":"TestMFAStatus","Output":"[GIN-debug] [WARNING] Running in \"debug\" mode. Switch to \"release\" mode in production.\n"}
+{"Time":"2025-05-21T20:54:35.1173536+07:00","Action":"output","Package":"command-line-arguments","Test":"TestMFAStatus","Output":" - using env:\texport GIN_MODE=release\n"}
+{"Time":"2025-05-21T20:54:35.1173536+07:00","Action":"output","Package":"command-line-arguments","Test":"TestMFAStatus","Output":" - using code:\tgin.SetMode(gin.ReleaseMode)\n"}
+{"Time":"2025-05-21T20:54:35.1173536+07:00","Action":"output","Package":"command-line-arguments","Test":"TestMFAStatus","Output":"\n"}
+{"Time":"2025-05-21T20:54:35.1173536+07:00","Action":"output","Package":"command-line-arguments","Test":"TestMFAStatus","Output":"[GIN-debug] GET    /auth/mfa/status          --\u003e command-line-arguments.MFAStatusHandler (3 handlers)\n"}
+{"Time":"2025-05-21T20:54:35.1173536+07:00","Action":"output","Package":"command-line-arguments","Test":"TestMFAStatus","Output":"[GIN-debug] POST   /auth/mfa/setup           --\u003e command-line-arguments.SetupMFAHandler (3 handlers)\n"}
+{"Time":"2025-05-21T20:54:35.1173536+07:00","Action":"output","Package":"command-line-arguments","Test":"TestMFAStatus","Output":"[GIN-debug] POST   /auth/mfa/verify          --\u003e command-line-arguments.VerifyMFAHandler (3 handlers)\n"}
+{"Time":"2025-05-21T20:54:35.1173536+07:00","Action":"output","Package":"command-line-arguments","Test":"TestMFAStatus","Output":"[GIN-debug] POST   /auth/mfa/disable         --\u003e command-line-arguments.DisableMFAHandler (3 handlers)\n"}
+{"Time":"2025-05-21T20:54:35.118007+07:00","Action":"output","Package":"command-line-arguments","Test":"TestMFAStatus","Output":"[GIN] 2025/05/21 - 20:54:35 | 200 |            0s |                 | GET      \"/auth/mfa/status\"\n"}
+{"Time":"2025-05-21T20:54:35.118007+07:00","Action":"output","Package":"command-line-arguments","Test":"TestMFAStatus","Output":"--- PASS: TestMFAStatus (0.00s)\n"}
+{"Time":"2025-05-21T20:54:35.118007+07:00","Action":"pass","Package":"command-line-arguments","Test":"TestMFAStatus","Elapsed":0}
+{"Time":"2025-05-21T20:54:35.118007+07:00","Action":"run","Package":"command-line-arguments","Test":"TestSetupMFA"}
+{"Time":"2025-05-21T20:54:35.118007+07:00","Action":"output","Package":"command-line-arguments","Test":"TestSetupMFA","Output":"=== RUN   TestSetupMFA\n"}
+{"Time":"2025-05-21T20:54:35.118007+07:00","Action":"output","Package":"command-line-arguments","Test":"TestSetupMFA","Output":"[GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.\n"}
+{"Time":"2025-05-21T20:54:35.118007+07:00","Action":"output","Package":"command-line-arguments","Test":"TestSetupMFA","Output":"\n"}
+{"Time":"2025-05-21T20:54:35.118007+07:00","Action":"output","Package":"command-line-arguments","Test":"TestSetupMFA","Output":"[GIN-debug] [WARNING] Running in \"debug\" mode. Switch to \"release\" mode in production.\n"}
+{"Time":"2025-05-21T20:54:35.118007+07:00","Action":"output","Package":"command-line-arguments","Test":"TestSetupMFA","Output":" - using env:\texport GIN_MODE=release\n"}
+{"Time":"2025-05-21T20:54:35.118007+07:00","Action":"output","Package":"command-line-arguments","Test":"TestSetupMFA","Output":" - using code:\tgin.SetMode(gin.ReleaseMode)\n"}
+{"Time":"2025-05-21T20:54:35.118007+07:00","Action":"output","Package":"command-line-arguments","Test":"TestSetupMFA","Output":"\n"}
+{"Time":"2025-05-21T20:54:35.118007+07:00","Action":"output","Package":"command-line-arguments","Test":"TestSetupMFA","Output":"[GIN-debug] GET    /auth/mfa/status          --\u003e command-line-arguments.MFAStatusHandler (3 handlers)\n"}
+{"Time":"2025-05-21T20:54:35.118007+07:00","Action":"output","Package":"command-line-arguments","Test":"TestSetupMFA","Output":"[GIN-debug] POST   /auth/mfa/setup           --\u003e command-line-arguments.SetupMFAHandler (3 handlers)\n"}
+{"Time":"2025-05-21T20:54:35.118007+07:00","Action":"output","Package":"command-line-arguments","Test":"TestSetupMFA","Output":"[GIN-debug] POST   /auth/mfa/verify          --\u003e command-line-arguments.VerifyMFAHandler (3 handlers)\n"}
+{"Time":"2025-05-21T20:54:35.118007+07:00","Action":"output","Package":"command-line-arguments","Test":"TestSetupMFA","Output":"[GIN-debug] POST   /auth/mfa/disable         --\u003e command-line-arguments.DisableMFAHandler (3 handlers)\n"}
+{"Time":"2025-05-21T20:54:35.118007+07:00","Action":"output","Package":"command-line-arguments","Test":"TestSetupMFA","Output":"[GIN] 2025/05/21 - 20:54:35 | 200 |            0s |                 | POST     \"/auth/mfa/setup\"\n"}
+{"Time":"2025-05-21T20:54:35.118007+07:00","Action":"output","Package":"command-line-arguments","Test":"TestSetupMFA","Output":"--- PASS: TestSetupMFA (0.00s)\n"}
+{"Time":"2025-05-21T20:54:35.118007+07:00","Action":"pass","Package":"command-line-arguments","Test":"TestSetupMFA","Elapsed":0}
+{"Time":"2025-05-21T20:54:35.118007+07:00","Action":"run","Package":"command-line-arguments","Test":"TestVerifyMFA"}
+{"Time":"2025-05-21T20:54:35.118007+07:00","Action":"output","Package":"command-line-arguments","Test":"TestVerifyMFA","Output":"=== RUN   TestVerifyMFA\n"}
+{"Time":"2025-05-21T20:54:35.118007+07:00","Action":"output","Package":"command-line-arguments","Test":"TestVerifyMFA","Output":"[GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.\n"}
+{"Time":"2025-05-21T20:54:35.118007+07:00","Action":"output","Package":"command-line-arguments","Test":"TestVerifyMFA","Output":"\n"}
+{"Time":"2025-05-21T20:54:35.118007+07:00","Action":"output","Package":"command-line-arguments","Test":"TestVerifyMFA","Output":"[GIN-debug] [WARNING] Running in \"debug\" mode. Switch to \"release\" mode in production.\n"}
+{"Time":"2025-05-21T20:54:35.118007+07:00","Action":"output","Package":"command-line-arguments","Test":"TestVerifyMFA","Output":" - using env:\texport GIN_MODE=release\n"}
+{"Time":"2025-05-21T20:54:35.118007+07:00","Action":"output","Package":"command-line-arguments","Test":"TestVerifyMFA","Output":" - using code:\tgin.SetMode(gin.ReleaseMode)\n"}
+{"Time":"2025-05-21T20:54:35.118007+07:00","Action":"output","Package":"command-line-arguments","Test":"TestVerifyMFA","Output":"\n"}
+{"Time":"2025-05-21T20:54:35.118007+07:00","Action":"output","Package":"command-line-arguments","Test":"TestVerifyMFA","Output":"[GIN-debug] GET    /auth/mfa/status          --\u003e command-line-arguments.MFAStatusHandler (3 handlers)\n"}
+{"Time":"2025-05-21T20:54:35.118007+07:00","Action":"output","Package":"command-line-arguments","Test":"TestVerifyMFA","Output":"[GIN-debug] POST   /auth/mfa/setup           --\u003e command-line-arguments.SetupMFAHandler (3 handlers)\n"}
+{"Time":"2025-05-21T20:54:35.118007+07:00","Action":"output","Package":"command-line-arguments","Test":"TestVerifyMFA","Output":"[GIN-debug] POST   /auth/mfa/verify          --\u003e command-line-arguments.VerifyMFAHandler (3 handlers)\n"}
+{"Time":"2025-05-21T20:54:35.1185482+07:00","Action":"output","Package":"command-line-arguments","Test":"TestVerifyMFA","Output":"[GIN-debug] POST   /auth/mfa/disable         --\u003e command-line-arguments.DisableMFAHandler (3 handlers)\n"}
+{"Time":"2025-05-21T20:54:35.1185482+07:00","Action":"run","Package":"command-line-arguments","Test":"TestVerifyMFA/✅_Verify_MFA_thành_công"}
+{"Time":"2025-05-21T20:54:35.1185482+07:00","Action":"output","Package":"command-line-arguments","Test":"TestVerifyMFA/✅_Verify_MFA_thành_công","Output":"=== RUN   TestVerifyMFA/✅_Verify_MFA_thành_công\n"}
+{"Time":"2025-05-21T20:54:35.1185482+07:00","Action":"output","Package":"command-line-arguments","Test":"TestVerifyMFA/✅_Verify_MFA_thành_công","Output":"[GIN] 2025/05/21 - 20:54:35 | 200 |       541.2µs |                 | POST     \"/auth/mfa/verify\"\n"}
+{"Time":"2025-05-21T20:54:35.1185482+07:00","Action":"run","Package":"command-line-arguments","Test":"TestVerifyMFA/❌_Code_không_hợp_lệ"}
+{"Time":"2025-05-21T20:54:35.1185482+07:00","Action":"output","Package":"command-line-arguments","Test":"TestVerifyMFA/❌_Code_không_hợp_lệ","Output":"=== RUN   TestVerifyMFA/❌_Code_không_hợp_lệ\n"}
+{"Time":"2025-05-21T20:54:35.1185482+07:00","Action":"output","Package":"command-line-arguments","Test":"TestVerifyMFA/❌_Code_không_hợp_lệ","Output":"[GIN] 2025/05/21 - 20:54:35 | 400 |            0s |                 | POST     \"/auth/mfa/verify\"\n"}
+{"Time":"2025-05-21T20:54:35.1185482+07:00","Action":"output","Package":"command-line-arguments","Test":"TestVerifyMFA","Output":"--- PASS: TestVerifyMFA (0.00s)\n"}
+{"Time":"2025-05-21T20:54:35.1185482+07:00","Action":"output","Package":"command-line-arguments","Test":"TestVerifyMFA/✅_Verify_MFA_thành_công","Output":"    --- PASS: TestVerifyMFA/✅_Verify_MFA_thành_công (0.00s)\n"}
+{"Time":"2025-05-21T20:54:35.1185482+07:00","Action":"pass","Package":"command-line-arguments","Test":"TestVerifyMFA/✅_Verify_MFA_thành_công","Elapsed":0}
+{"Time":"2025-05-21T20:54:35.1185482+07:00","Action":"output","Package":"command-line-arguments","Test":"TestVerifyMFA/❌_Code_không_hợp_lệ","Output":"    --- PASS: TestVerifyMFA/❌_Code_không_hợp_lệ (0.00s)\n"}
+{"Time":"2025-05-21T20:54:35.1185482+07:00","Action":"pass","Package":"command-line-arguments","Test":"TestVerifyMFA/❌_Code_không_hợp_lệ","Elapsed":0}
+{"Time":"2025-05-21T20:54:35.1185482+07:00","Action":"pass","Package":"command-line-arguments","Test":"TestVerifyMFA","Elapsed":0}
+{"Time":"2025-05-21T20:54:35.1185482+07:00","Action":"run","Package":"command-line-arguments","Test":"TestDisableMFA"}
+{"Time":"2025-05-21T20:54:35.1185482+07:00","Action":"output","Package":"command-line-arguments","Test":"TestDisableMFA","Output":"=== RUN   TestDisableMFA\n"}
+{"Time":"2025-05-21T20:54:35.1185482+07:00","Action":"output","Package":"command-line-arguments","Test":"TestDisableMFA","Output":"[GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.\n"}
+{"Time":"2025-05-21T20:54:35.1185482+07:00","Action":"output","Package":"command-line-arguments","Test":"TestDisableMFA","Output":"\n"}
+{"Time":"2025-05-21T20:54:35.1185482+07:00","Action":"output","Package":"command-line-arguments","Test":"TestDisableMFA","Output":"[GIN-debug] [WARNING] Running in \"debug\" mode. Switch to \"release\" mode in production.\n"}
+{"Time":"2025-05-21T20:54:35.1190945+07:00","Action":"output","Package":"command-line-arguments","Test":"TestDisableMFA","Output":" - using env:\texport GIN_MODE=release\n"}
+{"Time":"2025-05-21T20:54:35.1190945+07:00","Action":"output","Package":"command-line-arguments","Test":"TestDisableMFA","Output":" - using code:\tgin.SetMode(gin.ReleaseMode)\n"}
+{"Time":"2025-05-21T20:54:35.1190945+07:00","Action":"output","Package":"command-line-arguments","Test":"TestDisableMFA","Output":"\n"}
+{"Time":"2025-05-21T20:54:35.1190945+07:00","Action":"output","Package":"command-line-arguments","Test":"TestDisableMFA","Output":"[GIN-debug] GET    /auth/mfa/status          --\u003e command-line-arguments.MFAStatusHandler (3 handlers)\n"}
+{"Time":"2025-05-21T20:54:35.1190945+07:00","Action":"output","Package":"command-line-arguments","Test":"TestDisableMFA","Output":"[GIN-debug] POST   /auth/mfa/setup           --\u003e command-line-arguments.SetupMFAHandler (3 handlers)\n"}
+{"Time":"2025-05-21T20:54:35.1190945+07:00","Action":"output","Package":"command-line-arguments","Test":"TestDisableMFA","Output":"[GIN-debug] POST   /auth/mfa/verify          --\u003e command-line-arguments.VerifyMFAHandler (3 handlers)\n"}
+{"Time":"2025-05-21T20:54:35.1190945+07:00","Action":"output","Package":"command-line-arguments","Test":"TestDisableMFA","Output":"[GIN-debug] POST   /auth/mfa/disable         --\u003e command-line-arguments.DisableMFAHandler (3 handlers)\n"}
+{"Time":"2025-05-21T20:54:35.1190945+07:00","Action":"output","Package":"command-line-arguments","Test":"TestDisableMFA","Output":"[GIN] 2025/05/21 - 20:54:35 | 200 |            0s |                 | POST     \"/auth/mfa/disable\"\n"}
+{"Time":"2025-05-21T20:54:35.1190945+07:00","Action":"output","Package":"command-line-arguments","Test":"TestDisableMFA","Output":"--- PASS: TestDisableMFA (0.00s)\n"}
+{"Time":"2025-05-21T20:54:35.1190945+07:00","Action":"pass","Package":"command-line-arguments","Test":"TestDisableMFA","Elapsed":0}
+{"Time":"2025-05-21T20:54:35.1190945+07:00","Action":"output","Package":"command-line-arguments","Output":"PASS\n"}
+{"Time":"2025-05-21T20:54:35.1215063+07:00","Action":"output","Package":"command-line-arguments","Output":"ok  \tcommand-line-arguments\t1.709s\n"}
+{"Time":"2025-05-21T20:54:35.1215063+07:00","Action":"pass","Package":"command-line-arguments","Elapsed":1.709}
