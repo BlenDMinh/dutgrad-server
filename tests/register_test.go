@@ -18,7 +18,6 @@ func setupRouter() *gin.Engine {
 	return r
 }
 
-// Mock database để kiểm tra email tồn tại
 var mockUsers = map[string]bool{
 	"existing@example.com": true,
 }
