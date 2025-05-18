@@ -94,5 +94,15 @@ func (s *UserQuerySessionRepository) ClearChatHistory(sessionID uint) error {
 		return fmt.Errorf("failed to clear chat history: %v", err)
 	}
 
+	err = db.Where("query_session_id = ?", sessionID).Delete(&entities.UserQuery{}).Error
+	if err != nil {
+		return fmt.Errorf("failed to delete user queries: %v", err)
+	}
+
+	err = db.Where("id = ?", sessionID).Delete(&entities.UserQuerySession{}).Error
+	if err != nil {
+		return fmt.Errorf("failed to delete session: %v", err)
+	}
+
 	return nil
 }

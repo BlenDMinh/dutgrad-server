@@ -248,10 +248,9 @@ func (c *UserQuerySessionController) ClearChatHistory(ctx *gin.Context) {
 		))
 		return
 	}
-
 	ctx.JSON(http.StatusOK, models.NewSuccessResponse(
 		http.StatusOK,
-		"Chat history cleared successfully",
+		"Chat history and session cleared successfully",
 		nil,
 	))
 }
