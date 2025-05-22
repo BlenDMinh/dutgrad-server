@@ -27,3 +27,19 @@ type UserSpaceDTO struct {
 	UpdatedAt       time.Time          `json:"updated_at"`
 	Role            entities.SpaceRole `json:"role"`
 }
+
+// SpaceInvitationRequest represents a request to invite a user to a space
+type SpaceInvitationRequest struct {
+	InvitedUserID    *uint  `json:"invited_user_id"`
+	InvitedUserEmail string `json:"invited_user_email"`
+	SpaceRoleID      uint   `json:"space_role_id" binding:"required"`
+}
+
+// UpdateRoleRequest represents a request to update a user's role in a space
+type UpdateRoleRequest struct {
+	RoleID uint `json:"role_id" binding:"required"`
+}
+
+type SpaceListResponse struct {
+	Spaces []entities.Space `json:"spaces"`
+}

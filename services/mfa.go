@@ -23,7 +23,7 @@ import (
 
 type MFAService struct {
 	redisService       *RedisService
-	userRepo           *repositories.UserRepository
+	userRepo           repositories.UserRepository
 	userMFARepo        *repositories.UserMFARepository
 	authCredentialRepo *repositories.UserAuthCredentialRepository
 }

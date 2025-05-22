@@ -2,10 +2,8 @@ package controllers
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/BlenDMinh/dutgrad-server/databases/entities"
-	"github.com/BlenDMinh/dutgrad-server/models"
 	"github.com/BlenDMinh/dutgrad-server/services"
 	"github.com/gin-gonic/gin"
 )
@@ -21,82 +19,56 @@ func NewSpaceInvitationController() *SpaceInvitationController {
 }
 
 func (c *SpaceInvitationController) AcceptInvitation(ctx *gin.Context) {
-	userIdValue, exists := ctx.Get("user_id")
-	if !exists {
-		ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(http.StatusInternalServerError, "User ID not found in context", nil))
+	userId, ok := ExtractID(ctx, "user_id")
+	if !ok {
 		return
 	}
-	userId := userIdValue.(uint)
 
-	invitationIdParam := ctx.Param("id")
-	invitationId, err := strconv.ParseUint(invitationIdParam, 10, 64)
+	invitationId, ok := ExtractID(ctx, "id")
+	if !ok {
+		return
+	}
+
+	err := c.service.(*services.SpaceInvitationService).AcceptInvitation(invitationId, userId)
 	if err != nil {
-		errMsg := err.Error()
-		ctx.JSON(http.StatusBadRequest, models.NewErrorResponse(http.StatusBadRequest, "Invalid invitation ID", &errMsg))
+		HandleError(ctx, http.StatusInternalServerError, "Failed to accept invitation", err)
 		return
 	}
 
-	err = c.service.(*services.SpaceInvitationService).AcceptInvitation(uint(invitationId), userId)
-	if err != nil {
-		errMsg := err.Error()
-		ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(http.StatusInternalServerError, "Failed to accept invitation", &errMsg))
-		return
-	}
-
-	ctx.JSON(http.StatusOK, models.NewSuccessResponse(
-		http.StatusOK,
-		"Invitation accepted successfully",
-		gin.H{"ok": "yes"},
-	))
+	HandleSuccess(ctx, "Invitation accepted successfully", gin.H{"ok": "yes"})
 }
 
 func (c *SpaceInvitationController) RejectInvitation(ctx *gin.Context) {
-	userIdValue, exists := ctx.Get("user_id")
-	if !exists {
-		ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(http.StatusInternalServerError, "User ID not found in context", nil))
+	userId, ok := ExtractID(ctx, "user_id")
+	if !ok {
 		return
 	}
-	userId := userIdValue.(uint)
 
-	invitationIdParam := ctx.Param("id")
-	invitationId, err := strconv.ParseUint(invitationIdParam, 10, 64)
+	invitationId, ok := ExtractID(ctx, "id")
+	if !ok {
+		return
+	}
+
+	err := c.service.(*services.SpaceInvitationService).RejectInvitation(invitationId, userId)
 	if err != nil {
-		errMsg := err.Error()
-		ctx.JSON(http.StatusBadRequest, models.NewErrorResponse(http.StatusBadRequest, "Invalid invitation ID", &errMsg))
+		HandleError(ctx, http.StatusInternalServerError, "Failed to reject invitation", err)
 		return
 	}
 
-	err = c.service.(*services.SpaceInvitationService).RejectInvitation(uint(invitationId), userId)
-	if err != nil {
-		errMsg := err.Error()
-		ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(http.StatusInternalServerError, "Failed to reject invitation", &errMsg))
-		return
-	}
-
-	ctx.JSON(http.StatusOK, models.NewSuccessResponse(
-		http.StatusOK,
-		"Invitation rejected successfully",
-		gin.H{"ok": "yes"},
-	))
+	HandleSuccess(ctx, "Invitation rejected successfully", gin.H{"ok": "yes"})
 }
 
 func (c *SpaceInvitationController) GetInvitationCount(ctx *gin.Context) {
-	userID, exists := ctx.Get("user_id")
-	if !exists {
-		ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(http.StatusInternalServerError, "User ID not found in context", nil))
+	userID, ok := ExtractID(ctx, "user_id")
+	if !ok {
 		return
 	}
 
-	count, err := c.service.(*services.SpaceInvitationService).CountInvitationByUserID(userID.(uint))
+	count, err := c.service.(*services.SpaceInvitationService).CountInvitationByUserID(userID)
 	if err != nil {
-		errMsg := err.Error()
-		ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(http.StatusInternalServerError, "Failed to get invitation count", &errMsg))
+		HandleError(ctx, http.StatusInternalServerError, "Failed to get invitation count", err)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, models.NewSuccessResponse(
-		http.StatusOK,
-		"Invitation count retrieved successfully",
-		gin.H{"count": count},
-	))
+	HandleSuccess(ctx, "Invitation count retrieved successfully", gin.H{"count": count})
 }

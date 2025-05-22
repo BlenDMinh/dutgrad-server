@@ -2,196 +2,125 @@ package controllers
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/BlenDMinh/dutgrad-server/databases/entities"
-	"github.com/BlenDMinh/dutgrad-server/models"
+	"github.com/BlenDMinh/dutgrad-server/models/dtos"
 	"github.com/BlenDMinh/dutgrad-server/services"
 	"github.com/gin-gonic/gin"
 )
 
 type UserController struct {
 	CrudController[entities.User, uint]
+	service services.UserService
 }
 
 func NewUserController() *UserController {
+	crudController := NewCrudController(services.NewUserService())
+	service := crudController.service.(services.UserService)
 	return &UserController{
 		CrudController: *NewCrudController(services.NewUserService()),
+		service:        service,
 	}
 }
 
 func (uc *UserController) GetCurrentUser(ctx *gin.Context) {
-	userID, exists := ctx.Get("user_id")
-	if !exists {
-		ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(http.StatusInternalServerError, "User ID not found in context", nil))
+	userID, ok := ExtractID(ctx, "user_id")
+	if !ok {
 		return
 	}
 
-	user, err := uc.service.GetById(userID.(uint))
+	user, err := uc.service.GetById(userID)
 	if err != nil {
-		errMsg := err.Error()
-		ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(http.StatusInternalServerError, "Failed to retrieve user", &errMsg))
+		HandleError(ctx, http.StatusInternalServerError, "Failed to retrieve user", err)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, models.NewSuccessResponse(http.StatusOK, "User retrieved successfully", user))
+	HandleSuccess(ctx, "User retrieved successfully", user)
 }
 
 func (c *UserController) GetMySpaces(ctx *gin.Context) {
-	userId, exists := ctx.Get("user_id")
-	if !exists {
-		ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(http.StatusInternalServerError, "User ID not found in context", nil))
-		return
-	}
-	spaces, err := c.service.(*services.UserService).GetSpacesByUserId(userId.(uint))
-	if err != nil {
-		errMsg := err.Error()
-		ctx.JSON(
-			http.StatusInternalServerError,
-			models.NewErrorResponse(
-				http.StatusInternalServerError,
-				"error",
-				&errMsg,
-			),
-		)
+	userId, ok := ExtractID(ctx, "user_id")
+	if !ok {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, models.NewSuccessResponse(
-		http.StatusOK,
-		"Success",
-		gin.H{"spaces": spaces},
-	))
+	spaces, err := c.service.GetSpacesByUserId(userId)
+	if err != nil {
+		HandleError(ctx, http.StatusInternalServerError, "Failed to retrieve spaces", err)
+		return
+	}
+
+	HandleSuccess(ctx, "Success", dtos.SpaceListResponse{
+		Spaces: spaces,
+	})
 }
 
 func (c *UserController) GetUserSpaces(ctx *gin.Context) {
-	userIdParam := ctx.Param("user_id")
-	userId, err := strconv.ParseUint(userIdParam, 10, 32)
-	if err != nil {
-		errMsg := err.Error()
-		ctx.JSON(
-			http.StatusInternalServerError,
-			models.NewErrorResponse(
-				http.StatusInternalServerError,
-				"Invalid user ID",
-				&errMsg,
-			),
-		)
+	userId, ok := ExtractID(ctx, "id")
+	if !ok {
 		return
 	}
 
-	spaces, err := c.service.(*services.UserService).GetSpacesByUserId(uint(userId))
+	spaces, err := c.service.GetSpacesByUserId(userId)
 	if err != nil {
-		errMsg := err.Error()
-		ctx.JSON(
-			http.StatusInternalServerError,
-			models.NewErrorResponse(
-				http.StatusInternalServerError,
-				"error",
-				&errMsg,
-			),
-		)
+		HandleError(ctx, http.StatusInternalServerError, "Failed to retrieve spaces", err)
 		return
 	}
-	ctx.JSON(http.StatusOK, models.NewSuccessResponse(
-		http.StatusOK,
-		"Success",
-		gin.H{"spaces": spaces},
-	))
+
+	HandleSuccess(ctx, "Success", dtos.SpaceListResponse{
+		Spaces: spaces,
+	})
 }
 
 func (c *UserController) GetMyInvitations(ctx *gin.Context) {
-	userId, exists := ctx.Get("user_id")
-	if !exists {
-		ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(http.StatusInternalServerError, "User ID not found in context", nil))
+	userId, ok := ExtractID(ctx, "user_id")
+	if !ok {
 		return
 	}
 
-	invitations, err := c.service.(*services.UserService).GetInvitationsByUserId(userId.(uint))
+	invitations, err := c.service.GetInvitationsByUserId(userId)
 	if err != nil {
-		errMsg := err.Error()
-		ctx.JSON(
-			http.StatusInternalServerError,
-			models.NewErrorResponse(
-				http.StatusInternalServerError,
-				"Failed to retrieve invitations",
-				&errMsg,
-			),
-		)
+		HandleError(ctx, http.StatusInternalServerError, "Failed to retrieve invitations", err)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, models.NewSuccessResponse(
-		http.StatusOK,
-		"Invitations retrieved successfully",
-		gin.H{"invitations": invitations},
-	))
+	HandleSuccess(ctx, "Invitations retrieved successfully", dtos.SpaceInvitationListResponse{
+		Invitations: invitations,
+	})
 }
 
 func (c *UserController) SearchUsers(ctx *gin.Context) {
 	query := ctx.Query("query")
 	if query == "" {
-		ctx.JSON(
-			http.StatusBadRequest,
-			models.NewErrorResponse(
-				http.StatusBadRequest,
-				"Search query cannot be empty",
-				nil,
-			),
-		)
+		HandleError(ctx, http.StatusBadRequest, "Search query cannot be empty", nil)
 		return
 	}
 
-	users, err := c.service.(*services.UserService).SearchUsers(query)
+	users, err := c.service.SearchUsers(query)
 	if err != nil {
-		errMsg := err.Error()
-		ctx.JSON(
-			http.StatusInternalServerError,
-			models.NewErrorResponse(
-				http.StatusInternalServerError,
-				"Failed to search users",
-				&errMsg,
-			),
-		)
+		HandleError(ctx, http.StatusInternalServerError, "Failed to search users", err)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, models.NewSuccessResponse(
-		http.StatusOK,
-		"Users retrieved successfully",
-		gin.H{"users": users},
-	))
+	HandleSuccess(ctx, "Users retrieved successfully", dtos.UserListResponse{
+		Users: users,
+	})
 }
 
 func (c *UserController) GetUserTier(ctx *gin.Context) {
-	userID, exists := ctx.Get("user_id")
-	if !exists {
-		ctx.JSON(http.StatusUnauthorized, models.NewErrorResponse(
-			http.StatusUnauthorized,
-			"User ID not found in context",
-			nil,
-		))
+	userID, ok := ExtractID(ctx, "user_id")
+	if !ok {
 		return
 	}
 
-	service := c.service.(*services.UserService)
-	tierUsage, err := service.GetUserTierUsage(userID.(uint))
+	tierUsage, err := c.service.GetUserTierUsage(userID)
 	if err != nil {
-		errMsg := err.Error()
-		ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(
-			http.StatusInternalServerError,
-			"Failed to fetch user tier and usage",
-			&errMsg,
-		))
+		HandleError(ctx, http.StatusInternalServerError, "Failed to fetch user tier and usage", err)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, models.NewSuccessResponse(
-		http.StatusOK,
-		"User tier and usage fetched successfully",
-		gin.H{
-			"tier":  tierUsage.Tier,
-			"usage": tierUsage.Usage,
-		},
-	))
+	HandleSuccess(ctx, "User tier and usage fetched successfully", dtos.UserTierUsageResponse{
+		Tier:  tierUsage.Tier,
+		Usage: tierUsage.Usage,
+	})
 }

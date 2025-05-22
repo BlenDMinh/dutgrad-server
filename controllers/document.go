@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/BlenDMinh/dutgrad-server/databases/entities"
-	"github.com/BlenDMinh/dutgrad-server/models"
+	"github.com/BlenDMinh/dutgrad-server/models/dtos"
 	"github.com/BlenDMinh/dutgrad-server/services"
 	"github.com/gin-gonic/gin"
 )
@@ -25,143 +25,87 @@ func NewDocumentController() *DocumentController {
 }
 
 func (c *DocumentController) GetBySpaceID(ctx *gin.Context) {
-	spaceIDStr := ctx.Param("space_id")
-	spaceID, err := strconv.ParseUint(spaceIDStr, 10, 32)
-	if err != nil {
-		errMsg := err.Error()
-		ctx.JSON(
-			http.StatusInternalServerError,
-			models.NewErrorResponse(
-				http.StatusInternalServerError,
-				"Invalid space_id",
-				&errMsg,
-			),
-		)
+	spaceID, ok := ExtractID(ctx, "id")
+	if !ok {
 		return
 	}
 
-	documents, err := c.service.GetDocumentsBySpaceID(uint(spaceID))
+	documents, err := c.service.GetDocumentsBySpaceID(spaceID)
 	if err != nil {
-		errMsg := err.Error()
-		ctx.JSON(
-			http.StatusInternalServerError,
-			models.NewErrorResponse(
-				http.StatusInternalServerError,
-				"Failed to retrieve documents",
-				&errMsg,
-			),
-		)
+		HandleError(ctx, http.StatusInternalServerError, "Failed to retrieve documents", err)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, models.NewSuccessResponse(
-		http.StatusOK,
-		"Success",
-		gin.H{"documents": documents},
-	))
+	HandleSuccess(ctx, "Documents retrieved successfully", gin.H{"documents": documents})
 }
 
 func (c *DocumentController) UploadDocument(ctx *gin.Context) {
+	var req dtos.DocumentUploadRequest
 	spaceIDStr := ctx.Request.FormValue("space_id")
 	spaceID, err := strconv.ParseUint(spaceIDStr, 10, 32)
 	if err != nil {
-		errMsg := err.Error()
-		ctx.JSON(
-			http.StatusInternalServerError,
-			models.NewErrorResponse(
-				http.StatusBadRequest,
-				"Invalid space_id",
-				&errMsg,
-			),
-		)
+		HandleError(ctx, http.StatusBadRequest, "Invalid space_id", err)
 		return
 	}
+	req.SpaceID = uint(spaceID)
+	req.Description = ctx.Request.FormValue("description")
 
 	file, err := ctx.FormFile("file")
 	if err != nil {
-		errMsg := err.Error()
-		ctx.JSON(
-			http.StatusInternalServerError,
-			models.NewErrorResponse(
-				http.StatusBadRequest,
-				"Failed to get file",
-				&errMsg,
-			),
-		)
+		HandleError(ctx, http.StatusBadRequest, "Failed to get file", err)
 		return
 	}
-
 	mimeType := ctx.Request.Header.Get("Mime-Type")
-	description := ctx.Request.FormValue("description")
 
-	document, err := c.service.UploadDocument(file, uint(spaceID), mimeType, description)
+	document, err := c.service.UploadDocument(file, req.SpaceID, mimeType, req.Description)
 	if err != nil {
-		errMsg := err.Error()
 		statusCode := http.StatusInternalServerError
 
-		if strings.Contains(errMsg, "document limit reached") || strings.Contains(errMsg, "file size exceeds the limit") {
+		if strings.Contains(err.Error(), "document limit reached") ||
+			strings.Contains(err.Error(), "file size exceeds the limit") {
 			statusCode = http.StatusTooManyRequests
 		}
 
-		ctx.JSON(
-			statusCode,
-			models.NewErrorResponse(
-				statusCode,
-				"Failed to upload document",
-				&errMsg,
-			),
-		)
+		HandleError(ctx, statusCode, "Failed to upload document", err)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, models.NewSuccessResponse(
-		http.StatusOK,
-		"Success",
-		gin.H{"document": document},
-	))
+	HandleSuccess(ctx, "Document uploaded successfully", gin.H{"document": document})
 }
 
 func (c *DocumentController) DeleteDocument(ctx *gin.Context) {
-	userIDInterface, exists := ctx.Get("user_id")
-	if !exists {
-		ctx.JSON(http.StatusUnauthorized, models.NewErrorResponse(http.StatusUnauthorized, "Unauthorized", nil))
-		return
-	}
-	userID := userIDInterface.(uint)
-
-	docIDStr := ctx.Param("id")
-	docID, err := strconv.ParseUint(docIDStr, 10, 32)
-	if err != nil {
-		errMsg := err.Error()
-		ctx.JSON(http.StatusBadRequest, models.NewErrorResponse(http.StatusBadRequest, "Invalid document ID", &errMsg))
+	userID, ok := ExtractID(ctx, "user_id")
+	if !ok {
 		return
 	}
 
-	document, err := c.service.GetById(uint(docID))
+	docID, ok := ExtractID(ctx, "id")
+	if !ok {
+		return
+	}
+
+	document, err := c.service.GetById(docID)
 	if err != nil {
-		errMsg := err.Error()
-		ctx.JSON(http.StatusNotFound, models.NewErrorResponse(http.StatusNotFound, "Document not found", &errMsg))
+		HandleError(ctx, http.StatusNotFound, "Document not found", err)
 		return
 	}
 
 	role, err := c.service.GetUserRoleInSpace(userID, document.SpaceID)
 	if err != nil {
-		errMsg := err.Error()
-		ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(http.StatusInternalServerError, "Failed to get user role", &errMsg))
+		HandleError(ctx, http.StatusInternalServerError, "Failed to get user role", err)
 		return
 	}
 
 	if role != "owner" && role != "editor" {
-		ctx.JSON(http.StatusForbidden, models.NewErrorResponse(http.StatusForbidden, "You are not allowed to delete this document", nil))
+		HandleError(ctx, http.StatusForbidden, "You are not allowed to delete this document", nil)
 		return
 	}
 
-	err = c.service.DeleteDocument(uint(docID))
+	err = c.service.DeleteDocument(docID)
 	if err != nil {
-		errMsg := err.Error()
-		ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(http.StatusInternalServerError, "Failed to delete document", &errMsg))
+		HandleError(ctx, http.StatusInternalServerError, "Failed to delete document", err)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, models.NewSuccessResponse(http.StatusOK, "Document deleted successfully", gin.H{}))
+	HandleSuccess(ctx, "Document deleted successfully", nil)
 }

@@ -10,17 +10,28 @@ import (
 	"github.com/BlenDMinh/dutgrad-server/models/dtos"
 )
 
-type UserRepository struct {
+type UserRepository interface {
+	ICrudRepository[entities.User, uint]
+	GetSpacesByUserId(userId uint) ([]entities.Space, error)
+	GetByEmail(email string) (*entities.User, error)
+	UpdateMFAStatus(userID uint, enabled bool) error
+	GetInvitationsByUserId(InvitedUserId uint) ([]entities.SpaceInvitation, error)
+	SearchUsers(query string) ([]entities.User, error)
+	GetUserTier(userID uint) (*entities.Tier, error)
+	GetUserTierUsage(userID uint) (*dtos.TierUsageResponse, error)
+}
+
+type UserRepositoryImpl struct {
 	*CrudRepository[entities.User, uint]
 }
 
-func NewUserRepository() *UserRepository {
-	return &UserRepository{
+func NewUserRepository() UserRepository {
+	return &UserRepositoryImpl{
 		CrudRepository: NewCrudRepository[entities.User, uint](),
 	}
 }
 
-func (r *UserRepository) GetSpacesByUserId(userId uint) ([]dtos.UserSpaceDTO, error) {
+func (r *UserRepositoryImpl) GetSpacesByUserId(userId uint) ([]entities.Space, error) {
 	db := databases.GetDB()
 	var spaceUsers []entities.SpaceUser
 	err := db.Preload("Space").Preload("SpaceRole").
@@ -30,27 +41,15 @@ func (r *UserRepository) GetSpacesByUserId(userId uint) ([]dtos.UserSpaceDTO, er
 	if err != nil {
 		return nil, err
 	}
-	userSpaces := make([]dtos.UserSpaceDTO, 0, len(spaceUsers))
-	for _, su := range spaceUsers {
-		userSpace := dtos.UserSpaceDTO{
-			ID:              su.Space.ID,
-			Name:            su.Space.Name,
-			Description:     su.Space.Description,
-			PrivacyStatus:   su.Space.PrivacyStatus,
-			DocumentLimit:   su.Space.DocumentLimit,
-			FileSizeLimitKb: su.Space.FileSizeLimitKb,
-			ApiCallLimit:    su.Space.ApiCallLimit,
-			CreatedAt:       su.Space.CreatedAt,
-			UpdatedAt:       su.Space.UpdatedAt,
-			Role:            su.SpaceRole,
-		}
-		userSpaces = append(userSpaces, userSpace)
+	var userSpaces []entities.Space
+	for _, spaceUser := range spaceUsers {
+		userSpaces = append(userSpaces, spaceUser.Space)
 	}
 
 	return userSpaces, nil
 }
 
-func (r *UserRepository) GetByEmail(email string) (*entities.User, error) {
+func (r *UserRepositoryImpl) GetByEmail(email string) (*entities.User, error) {
 	db := databases.GetDB()
 	var user entities.User
 	if err := db.Where("email = ?", email).First(&user).Error; err != nil {
@@ -59,12 +58,12 @@ func (r *UserRepository) GetByEmail(email string) (*entities.User, error) {
 	return &user, nil
 }
 
-func (r *UserRepository) UpdateMFAStatus(userID uint, enabled bool) error {
+func (r *UserRepositoryImpl) UpdateMFAStatus(userID uint, enabled bool) error {
 	db := databases.GetDB()
 	return db.Model(&entities.User{}).Where("id = ?", userID).Update("mfa_enabled", enabled).Error
 }
 
-func (r *UserRepository) Transaction(fn func(*databases.Transaction) error) error {
+func (r *UserRepositoryImpl) Transaction(fn func(*databases.Transaction) error) error {
 	db := databases.GetDB()
 	tx := db.Begin()
 
@@ -82,16 +81,7 @@ func (r *UserRepository) Transaction(fn func(*databases.Transaction) error) erro
 	return tx.Commit().Error
 }
 
-func (r *UserRepository) GetUserByEmail(email string) (*entities.User, error) {
-	var user entities.User
-	db := databases.GetDB()
-	if err := db.Where("email = ?", email).First(&user).Error; err != nil {
-		return nil, err
-	}
-	return &user, nil
-}
-
-func (r *UserRepository) GetInvitationsByUserId(InvitedUserId uint) ([]entities.SpaceInvitation, error) {
+func (r *UserRepositoryImpl) GetInvitationsByUserId(InvitedUserId uint) ([]entities.SpaceInvitation, error) {
 	var invitations []entities.SpaceInvitation
 	db := databases.GetDB()
 	err := db.Preload("Space").Preload("Inviter").
@@ -102,7 +92,7 @@ func (r *UserRepository) GetInvitationsByUserId(InvitedUserId uint) ([]entities.
 	return invitations, nil
 }
 
-func (r *UserRepository) SearchUsers(query string) ([]entities.User, error) {
+func (r *UserRepositoryImpl) SearchUsers(query string) ([]entities.User, error) {
 	var users []entities.User
 	db := databases.GetDB()
 
@@ -121,7 +111,7 @@ func (r *UserRepository) SearchUsers(query string) ([]entities.User, error) {
 	return users, nil
 }
 
-func (r *UserRepository) GetUserTier(userID uint) (*entities.Tier, error) {
+func (r *UserRepositoryImpl) GetUserTier(userID uint) (*entities.Tier, error) {
 	db := databases.GetDB()
 	var user entities.User
 
@@ -136,7 +126,7 @@ func (r *UserRepository) GetUserTier(userID uint) (*entities.Tier, error) {
 	return user.Tier, nil
 }
 
-func (s *UserRepository) GetUserTierUsage(userID uint) (*dtos.TierUsageResponse, error) {
+func (s *UserRepositoryImpl) GetUserTierUsage(userID uint) (*dtos.TierUsageResponse, error) {
 	tier, err := s.GetUserTier(userID)
 	if err != nil {
 		return nil, err

@@ -61,6 +61,7 @@ func GetRouter() *gin.Engine {
 			mfaManagementGroup.Use(middlewares.AuthMiddleware())
 			{
 				mfaManagementGroup.GET("/status", authController.GetMFAStatus)
+
 				mfaManagementGroup.POST("/setup", authController.SetupMFA)
 				mfaManagementGroup.POST("/verify", authController.ConfirmMFA)
 				mfaManagementGroup.POST("/disable", authController.DisableMFA)
@@ -78,46 +79,64 @@ func GetRouter() *gin.Engine {
 		{
 			documentGroup.GET("", documentController.Retrieve)
 			documentGroup.GET("/:id", documentController.RetrieveOne)
-			documentGroup.PUT("/:id", documentController.Update)
-			documentGroup.PATCH("/:id", documentController.Patch)
+
 			documentGroup.POST("/upload", middlewares.AuthMiddleware(), documentController.UploadDocument)
+
+			documentGroup.PUT("/:id", documentController.Update)
+
+			documentGroup.PATCH("/:id", documentController.Patch)
+
 			documentGroup.DELETE("/:id", middlewares.AuthMiddleware(), documentController.DeleteDocument)
 		}
 
 		spaceController := controllers.NewSpaceController()
+		apiKeyController := controllers.NewSpaceApiKeyController()
 		spaceGroup := v1.Group("/spaces")
 		{
 			spaceGroup.GET("", spaceController.Retrieve)
-			spaceGroup.POST("", middlewares.AuthMiddleware(), spaceController.CreateSpace)
-			spaceGroup.GET("/:id", spaceController.RetrieveOne)
-			spaceGroup.PUT("/:id", spaceController.Update)
-			spaceGroup.PATCH("/:id", spaceController.Patch)
-			spaceGroup.DELETE("/:id", spaceController.Delete)
-			spaceGroup.GET("/:id/members", spaceController.GetMembers)
-			spaceGroup.GET("/:id/invitations", spaceController.GetInvitations)
-			spaceGroup.PUT("/:id/invitation-link", middlewares.AuthMiddleware(), spaceController.GetInvitationLink)
-			spaceGroup.POST("/:id/invitations", middlewares.AuthMiddleware(), spaceController.InviteUserToSpace)
 			spaceGroup.GET("/roles", spaceController.GetSpaceRoles)
-			spaceGroup.GET("/:id/user-role", middlewares.AuthMiddleware(), spaceController.GetUserRole)
-			spaceGroup.POST("/join", middlewares.AuthMiddleware(), spaceController.JoinSpace)
-			spaceGroup.POST("/:id/join-public", middlewares.AuthMiddleware(), spaceController.JoinPublicSpace)
 			spaceGroup.GET("/public", spaceController.GetPublicSpaces)
 			spaceGroup.GET("/popular", spaceController.GetPopularSpaces)
+			spaceGroup.GET("/user/:id", userController.GetUserSpaces)
 			spaceGroup.GET("/me", middlewares.AuthMiddleware(), userController.GetMySpaces)
-			spaceGroup.HEAD("/count/me", middlewares.AuthMiddleware(), spaceController.CountMySpaces)
-			spaceGroup.GET("/user/:user_id", userController.GetUserSpaces)
-			spaceGroup.POST("/:id/chat", middlewares.RequireApiKey(), spaceController.Chat)
-			spaceGroup.PATCH("/:id/members/:memberId/role", middlewares.AuthMiddleware(), spaceController.UpdateUserRole)
-			spaceGroup.DELETE("/:id/members/:memberId", middlewares.AuthMiddleware(), spaceController.RemoveMember)
-		}
 
-		apiKeyController := controllers.NewSpaceApiKeyController()
-		apiKeyGroup := v1.Group("spaces/:id/api-keys")
-		{
-			apiKeyGroup.POST("", middlewares.AuthMiddleware(), apiKeyController.Create)
-			apiKeyGroup.GET("", middlewares.AuthMiddleware(), apiKeyController.List)
-			apiKeyGroup.GET("/:keyId", middlewares.AuthMiddleware(), apiKeyController.GetOne)
-			apiKeyGroup.DELETE("/:keyId", middlewares.AuthMiddleware(), apiKeyController.Delete)
+			spaceGroup.HEAD("/count/me", middlewares.AuthMiddleware(), spaceController.CountMySpaces)
+
+			spaceGroup.POST("/join", middlewares.AuthMiddleware(), spaceController.JoinSpace)
+			spaceGroup.POST("", middlewares.AuthMiddleware(), spaceController.CreateSpace)
+
+			detailGroup := spaceGroup.Group("/:id")
+			detailGroup.Use(middlewares.AuthMiddleware())
+			{
+				detailGroup.GET("", spaceController.RetrieveOne)
+				detailGroup.PUT("", spaceController.Update)
+				detailGroup.PATCH("", spaceController.Patch)
+				detailGroup.DELETE("", spaceController.Delete)
+
+				detailGroup.GET("/members", spaceController.GetMembers)
+				detailGroup.GET("/invitations", spaceController.GetInvitations)
+				detailGroup.GET("/user-role", spaceController.GetUserRole)
+				detailGroup.GET("/documents", documentController.GetBySpaceID)
+
+				detailGroup.PUT("/invitation-link", spaceController.GetInvitationLink)
+
+				detailGroup.POST("/invitations", spaceController.InviteUserToSpace)
+				detailGroup.POST("/join-public", spaceController.JoinPublicSpace)
+				detailGroup.POST("/chat", middlewares.RequireApiKey(), spaceController.Chat)
+
+				detailGroup.PATCH("/members/:memberId/role", middlewares.AuthMiddleware(), spaceController.UpdateUserRole)
+
+				detailGroup.DELETE("/members/:memberId", middlewares.AuthMiddleware(), spaceController.RemoveMember)
+				apiKeyGroup := detailGroup.Group("/api-keys")
+				{
+					apiKeyGroup.GET("", apiKeyController.List)
+					apiKeyGroup.GET("/:keyId", apiKeyController.GetOne)
+
+					apiKeyGroup.POST("", apiKeyController.Create)
+
+					apiKeyGroup.DELETE("/:keyId", apiKeyController.Delete)
+				}
+			}
 		}
 		spaceInvitationController := controllers.NewSpaceInvitationController()
 		spaceInvitationGroup := v1.Group("/space-invitations")
@@ -125,16 +144,14 @@ func GetRouter() *gin.Engine {
 			spaceInvitationGroup.GET("/count", middlewares.AuthMiddleware(), spaceInvitationController.GetInvitationCount)
 			spaceInvitationGroup.GET("", spaceInvitationController.Retrieve)
 			spaceInvitationGroup.GET("/:id", spaceInvitationController.RetrieveOne)
+
 			spaceInvitationGroup.PUT("/:id", spaceInvitationController.Update)
-			spaceInvitationGroup.PATCH("/:id", spaceInvitationController.Patch)
-			spaceInvitationGroup.DELETE("/:id", spaceInvitationController.Delete)
 			spaceInvitationGroup.PUT("/:id/accept", middlewares.AuthMiddleware(), spaceInvitationController.AcceptInvitation)
 			spaceInvitationGroup.PUT("/:id/reject", middlewares.AuthMiddleware(), spaceInvitationController.RejectInvitation)
-		}
 
-		spaceDocumentsGroup := v1.Group("space/:space_id/documents")
-		{
-			spaceDocumentsGroup.GET("", documentController.GetBySpaceID)
+			spaceInvitationGroup.PATCH("/:id", spaceInvitationController.Patch)
+
+			spaceInvitationGroup.DELETE("/:id", spaceInvitationController.Delete)
 		}
 
 		spaceInvitationLinkController := controllers.NewSpaceInvitationLinkController()
@@ -145,21 +162,27 @@ func GetRouter() *gin.Engine {
 
 		userQuerySessionController := controllers.NewUserQuerySessionController()
 		userQuerySessionGroup := v1.Group("/user-query-sessions")
+		userQuerySessionGroup.Use(middlewares.AuthMiddleware())
 		{
 			userQuerySessionController.RegisterCRUD(userQuerySessionGroup)
-			userQuerySessionGroup.POST("/begin-chat-session", middlewares.AuthMiddleware(), userQuerySessionController.BeginChatSession)
-			userQuerySessionGroup.GET("/me", middlewares.AuthMiddleware(), userQuerySessionController.GetMyChatSessions)
-			userQuerySessionGroup.HEAD("/me", middlewares.AuthMiddleware(), userQuerySessionController.CountMyChatSessions)
-			userQuerySessionGroup.GET("/:id/temp-message", middlewares.AuthMiddleware(), userQuerySessionController.GetTempMessageByID)
-			userQuerySessionGroup.GET("/:id/history", middlewares.AuthMiddleware(), userQuerySessionController.GetChatHistory)
-			userQuerySessionGroup.DELETE("/:id/history", middlewares.AuthMiddleware(), userQuerySessionController.ClearChatHistory)
+			userQuerySessionGroup.GET("/me", userQuerySessionController.GetMyChatSessions)
+			userQuerySessionGroup.GET("/:id/temp-message", userQuerySessionController.GetTempMessageByID)
+			userQuerySessionGroup.GET("/:id/history", userQuerySessionController.GetChatHistory)
+
+			userQuerySessionGroup.HEAD("/me", userQuerySessionController.CountMyChatSessions)
+
+			userQuerySessionGroup.POST("/begin-chat-session", userQuerySessionController.BeginChatSession)
+
+			userQuerySessionGroup.DELETE("/:id/history", userQuerySessionController.ClearChatHistory)
 		}
 
 		userQueryController := controllers.NewUserQueryController()
 		userQueryGroup := v1.Group("/user-query")
+		userQueryGroup.Use(middlewares.AuthMiddleware())
 		{
 			userQueryController.RegisterCRUD(userQueryGroup)
-			userQueryGroup.POST("/ask", middlewares.AuthMiddleware(), userQueryController.Ask)
+
+			userQueryGroup.POST("/ask", userQueryController.Ask)
 		}
 	}
 
