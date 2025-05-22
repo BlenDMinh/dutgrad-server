@@ -2,7 +2,6 @@ package dtos
 
 import "github.com/BlenDMinh/dutgrad-server/databases/entities"
 
-// SpaceInvitationResponse represents a space invitation response
 type SpaceInvitationResponse struct {
 	ID        uint   `json:"id"`
 	UserID    uint   `json:"user_id"`
