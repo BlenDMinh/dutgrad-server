@@ -8,12 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// ExtractID extracts an ID from either URL parameters or context
-// If paramName is "user_id", extracts user ID from context
-// Otherwise extracts from URL parameters
-// Returns the ID and true if successful, 0 and false otherwise (also handles error response)
 func ExtractID(ctx *gin.Context, paramName string) (uint, bool) {
-	// For user ID from context
 	if paramName == "user_id" {
 		userID, exists := ctx.Get("user_id")
 		if !exists {
@@ -27,7 +22,6 @@ func ExtractID(ctx *gin.Context, paramName string) (uint, bool) {
 		return userID.(uint), true
 	}
 
-	// For ID from URL parameter
 	idStr := ctx.Param(paramName)
 	id, err := strconv.ParseUint(idStr, 10, 32)
 	if err != nil {
@@ -42,7 +36,6 @@ func ExtractID(ctx *gin.Context, paramName string) (uint, bool) {
 	return uint(id), true
 }
 
-// HandleBindJSON binds and validates JSON request
 func HandleBindJSON[T any](ctx *gin.Context, req *T) bool {
 	if err := ctx.ShouldBindJSON(req); err != nil {
 		errMsg := err.Error()
@@ -56,7 +49,6 @@ func HandleBindJSON[T any](ctx *gin.Context, req *T) bool {
 	return true
 }
 
-// HandleSuccess handles successful responses
 func HandleSuccess(ctx *gin.Context, message string, data interface{}) {
 	ctx.JSON(http.StatusOK, models.NewSuccessResponse(
 		http.StatusOK,
@@ -65,7 +57,6 @@ func HandleSuccess(ctx *gin.Context, message string, data interface{}) {
 	))
 }
 
-// HandleCreated handles creation success responses
 func HandleCreated(ctx *gin.Context, message string, data interface{}) {
 	ctx.JSON(http.StatusCreated, models.NewSuccessResponse(
 		http.StatusCreated,
@@ -74,7 +65,6 @@ func HandleCreated(ctx *gin.Context, message string, data interface{}) {
 	))
 }
 
-// HandleError handles error responses
 func HandleError(ctx *gin.Context, statusCode int, message string, err error) {
 	var errMsg *string
 	if err != nil {

@@ -23,7 +23,6 @@ const (
 	MFATokenExpiration   = 5 * time.Minute
 )
 
-// Helper function to redirect to error page
 func redirectToError(ctx *gin.Context, code string, message string) {
 	errorURL := fmt.Sprintf("%s/auth/error?code=%s&message=%s",
 		configs.GetEnv().WebClientURL,
@@ -53,21 +52,18 @@ func NewOAuthController() *OAuthController {
 }
 
 func (c *OAuthController) HandleOAuthCallback(ctx *gin.Context, providerName string) {
-	// Check if provider exists
 	provider, exists := c.providers[providerName]
 	if !exists {
 		redirectToError(ctx, "invalid_provider", "Provider not supported")
 		return
 	}
 
-	// Check if code is provided
 	code := ctx.Query("code")
 	if code == "" {
 		redirectToError(ctx, "missing_code", "Authorization code missing")
 		return
 	}
 
-	// Exchange code for token
 	token, err := provider.GetConfig().Exchange(context.Background(), code)
 	if err != nil {
 		log.Printf("Code exchange error: %v", err)
@@ -75,7 +71,6 @@ func (c *OAuthController) HandleOAuthCallback(ctx *gin.Context, providerName str
 		return
 	}
 
-	// Get user info from provider
 	userInfo, err := provider.GetUserInfo(token)
 	if err != nil {
 		log.Printf("Failed to get user info: %v", err)
@@ -83,7 +78,6 @@ func (c *OAuthController) HandleOAuthCallback(ctx *gin.Context, providerName str
 		return
 	}
 
-	// Create external auth DTO
 	externalAuthDto := dtos.ExternalAuthDTO{
 		Email:      userInfo.Email,
 		Username:   userInfo.Username,
@@ -91,7 +85,6 @@ func (c *OAuthController) HandleOAuthCallback(ctx *gin.Context, providerName str
 		AuthType:   userInfo.Provider,
 	}
 
-	// Authenticate with external provider
 	user, jwt_token, expiresAt, IsNewUser, err := c.authService.ExternalAuth(&externalAuthDto)
 	if err != nil {
 		log.Printf("Authentication error: %v", err)
@@ -99,7 +92,6 @@ func (c *OAuthController) HandleOAuthCallback(ctx *gin.Context, providerName str
 		return
 	}
 
-	// Check if MFA is enabled for user
 	mfaEnabled, err := c.mfaService.GetUserMFAStatus(user.ID)
 	if err != nil {
 		log.Printf("Failed to check MFA status: %v", err)
@@ -107,7 +99,6 @@ func (c *OAuthController) HandleOAuthCallback(ctx *gin.Context, providerName str
 		return
 	}
 
-	// Handle MFA flow if enabled
 	if mfaEnabled {
 		tempToken, _, err := c.mfaService.CreateTempToken(user.ID)
 		if err != nil {
@@ -122,7 +113,6 @@ func (c *OAuthController) HandleOAuthCallback(ctx *gin.Context, providerName str
 			return
 		}
 
-		// Redirect to MFA verification
 		mfaURL := fmt.Sprintf("%s/auth/mfa?state=%s",
 			configs.GetEnv().WebClientURL,
 			tempToken)
@@ -131,7 +121,6 @@ func (c *OAuthController) HandleOAuthCallback(ctx *gin.Context, providerName str
 		return
 	}
 
-	// Create state token and store auth response in Redis
 	stateToken := uuid.New().String()
 	authResponse := dtos.AuthResponse{
 		Token:     jwt_token,
@@ -146,7 +135,6 @@ func (c *OAuthController) HandleOAuthCallback(ctx *gin.Context, providerName str
 		return
 	}
 
-	// Redirect to success page with state token
 	successURL := fmt.Sprintf("%s/auth/success?state=%s",
 		configs.GetEnv().WebClientURL,
 		stateToken)
@@ -158,7 +146,6 @@ func (c *OAuthController) GoogleOAuth(ctx *gin.Context) {
 	c.HandleOAuthCallback(ctx, "google")
 }
 
-// ExchangeState exchanges a state token for authentication data
 func (c *OAuthController) ExchangeState(ctx *gin.Context) {
 	state := ctx.Query("state")
 	if state == "" {
@@ -172,7 +159,6 @@ func (c *OAuthController) ExchangeState(ctx *gin.Context) {
 		return
 	}
 
-	// Delete token after use
 	c.redisService.Del(state)
 
 	var authResponse dtos.AuthResponse
@@ -184,7 +170,6 @@ func (c *OAuthController) ExchangeState(ctx *gin.Context) {
 	HandleSuccess(ctx, "Token exchange successful", authResponse)
 }
 
-// VerifyOAuthMFA handles MFA verification for OAuth login
 func (c *OAuthController) VerifyOAuthMFA(ctx *gin.Context) {
 	var req dtos.MFALoginCompleteRequest
 	if !HandleBindJSON(ctx, &req) {
@@ -209,31 +194,26 @@ func (c *OAuthController) VerifyOAuthMFA(ctx *gin.Context) {
 		return
 	}
 
-	// Verify MFA code
 	isValid := c.mfaService.VerifyMFACode(userID, req.Code, req.UseBackupCode)
 	if !isValid {
 		HandleError(ctx, http.StatusUnauthorized, "Invalid MFA code", nil)
 		return
 	}
 
-	// Get user information
 	user, err := services.NewUserService().GetById(userID)
 	if err != nil {
 		HandleError(ctx, http.StatusInternalServerError, "Failed to get user", err)
 		return
 	}
 
-	// Generate token
 	token, expiresAt, err := c.mfaService.CompleteLogin(userID)
 	if err != nil {
 		HandleError(ctx, http.StatusInternalServerError, "Failed to complete login", err)
 		return
 	}
 
-	// Delete temporary token
 	c.redisService.Del(tempToken)
 
-	// Return authentication response
 	HandleSuccess(ctx, "Login successful", dtos.AuthResponse{
 		Token:   token,
 		User:    user,
@@ -241,7 +221,6 @@ func (c *OAuthController) VerifyOAuthMFA(ctx *gin.Context) {
 	})
 }
 
-// GetAuthorizationURL generates an authorization URL for the specified provider
 func (c *OAuthController) GetAuthorizationURL(ctx *gin.Context, providerName string) {
 	provider, exists := c.providers[providerName]
 	if !exists {
@@ -258,7 +237,6 @@ func (c *OAuthController) GetAuthorizationURL(ctx *gin.Context, providerName str
 	})
 }
 
-// GoogleAuthURL generates a Google OAuth authorization URL
 func (c *OAuthController) GoogleAuthURL(ctx *gin.Context) {
 	c.GetAuthorizationURL(ctx, "google")
 }

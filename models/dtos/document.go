@@ -2,13 +2,11 @@ package dtos
 
 import "time"
 
-// DocumentUploadRequest represents the request body for uploading a document
 type DocumentUploadRequest struct {
 	SpaceID     uint   `form:"space_id" binding:"required"`
 	Description string `form:"description"`
 }
 
-// DocumentResponse represents the response after creating or retrieving a document
 type DocumentResponse struct {
 	ID               uint      `json:"id"`
 	Name             string    `json:"name"`
