@@ -1,0 +1,74 @@
+{"Time":"2025-05-21T20:46:58.3865504+07:00","Action":"start","Package":"command-line-arguments"}
+{"Time":"2025-05-21T20:47:00.4065172+07:00","Action":"run","Package":"command-line-arguments","Test":"TestGoogleOAuth"}
+{"Time":"2025-05-21T20:47:00.4070258+07:00","Action":"output","Package":"command-line-arguments","Test":"TestGoogleOAuth","Output":"=== RUN   TestGoogleOAuth\n"}
+{"Time":"2025-05-21T20:47:00.4070258+07:00","Action":"output","Package":"command-line-arguments","Test":"TestGoogleOAuth","Output":"[GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.\n"}
+{"Time":"2025-05-21T20:47:00.4070258+07:00","Action":"output","Package":"command-line-arguments","Test":"TestGoogleOAuth","Output":"\n"}
+{"Time":"2025-05-21T20:47:00.4070258+07:00","Action":"output","Package":"command-line-arguments","Test":"TestGoogleOAuth","Output":"[GIN-debug] [WARNING] Running in \"debug\" mode. Switch to \"release\" mode in production.\n"}
+{"Time":"2025-05-21T20:47:00.4070258+07:00","Action":"output","Package":"command-line-arguments","Test":"TestGoogleOAuth","Output":" - using env:\texport GIN_MODE=release\n"}
+{"Time":"2025-05-21T20:47:00.4070258+07:00","Action":"output","Package":"command-line-arguments","Test":"TestGoogleOAuth","Output":" - using code:\tgin.SetMode(gin.ReleaseMode)\n"}
+{"Time":"2025-05-21T20:47:00.4070258+07:00","Action":"output","Package":"command-line-arguments","Test":"TestGoogleOAuth","Output":"\n"}
+{"Time":"2025-05-21T20:47:00.4070258+07:00","Action":"output","Package":"command-line-arguments","Test":"TestGoogleOAuth","Output":"[GIN-debug] GET    /auth/oauth/google        --\u003e command-line-arguments.GoogleOAuthHandler (3 handlers)\n"}
+{"Time":"2025-05-21T20:47:00.4070258+07:00","Action":"output","Package":"command-line-arguments","Test":"TestGoogleOAuth","Output":"[GIN-debug] POST   /auth/external-auth       --\u003e command-line-arguments.ExternalAuthHandler (3 handlers)\n"}
+{"Time":"2025-05-21T20:47:00.4070258+07:00","Action":"output","Package":"command-line-arguments","Test":"TestGoogleOAuth","Output":"[GIN-debug] POST   /auth/exchange-state      --\u003e command-line-arguments.ExchangeStateHandler (3 handlers)\n"}
+{"Time":"2025-05-21T20:47:00.4070258+07:00","Action":"output","Package":"command-line-arguments","Test":"TestGoogleOAuth","Output":"[GIN] 2025/05/21 - 20:47:00 | 307 |       508.6µs |                 | GET      \"/auth/oauth/google\"\n"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"output","Package":"command-line-arguments","Test":"TestGoogleOAuth","Output":"--- PASS: TestGoogleOAuth (0.00s)\n"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"pass","Package":"command-line-arguments","Test":"TestGoogleOAuth","Elapsed":0}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"run","Package":"command-line-arguments","Test":"TestExchangeState"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"output","Package":"command-line-arguments","Test":"TestExchangeState","Output":"=== RUN   TestExchangeState\n"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"output","Package":"command-line-arguments","Test":"TestExchangeState","Output":"[GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.\n"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"output","Package":"command-line-arguments","Test":"TestExchangeState","Output":"\n"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"output","Package":"command-line-arguments","Test":"TestExchangeState","Output":"[GIN-debug] [WARNING] Running in \"debug\" mode. Switch to \"release\" mode in production.\n"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"output","Package":"command-line-arguments","Test":"TestExchangeState","Output":" - using env:\texport GIN_MODE=release\n"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"output","Package":"command-line-arguments","Test":"TestExchangeState","Output":" - using code:\tgin.SetMode(gin.ReleaseMode)\n"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"output","Package":"command-line-arguments","Test":"TestExchangeState","Output":"\n"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"output","Package":"command-line-arguments","Test":"TestExchangeState","Output":"[GIN-debug] GET    /auth/oauth/google        --\u003e command-line-arguments.GoogleOAuthHandler (3 handlers)\n"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"output","Package":"command-line-arguments","Test":"TestExchangeState","Output":"[GIN-debug] POST   /auth/external-auth       --\u003e command-line-arguments.ExternalAuthHandler (3 handlers)\n"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"output","Package":"command-line-arguments","Test":"TestExchangeState","Output":"[GIN-debug] POST   /auth/exchange-state      --\u003e command-line-arguments.ExchangeStateHandler (3 handlers)\n"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"run","Package":"command-line-arguments","Test":"TestExchangeState/✅_Exchange_thành_công"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"output","Package":"command-line-arguments","Test":"TestExchangeState/✅_Exchange_thành_công","Output":"=== RUN   TestExchangeState/✅_Exchange_thành_công\n"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"output","Package":"command-line-arguments","Test":"TestExchangeState/✅_Exchange_thành_công","Output":"[GIN] 2025/05/21 - 20:47:00 | 200 |            0s |                 | POST     \"/auth/exchange-state\"\n"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"run","Package":"command-line-arguments","Test":"TestExchangeState/❌_State_không_hợp_lệ"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"output","Package":"command-line-arguments","Test":"TestExchangeState/❌_State_không_hợp_lệ","Output":"=== RUN   TestExchangeState/❌_State_không_hợp_lệ\n"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"output","Package":"command-line-arguments","Test":"TestExchangeState/❌_State_không_hợp_lệ","Output":"[GIN] 2025/05/21 - 20:47:00 | 400 |            0s |                 | POST     \"/auth/exchange-state\"\n"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"run","Package":"command-line-arguments","Test":"TestExchangeState/❌_Code_không_hợp_lệ"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"output","Package":"command-line-arguments","Test":"TestExchangeState/❌_Code_không_hợp_lệ","Output":"=== RUN   TestExchangeState/❌_Code_không_hợp_lệ\n"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"output","Package":"command-line-arguments","Test":"TestExchangeState/❌_Code_không_hợp_lệ","Output":"[GIN] 2025/05/21 - 20:47:00 | 400 |            0s |                 | POST     \"/auth/exchange-state\"\n"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"output","Package":"command-line-arguments","Test":"TestExchangeState","Output":"--- PASS: TestExchangeState (0.00s)\n"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"output","Package":"command-line-arguments","Test":"TestExchangeState/✅_Exchange_thành_công","Output":"    --- PASS: TestExchangeState/✅_Exchange_thành_công (0.00s)\n"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"pass","Package":"command-line-arguments","Test":"TestExchangeState/✅_Exchange_thành_công","Elapsed":0}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"output","Package":"command-line-arguments","Test":"TestExchangeState/❌_State_không_hợp_lệ","Output":"    --- PASS: TestExchangeState/❌_State_không_hợp_lệ (0.00s)\n"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"pass","Package":"command-line-arguments","Test":"TestExchangeState/❌_State_không_hợp_lệ","Elapsed":0}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"output","Package":"command-line-arguments","Test":"TestExchangeState/❌_Code_không_hợp_lệ","Output":"    --- PASS: TestExchangeState/❌_Code_không_hợp_lệ (0.00s)\n"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"pass","Package":"command-line-arguments","Test":"TestExchangeState/❌_Code_không_hợp_lệ","Elapsed":0}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"pass","Package":"command-line-arguments","Test":"TestExchangeState","Elapsed":0}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"run","Package":"command-line-arguments","Test":"TestExternalAuth"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"output","Package":"command-line-arguments","Test":"TestExternalAuth","Output":"=== RUN   TestExternalAuth\n"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"output","Package":"command-line-arguments","Test":"TestExternalAuth","Output":"[GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.\n"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"output","Package":"command-line-arguments","Test":"TestExternalAuth","Output":"\n"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"output","Package":"command-line-arguments","Test":"TestExternalAuth","Output":"[GIN-debug] [WARNING] Running in \"debug\" mode. Switch to \"release\" mode in production.\n"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"output","Package":"command-line-arguments","Test":"TestExternalAuth","Output":" - using env:\texport GIN_MODE=release\n"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"output","Package":"command-line-arguments","Test":"TestExternalAuth","Output":" - using code:\tgin.SetMode(gin.ReleaseMode)\n"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"output","Package":"command-line-arguments","Test":"TestExternalAuth","Output":"\n"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"output","Package":"command-line-arguments","Test":"TestExternalAuth","Output":"[GIN-debug] GET    /auth/oauth/google        --\u003e command-line-arguments.GoogleOAuthHandler (3 handlers)\n"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"output","Package":"command-line-arguments","Test":"TestExternalAuth","Output":"[GIN-debug] POST   /auth/external-auth       --\u003e command-line-arguments.ExternalAuthHandler (3 handlers)\n"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"output","Package":"command-line-arguments","Test":"TestExternalAuth","Output":"[GIN-debug] POST   /auth/exchange-state      --\u003e command-line-arguments.ExchangeStateHandler (3 handlers)\n"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"run","Package":"command-line-arguments","Test":"TestExternalAuth/✅_External_auth_thành_công"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"output","Package":"command-line-arguments","Test":"TestExternalAuth/✅_External_auth_thành_công","Output":"=== RUN   TestExternalAuth/✅_External_auth_thành_công\n"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"output","Package":"command-line-arguments","Test":"TestExternalAuth/✅_External_auth_thành_công","Output":"[GIN] 2025/05/21 - 20:47:00 | 200 |            0s |                 | POST     \"/auth/external-auth\"\n"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"run","Package":"command-line-arguments","Test":"TestExternalAuth/❌_Token_không_hợp_lệ"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"output","Package":"command-line-arguments","Test":"TestExternalAuth/❌_Token_không_hợp_lệ","Output":"=== RUN   TestExternalAuth/❌_Token_không_hợp_lệ\n"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"output","Package":"command-line-arguments","Test":"TestExternalAuth/❌_Token_không_hợp_lệ","Output":"[GIN] 2025/05/21 - 20:47:00 | 401 |            0s |                 | POST     \"/auth/external-auth\"\n"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"run","Package":"command-line-arguments","Test":"TestExternalAuth/❌_Auth_type_không_được_hỗ_trợ"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"output","Package":"command-line-arguments","Test":"TestExternalAuth/❌_Auth_type_không_được_hỗ_trợ","Output":"=== RUN   TestExternalAuth/❌_Auth_type_không_được_hỗ_trợ\n"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"output","Package":"command-line-arguments","Test":"TestExternalAuth/❌_Auth_type_không_được_hỗ_trợ","Output":"[GIN] 2025/05/21 - 20:47:00 | 400 |            0s |                 | POST     \"/auth/external-auth\"\n"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"output","Package":"command-line-arguments","Test":"TestExternalAuth","Output":"--- PASS: TestExternalAuth (0.00s)\n"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"output","Package":"command-line-arguments","Test":"TestExternalAuth/✅_External_auth_thành_công","Output":"    --- PASS: TestExternalAuth/✅_External_auth_thành_công (0.00s)\n"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"pass","Package":"command-line-arguments","Test":"TestExternalAuth/✅_External_auth_thành_công","Elapsed":0}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"output","Package":"command-line-arguments","Test":"TestExternalAuth/❌_Token_không_hợp_lệ","Output":"    --- PASS: TestExternalAuth/❌_Token_không_hợp_lệ (0.00s)\n"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"pass","Package":"command-line-arguments","Test":"TestExternalAuth/❌_Token_không_hợp_lệ","Elapsed":0}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"output","Package":"command-line-arguments","Test":"TestExternalAuth/❌_Auth_type_không_được_hỗ_trợ","Output":"    --- PASS: TestExternalAuth/❌_Auth_type_không_được_hỗ_trợ (0.00s)\n"}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"pass","Package":"command-line-arguments","Test":"TestExternalAuth/❌_Auth_type_không_được_hỗ_trợ","Elapsed":0}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"pass","Package":"command-line-arguments","Test":"TestExternalAuth","Elapsed":0}
+{"Time":"2025-05-21T20:47:00.4075538+07:00","Action":"output","Package":"command-line-arguments","Output":"PASS\n"}
+{"Time":"2025-05-21T20:47:00.4096859+07:00","Action":"output","Package":"command-line-arguments","Output":"ok  \tcommand-line-arguments\t2.023s\n"}
+{"Time":"2025-05-21T20:47:00.4096859+07:00","Action":"pass","Package":"command-line-arguments","Elapsed":2.023}

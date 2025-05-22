@@ -1,0 +1,60 @@
+{"Time":"2025-05-21T20:20:08.6330728+07:00","Action":"start","Package":"command-line-arguments"}
+{"Time":"2025-05-21T20:20:10.5476057+07:00","Action":"run","Package":"command-line-arguments","Test":"TestLoginAPI"}
+{"Time":"2025-05-21T20:20:10.5476057+07:00","Action":"output","Package":"command-line-arguments","Test":"TestLoginAPI","Output":"=== RUN   TestLoginAPI\n"}
+{"Time":"2025-05-21T20:20:10.5476057+07:00","Action":"output","Package":"command-line-arguments","Test":"TestLoginAPI","Output":"[GIN-debug] [WARNING] Creating an Engine instance with the Logger and Recovery middleware already attached.\n"}
+{"Time":"2025-05-21T20:20:10.5476057+07:00","Action":"output","Package":"command-line-arguments","Test":"TestLoginAPI","Output":"\n"}
+{"Time":"2025-05-21T20:20:10.552412+07:00","Action":"output","Package":"command-line-arguments","Test":"TestLoginAPI","Output":"[GIN-debug] [WARNING] Running in \"debug\" mode. Switch to \"release\" mode in production.\n"}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"output","Package":"command-line-arguments","Test":"TestLoginAPI","Output":" - using env:\texport GIN_MODE=release\n"}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"output","Package":"command-line-arguments","Test":"TestLoginAPI","Output":" - using code:\tgin.SetMode(gin.ReleaseMode)\n"}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"output","Package":"command-line-arguments","Test":"TestLoginAPI","Output":"\n"}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"output","Package":"command-line-arguments","Test":"TestLoginAPI","Output":"[GIN-debug] POST   /auth/login               --\u003e command-line-arguments.LoginHandler (3 handlers)\n"}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"run","Package":"command-line-arguments","Test":"TestLoginAPI/✅_Đăng_nhập_thành_công"}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"output","Package":"command-line-arguments","Test":"TestLoginAPI/✅_Đăng_nhập_thành_công","Output":"=== RUN   TestLoginAPI/✅_Đăng_nhập_thành_công\n"}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"output","Package":"command-line-arguments","Test":"TestLoginAPI/✅_Đăng_nhập_thành_công","Output":"[GIN] 2025/05/21 - 20:20:10 | 200 |       530.8µs |                 | POST     \"/auth/login\"\n"}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"run","Package":"command-line-arguments","Test":"TestLoginAPI/✅_Đăng_nhập_Google_thành_công"}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"output","Package":"command-line-arguments","Test":"TestLoginAPI/✅_Đăng_nhập_Google_thành_công","Output":"=== RUN   TestLoginAPI/✅_Đăng_nhập_Google_thành_công\n"}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"output","Package":"command-line-arguments","Test":"TestLoginAPI/✅_Đăng_nhập_Google_thành_công","Output":"[GIN] 2025/05/21 - 20:20:10 | 200 |            0s |                 | POST     \"/auth/login\"\n"}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"run","Package":"command-line-arguments","Test":"TestLoginAPI/✅_Đăng_nhập_yêu_cầu_MFA"}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"output","Package":"command-line-arguments","Test":"TestLoginAPI/✅_Đăng_nhập_yêu_cầu_MFA","Output":"=== RUN   TestLoginAPI/✅_Đăng_nhập_yêu_cầu_MFA\n"}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"output","Package":"command-line-arguments","Test":"TestLoginAPI/✅_Đăng_nhập_yêu_cầu_MFA","Output":"[GIN] 2025/05/21 - 20:20:10 | 200 |            0s |                 | POST     \"/auth/login\"\n"}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"run","Package":"command-line-arguments","Test":"TestLoginAPI/❌_Email_không_tồn_tại"}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"output","Package":"command-line-arguments","Test":"TestLoginAPI/❌_Email_không_tồn_tại","Output":"=== RUN   TestLoginAPI/❌_Email_không_tồn_tại\n"}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"output","Package":"command-line-arguments","Test":"TestLoginAPI/❌_Email_không_tồn_tại","Output":"[GIN] 2025/05/21 - 20:20:10 | 401 |            0s |                 | POST     \"/auth/login\"\n"}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"run","Package":"command-line-arguments","Test":"TestLoginAPI/❌_Sai_mật_khẩu"}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"output","Package":"command-line-arguments","Test":"TestLoginAPI/❌_Sai_mật_khẩu","Output":"=== RUN   TestLoginAPI/❌_Sai_mật_khẩu\n"}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"output","Package":"command-line-arguments","Test":"TestLoginAPI/❌_Sai_mật_khẩu","Output":"[GIN] 2025/05/21 - 20:20:10 | 401 |            0s |                 | POST     \"/auth/login\"\n"}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"run","Package":"command-line-arguments","Test":"TestLoginAPI/❌_Thiếu_email"}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"output","Package":"command-line-arguments","Test":"TestLoginAPI/❌_Thiếu_email","Output":"=== RUN   TestLoginAPI/❌_Thiếu_email\n"}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"output","Package":"command-line-arguments","Test":"TestLoginAPI/❌_Thiếu_email","Output":"[GIN] 2025/05/21 - 20:20:10 | 400 |            0s |                 | POST     \"/auth/login\"\n"}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"run","Package":"command-line-arguments","Test":"TestLoginAPI/❌_Thiếu_mật_khẩu"}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"output","Package":"command-line-arguments","Test":"TestLoginAPI/❌_Thiếu_mật_khẩu","Output":"=== RUN   TestLoginAPI/❌_Thiếu_mật_khẩu\n"}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"output","Package":"command-line-arguments","Test":"TestLoginAPI/❌_Thiếu_mật_khẩu","Output":"[GIN] 2025/05/21 - 20:20:10 | 400 |            0s |                 | POST     \"/auth/login\"\n"}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"run","Package":"command-line-arguments","Test":"TestLoginAPI/❌_Thiếu_auth_type_khi_đăng_nhập_Google"}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"output","Package":"command-line-arguments","Test":"TestLoginAPI/❌_Thiếu_auth_type_khi_đăng_nhập_Google","Output":"=== RUN   TestLoginAPI/❌_Thiếu_auth_type_khi_đăng_nhập_Google\n"}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"output","Package":"command-line-arguments","Test":"TestLoginAPI/❌_Thiếu_auth_type_khi_đăng_nhập_Google","Output":"[GIN] 2025/05/21 - 20:20:10 | 400 |            0s |                 | POST     \"/auth/login\"\n"}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"run","Package":"command-line-arguments","Test":"TestLoginAPI/❌_Body_rỗng"}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"output","Package":"command-line-arguments","Test":"TestLoginAPI/❌_Body_rỗng","Output":"=== RUN   TestLoginAPI/❌_Body_rỗng\n"}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"output","Package":"command-line-arguments","Test":"TestLoginAPI/❌_Body_rỗng","Output":"[GIN] 2025/05/21 - 20:20:10 | 400 |            0s |                 | POST     \"/auth/login\"\n"}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"output","Package":"command-line-arguments","Test":"TestLoginAPI","Output":"--- PASS: TestLoginAPI (0.00s)\n"}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"output","Package":"command-line-arguments","Test":"TestLoginAPI/✅_Đăng_nhập_thành_công","Output":"    --- PASS: TestLoginAPI/✅_Đăng_nhập_thành_công (0.00s)\n"}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"pass","Package":"command-line-arguments","Test":"TestLoginAPI/✅_Đăng_nhập_thành_công","Elapsed":0}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"output","Package":"command-line-arguments","Test":"TestLoginAPI/✅_Đăng_nhập_Google_thành_công","Output":"    --- PASS: TestLoginAPI/✅_Đăng_nhập_Google_thành_công (0.00s)\n"}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"pass","Package":"command-line-arguments","Test":"TestLoginAPI/✅_Đăng_nhập_Google_thành_công","Elapsed":0}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"output","Package":"command-line-arguments","Test":"TestLoginAPI/✅_Đăng_nhập_yêu_cầu_MFA","Output":"    --- PASS: TestLoginAPI/✅_Đăng_nhập_yêu_cầu_MFA (0.00s)\n"}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"pass","Package":"command-line-arguments","Test":"TestLoginAPI/✅_Đăng_nhập_yêu_cầu_MFA","Elapsed":0}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"output","Package":"command-line-arguments","Test":"TestLoginAPI/❌_Email_không_tồn_tại","Output":"    --- PASS: TestLoginAPI/❌_Email_không_tồn_tại (0.00s)\n"}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"pass","Package":"command-line-arguments","Test":"TestLoginAPI/❌_Email_không_tồn_tại","Elapsed":0}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"output","Package":"command-line-arguments","Test":"TestLoginAPI/❌_Sai_mật_khẩu","Output":"    --- PASS: TestLoginAPI/❌_Sai_mật_khẩu (0.00s)\n"}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"pass","Package":"command-line-arguments","Test":"TestLoginAPI/❌_Sai_mật_khẩu","Elapsed":0}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"output","Package":"command-line-arguments","Test":"TestLoginAPI/❌_Thiếu_email","Output":"    --- PASS: TestLoginAPI/❌_Thiếu_email (0.00s)\n"}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"pass","Package":"command-line-arguments","Test":"TestLoginAPI/❌_Thiếu_email","Elapsed":0}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"output","Package":"command-line-arguments","Test":"TestLoginAPI/❌_Thiếu_mật_khẩu","Output":"    --- PASS: TestLoginAPI/❌_Thiếu_mật_khẩu (0.00s)\n"}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"pass","Package":"command-line-arguments","Test":"TestLoginAPI/❌_Thiếu_mật_khẩu","Elapsed":0}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"output","Package":"command-line-arguments","Test":"TestLoginAPI/❌_Thiếu_auth_type_khi_đăng_nhập_Google","Output":"    --- PASS: TestLoginAPI/❌_Thiếu_auth_type_khi_đăng_nhập_Google (0.00s)\n"}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"pass","Package":"command-line-arguments","Test":"TestLoginAPI/❌_Thiếu_auth_type_khi_đăng_nhập_Google","Elapsed":0}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"output","Package":"command-line-arguments","Test":"TestLoginAPI/❌_Body_rỗng","Output":"    --- PASS: TestLoginAPI/❌_Body_rỗng (0.00s)\n"}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"pass","Package":"command-line-arguments","Test":"TestLoginAPI/❌_Body_rỗng","Elapsed":0}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"pass","Package":"command-line-arguments","Test":"TestLoginAPI","Elapsed":0}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"output","Package":"command-line-arguments","Output":"PASS\n"}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"output","Package":"command-line-arguments","Output":"ok  \tcommand-line-arguments\t1.920s\n"}
+{"Time":"2025-05-21T20:20:10.552656+07:00","Action":"pass","Package":"command-line-arguments","Elapsed":1.92}

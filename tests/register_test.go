@@ -14,11 +14,13 @@ import (
 // Mock router để test API
 func setupRouter() *gin.Engine {
 	r := gin.Default()
-	r.POST("/register", RegisterHandler)
+	authGroup := r.Group("/auth")
+	{
+		authGroup.POST("/register", RegisterHandler)
+	}
 	return r
 }
 
-// Mock database để kiểm tra email tồn tại
 var mockUsers = map[string]bool{
 	"existing@example.com": true,
 }
@@ -162,7 +164,7 @@ func TestRegisterAPI(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			body, _ := json.Marshal(tc.requestBody)
-			req, _ := http.NewRequest("POST", "/register", bytes.NewBuffer(body))
+			req, _ := http.NewRequest("POST", "/auth/register", bytes.NewBuffer(body))
 			req.Header.Set("Content-Type", "application/json")
 
 			w := httptest.NewRecorder()
