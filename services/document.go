@@ -11,26 +11,38 @@ import (
 	"github.com/BlenDMinh/dutgrad-server/helpers"
 )
 
-type DocumentService struct {
+type DocumentService interface {
+	ICrudService[entities.Document, uint]
+	GetDocumentsBySpaceID(spaceID uint) ([]entities.Document, error)
+	CheckDocumentLimits(spaceID uint, fileSize int64) error
+	UploadDocument(fileHeader *multipart.FileHeader, spaceID uint, mimeType string, description string) (*entities.Document, error)
+	GetUserRoleInSpace(userID, spaceID uint) (string, error)
+	DeleteDocument(documentID uint) error
+}
+
+type documentServiceImpl struct {
 	CrudService[entities.Document, uint]
-	repo             *repositories.DocumentRepository
+	repo             repositories.DocumentRepository
 	ragServerService *RAGServerService
 }
 
-func NewDocumentService() *DocumentService {
-	repo := repositories.NewDocumentRepository()
-	return &DocumentService{
-		CrudService:      *NewCrudService(repo),
+func NewDocumentService(
+	ragServerService *RAGServerService,
+) DocumentService {
+	crudService := NewCrudService(repositories.NewDocumentRepository())
+	repo := crudService.repo.(repositories.DocumentRepository)
+	return &documentServiceImpl{
+		CrudService:      *crudService,
 		repo:             repo,
-		ragServerService: NewRAGServerService(),
+		ragServerService: ragServerService,
 	}
 }
 
-func (s *DocumentService) GetDocumentsBySpaceID(spaceID uint) ([]entities.Document, error) {
+func (s *documentServiceImpl) GetDocumentsBySpaceID(spaceID uint) ([]entities.Document, error) {
 	return s.repo.GetBySpaceID(spaceID)
 }
 
-func (s *DocumentService) CheckDocumentLimits(spaceID uint, fileSize int64) error {
+func (s *documentServiceImpl) CheckDocumentLimits(spaceID uint, fileSize int64) error {
 	db := databases.GetDB()
 
 	var space entities.Space
@@ -55,7 +67,7 @@ func (s *DocumentService) CheckDocumentLimits(spaceID uint, fileSize int64) erro
 	return nil
 }
 
-func (s *DocumentService) UploadDocument(fileHeader *multipart.FileHeader, spaceID uint, mimeType string, description string) (*entities.Document, error) {
+func (s *documentServiceImpl) UploadDocument(fileHeader *multipart.FileHeader, spaceID uint, mimeType string, description string) (*entities.Document, error) {
 	if err := s.CheckDocumentLimits(spaceID, fileHeader.Size); err != nil {
 		return nil, err
 	}
@@ -100,11 +112,11 @@ func (s *DocumentService) UploadDocument(fileHeader *multipart.FileHeader, space
 	return document, nil
 }
 
-func (s *DocumentService) GetUserRoleInSpace(userID, spaceID uint) (string, error) {
+func (s *documentServiceImpl) GetUserRoleInSpace(userID, spaceID uint) (string, error) {
 	return s.repo.GetUserRoleInSpace(userID, spaceID)
 }
 
-func (s *DocumentService) DeleteDocument(documentID uint) error {
+func (s *documentServiceImpl) DeleteDocument(documentID uint) error {
 	document, err := s.GetById(documentID)
 	if err != nil {
 		return err
@@ -121,5 +133,5 @@ func (s *DocumentService) DeleteDocument(documentID uint) error {
 		return fmt.Errorf("failed to delete file from S3: %v", err)
 	}
 
-	return s.repo.DeleteDocumentByID(documentID)
+	return s.repo.Delete(documentID)
 }

@@ -8,24 +8,33 @@ import (
 	"github.com/BlenDMinh/dutgrad-server/databases/entities"
 )
 
-type UserQuerySessionRepository struct {
+type UserQuerySessionRepository interface {
+	ICrudRepository[entities.UserQuerySession, uint]
+	CountByUserID(userID uint) (int64, error)
+	GetByUserID(userID uint) ([]entities.UserQuerySession, error)
+	GetTempMessageByID(id uint) (*string, error)
+	GetChatHistoryBySessionID(sessionID uint) ([]map[string]interface{}, error)
+	ClearChatHistory(sessionID uint) error
+}
+
+type userQuerySessionRepositoryImpl struct {
 	*CrudRepository[entities.UserQuerySession, uint]
 }
 
-func NewUserQuerySessionRepository() *UserQuerySessionRepository {
-	return &UserQuerySessionRepository{
+func NewUserQuerySessionRepository() UserQuerySessionRepository {
+	return &userQuerySessionRepositoryImpl{
 		CrudRepository: NewCrudRepository[entities.UserQuerySession, uint](),
 	}
 }
 
-func (s *UserQuerySessionRepository) CountByUserID(userID uint) (int64, error) {
+func (s *userQuerySessionRepositoryImpl) CountByUserID(userID uint) (int64, error) {
 	var count int64
 	db := databases.GetDB()
 	err := db.Model(&entities.UserQuerySession{}).Where("user_id = ?", userID).Count(&count).Error
 	return count, err
 }
 
-func (s *UserQuerySessionRepository) GetByUserID(userID uint) ([]entities.UserQuerySession, error) {
+func (s *userQuerySessionRepositoryImpl) GetByUserID(userID uint) ([]entities.UserQuerySession, error) {
 	var sessions []entities.UserQuerySession
 	db := databases.GetDB()
 	err := db.Where("user_query_sessions.user_id = ?", userID).
@@ -40,7 +49,7 @@ func (s *UserQuerySessionRepository) GetByUserID(userID uint) ([]entities.UserQu
 	return sessions, err
 }
 
-func (s *UserQuerySessionRepository) GetTempMessageByID(id uint) (*string, error) {
+func (s *userQuerySessionRepositoryImpl) GetTempMessageByID(id uint) (*string, error) {
 	var session entities.UserQuerySession
 	db := databases.GetDB()
 	err := db.Select("temp_message").Where("id = ?", id).First(&session).Error
@@ -51,7 +60,7 @@ func (s *UserQuerySessionRepository) GetTempMessageByID(id uint) (*string, error
 	return session.TempMessage, nil
 }
 
-func (s *UserQuerySessionRepository) GetChatHistoryBySessionID(sessionID uint) ([]map[string]interface{}, error) {
+func (s *userQuerySessionRepositoryImpl) GetChatHistoryBySessionID(sessionID uint) ([]map[string]interface{}, error) {
 	var chatHistories []entities.ChatHistory
 	db := databases.GetDB()
 
@@ -86,7 +95,7 @@ func (s *UserQuerySessionRepository) GetChatHistoryBySessionID(sessionID uint) (
 	return result, nil
 }
 
-func (s *UserQuerySessionRepository) ClearChatHistory(sessionID uint) error {
+func (s *userQuerySessionRepositoryImpl) ClearChatHistory(sessionID uint) error {
 	db := databases.GetDB()
 
 	err := db.Where("session_id = ?", sessionID).Delete(&entities.ChatHistory{}).Error

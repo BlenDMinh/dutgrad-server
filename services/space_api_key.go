@@ -5,16 +5,25 @@ import (
 	"github.com/BlenDMinh/dutgrad-server/databases/repositories"
 )
 
-type SpaceApiKeyService struct {
-	CrudService[entities.SpaceAPIKey, uint]
+type SpaceApiKeyService interface {
+	ICrudService[entities.SpaceAPIKey, uint]
+	GetAllBySpaceID(spaceID uint) ([]entities.SpaceAPIKey, error)
 }
 
-func NewSpaceApiKeyService() *SpaceApiKeyService {
-	return &SpaceApiKeyService{
-		CrudService: *NewCrudService(repositories.NewSpaceApiKeyRepository()),
+type spaceApiKeyServiceImpl struct {
+	CrudService[entities.SpaceAPIKey, uint]
+	repo repositories.SpaceApiKeyRepository
+}
+
+func NewSpaceApiKeyService() SpaceApiKeyService {
+	crudService := NewCrudService(repositories.NewSpaceApiKeyRepository())
+	repo := crudService.repo.(repositories.SpaceApiKeyRepository)
+	return &spaceApiKeyServiceImpl{
+		CrudService: *crudService,
+		repo:        repo,
 	}
 }
 
-func (s *SpaceApiKeyService) GetAllBySpaceID(spaceID uint) ([]entities.SpaceAPIKey, error) {
-	return s.repo.(*repositories.SpaceApiKeyRepository).GetAllBySpaceID(spaceID)
+func (s *spaceApiKeyServiceImpl) GetAllBySpaceID(spaceID uint) ([]entities.SpaceAPIKey, error) {
+	return s.repo.GetAllBySpaceID(spaceID)
 }

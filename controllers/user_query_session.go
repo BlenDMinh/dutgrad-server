@@ -12,11 +12,16 @@ import (
 
 type UserQuerySessionController struct {
 	CrudController[entities.UserQuerySession, uint]
+	service services.UserQuerySessionService
 }
 
-func NewUserQuerySessionController() *UserQuerySessionController {
+func NewUserQuerySessionController(
+	service services.UserQuerySessionService,
+) *UserQuerySessionController {
+	crudController := NewCrudController(service)
 	return &UserQuerySessionController{
-		CrudController: *NewCrudController(services.NewUserQuerySessionService()),
+		CrudController: *crudController,
+		service:        service,
 	}
 }
 
@@ -51,7 +56,7 @@ func (c *UserQuerySessionController) GetMyChatSessions(ctx *gin.Context) {
 		return
 	}
 
-	sessions, err := c.service.(*services.UserQuerySessionService).GetChatSessionsByUserID(userID)
+	sessions, err := c.service.GetChatSessionsByUserID(userID)
 	if err != nil {
 		HandleError(ctx, http.StatusInternalServerError, "Failed to fetch sessions", err)
 		return
@@ -66,7 +71,7 @@ func (c *UserQuerySessionController) CountMyChatSessions(ctx *gin.Context) {
 		return
 	}
 
-	count, err := c.service.(*services.UserQuerySessionService).CountChatSessionsByUserID(userID)
+	count, err := c.service.CountChatSessionsByUserID(userID)
 	if err != nil {
 		HandleError(ctx, http.StatusInternalServerError, "Failed to count chat sessions", err)
 		return
@@ -82,7 +87,7 @@ func (c *UserQuerySessionController) GetTempMessageByID(ctx *gin.Context) {
 		return
 	}
 
-	tempMessage, err := c.service.(*services.UserQuerySessionService).GetTempMessageByID(sessionID)
+	tempMessage, err := c.service.GetTempMessageByID(sessionID)
 	if err != nil {
 		HandleError(ctx, http.StatusInternalServerError, "Failed to fetch temp message", err)
 		return
@@ -102,7 +107,7 @@ func (c *UserQuerySessionController) GetChatHistory(ctx *gin.Context) {
 		return
 	}
 
-	history, err := c.service.(*services.UserQuerySessionService).GetChatHistoryBySessionID(sessionID, userID)
+	history, err := c.service.GetChatHistoryBySessionID(sessionID, userID)
 	if err != nil {
 		HandleError(ctx, http.StatusInternalServerError, "Failed to fetch chat history", err)
 		return
@@ -122,7 +127,7 @@ func (c *UserQuerySessionController) ClearChatHistory(ctx *gin.Context) {
 		return
 	}
 
-	err := c.service.(*services.UserQuerySessionService).ClearChatHistoryBySessionID(sessionID, userID)
+	err := c.service.ClearChatHistoryBySessionID(sessionID, userID)
 	if err != nil {
 		HandleError(ctx, http.StatusInternalServerError, "Failed to clear chat history", err)
 		return

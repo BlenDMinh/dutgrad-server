@@ -5,28 +5,40 @@ import (
 	"github.com/BlenDMinh/dutgrad-server/databases/repositories"
 )
 
-type SpaceInvitationService struct {
-	CrudService[entities.SpaceInvitation, uint]
+type SpaceInvitationService interface {
+	ICrudService[entities.SpaceInvitation, uint]
+	AcceptInvitation(invitationId uint, userId uint) error
+	RejectInvitation(invitationId uint, userId uint) error
+	CancelInvitation(spaceID uint, invitedUserID uint) error
+	CountInvitationByUserID(userID uint) (int64, error)
 }
 
-func NewSpaceInvitationService() *SpaceInvitationService {
-	return &SpaceInvitationService{
-		CrudService: *NewCrudService(repositories.NewSpaceInvitationRepository()),
+type spaceInvitationServiceImpl struct {
+	CrudService[entities.SpaceInvitation, uint]
+	repo repositories.SpaceInvitationRepository
+}
+
+func NewSpaceInvitationService() SpaceInvitationService {
+	crudService := NewCrudService(repositories.NewSpaceInvitationRepository())
+	repo := crudService.repo.(repositories.SpaceInvitationRepository)
+	return &spaceInvitationServiceImpl{
+		CrudService: *crudService,
+		repo:        repo,
 	}
 }
 
-func (s *SpaceInvitationService) AcceptInvitation(invitationId uint, userId uint) error {
-	return s.repo.(*repositories.SpaceInvitationRepository).AcceptInvitation(invitationId, userId)
+func (s *spaceInvitationServiceImpl) AcceptInvitation(invitationId uint, userId uint) error {
+	return s.repo.AcceptInvitation(invitationId, userId)
 }
 
-func (s *SpaceInvitationService) RejectInvitation(invitationId uint, userId uint) error {
-	return s.repo.(*repositories.SpaceInvitationRepository).RejectInvitation(invitationId, userId)
+func (s *spaceInvitationServiceImpl) RejectInvitation(invitationId uint, userId uint) error {
+	return s.repo.RejectInvitation(invitationId, userId)
 }
 
-func (s *SpaceInvitationService) CancelInvitation(spaceID uint, invitedUserID uint) error {
-	return s.repo.(*repositories.SpaceInvitationRepository).CancelInvitation(spaceID, invitedUserID)
+func (s *spaceInvitationServiceImpl) CancelInvitation(spaceID uint, invitedUserID uint) error {
+	return s.repo.CancelInvitation(spaceID, invitedUserID)
 }
 
-func (s *SpaceInvitationService) CountInvitationByUserID(userID uint) (int64, error) {
-	return s.repo.(*repositories.SpaceInvitationRepository).CountInvitationByUserID(userID)
+func (s *spaceInvitationServiceImpl) CountInvitationByUserID(userID uint) (int64, error) {
+	return s.repo.CountInvitationByUserID(userID)
 }

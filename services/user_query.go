@@ -5,12 +5,20 @@ import (
 	"github.com/BlenDMinh/dutgrad-server/databases/repositories"
 )
 
-type UserQueryService struct {
-	CrudService[entities.UserQuery, uint]
+type UserQueryService interface {
+	ICrudService[entities.UserQuery, uint]
 }
 
-func NewUserQueryService() *UserQueryService {
-	return &UserQueryService{
-		CrudService: *NewCrudService(repositories.NewUserQueryRepository()),
+type UserQueryServiceImpl struct {
+	CrudService[entities.UserQuery, uint]
+	repo repositories.UserQueryRepository
+}
+
+func NewUserQueryService() UserQueryService {
+	crudService := NewCrudService(repositories.NewUserQueryRepository())
+	repo := crudService.repo.(repositories.UserQueryRepository)
+	return &UserQueryServiceImpl{
+		CrudService: *crudService,
+		repo:        repo,
 	}
 }

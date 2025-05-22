@@ -19,12 +19,17 @@ type AuthController struct {
 	mfaService   *services.MFAService
 }
 
-func NewAuthController() *AuthController {
+func NewAuthController(
+	authService *services.AuthService,
+	userService services.UserService,
+	redisService *services.RedisService,
+	mfaService *services.MFAService,
+) *AuthController {
 	return &AuthController{
-		authService:  services.NewAuthService(),
-		userService:  services.NewUserService(),
-		redisService: services.NewRedisService(),
-		mfaService:   services.NewMFAService(),
+		authService:  authService,
+		userService:  userService,
+		redisService: redisService,
+		mfaService:   mfaService,
 	}
 }
 

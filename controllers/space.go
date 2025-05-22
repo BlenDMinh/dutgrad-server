@@ -17,18 +17,22 @@ import (
 
 type SpaceController struct {
 	CrudController[entities.Space, uint]
+	service services.SpaceService
 }
 
-func NewSpaceController() *SpaceController {
-	invitationLinkRepo := repositories.NewSpaceInvitationLinkRepository()
+func NewSpaceController(
+	service services.SpaceService,
+) *SpaceController {
+	crudController := NewCrudController(service)
 	return &SpaceController{
-		CrudController: *NewCrudController(services.NewSpaceService(*invitationLinkRepo)),
+		CrudController: *crudController,
+		service:        service,
 	}
 }
 
 func (c *SpaceController) GetPublicSpaces(ctx *gin.Context) {
 	params := helpers.GetPaginationParams(ctx, repositories.DefaultPageSize)
-	result, err := c.service.(*services.SpaceService).GetPublicSpaces(params.Page, params.PageSize)
+	result, err := c.service.GetPublicSpaces(params.Page, params.PageSize)
 	if err != nil {
 		HandleError(ctx, http.StatusInternalServerError, "Failed to fetch public spaces", err)
 		return
@@ -58,7 +62,7 @@ func (c *SpaceController) CreateSpace(ctx *gin.Context) {
 		return
 	}
 
-	createdSpace, err := c.service.(*services.SpaceService).CreateSpace(model, userID)
+	createdSpace, err := c.service.CreateSpace(model, userID)
 	if err != nil {
 		statusCode := http.StatusInternalServerError
 
@@ -79,7 +83,7 @@ func (c *SpaceController) GetMembers(ctx *gin.Context) {
 		return
 	}
 
-	members, err := c.service.(*services.SpaceService).GetMembers(spaceId)
+	members, err := c.service.GetMembers(spaceId)
 	if err != nil {
 		HandleError(ctx, http.StatusInternalServerError, "Failed to retrieve members", err)
 		return
@@ -94,7 +98,7 @@ func (c *SpaceController) GetInvitations(ctx *gin.Context) {
 		return
 	}
 
-	invitations, err := c.service.(*services.SpaceService).GetInvitations(spaceId)
+	invitations, err := c.service.GetInvitations(spaceId)
 	if err != nil {
 		HandleError(ctx, http.StatusInternalServerError, "Failed to retrieve invitations", err)
 		return
@@ -121,7 +125,7 @@ func (c *SpaceController) GetInvitationLink(ctx *gin.Context) {
 
 	spaceRoleID := req.SpaceRoleID
 
-	service := c.service.(*services.SpaceService)
+	service := c.service
 	invitationLink, err := service.GetOrCreateSpaceInvitationLink(spaceId, spaceRoleID)
 	if err != nil {
 		HandleError(ctx, http.StatusInternalServerError, "Failed to create invitation link", err)
@@ -159,7 +163,7 @@ func (c *SpaceController) JoinSpace(ctx *gin.Context) {
 		return
 	}
 
-	spaceId, err := c.service.(*services.SpaceService).JoinSpaceWithToken(token, userID)
+	spaceId, err := c.service.JoinSpaceWithToken(token, userID)
 	if err != nil {
 		statusCode := http.StatusInternalServerError
 		message := "Failed to join space"
@@ -192,7 +196,7 @@ func (c *SpaceController) GetUserRole(ctx *gin.Context) {
 		return
 	}
 
-	role, err := c.service.(*services.SpaceService).GetUserRole(userID, spaceId)
+	role, err := c.service.GetUserRole(userID, spaceId)
 	if err != nil {
 		HandleError(ctx, http.StatusForbidden, "User does not have access to this space", err)
 		return
@@ -236,7 +240,7 @@ func (c *SpaceController) InviteUserToSpace(ctx *gin.Context) {
 		invitation.InvitedUserID = user.ID
 	}
 
-	isMember, err := c.service.(*services.SpaceService).IsMemberOfSpace(invitation.InvitedUserID, spaceId)
+	isMember, err := c.service.IsMemberOfSpace(invitation.InvitedUserID, spaceId)
 	if err != nil {
 		HandleError(ctx, http.StatusInternalServerError, "Failed to check membership", err)
 		return
@@ -247,7 +251,7 @@ func (c *SpaceController) InviteUserToSpace(ctx *gin.Context) {
 		return
 	}
 
-	_, err = c.service.(*services.SpaceService).CreateInvitation(&invitation)
+	_, err = c.service.CreateInvitation(&invitation)
 	if err != nil {
 		statusCode := http.StatusInternalServerError
 		message := "Failed to create invitation"
@@ -265,7 +269,7 @@ func (c *SpaceController) InviteUserToSpace(ctx *gin.Context) {
 }
 
 func (c *SpaceController) GetSpaceRoles(ctx *gin.Context) {
-	roles, err := c.service.(*services.SpaceService).GetSpaceRoles()
+	roles, err := c.service.GetSpaceRoles()
 	if err != nil {
 		HandleError(ctx, http.StatusInternalServerError, "Failed to fetch roles", err)
 		return
@@ -285,7 +289,7 @@ func (c *SpaceController) JoinPublicSpace(ctx *gin.Context) {
 		return
 	}
 
-	err := c.service.(*services.SpaceService).JoinPublicSpace(spaceID, userID)
+	err := c.service.JoinPublicSpace(spaceID, userID)
 	if err != nil {
 		statusCode := http.StatusInternalServerError
 		message := "Failed to join public space"
@@ -315,7 +319,7 @@ func (c *SpaceController) CountMySpaces(ctx *gin.Context) {
 		return
 	}
 
-	count, err := c.service.(*services.SpaceService).CountSpacesByUserID(userID)
+	count, err := c.service.CountSpacesByUserID(userID)
 	if err != nil {
 		HandleError(ctx, http.StatusInternalServerError, "Failed to count spaces", err)
 		return
@@ -333,7 +337,7 @@ func (c *SpaceController) GetPopularSpaces(ctx *gin.Context) {
 		return
 	}
 
-	popularSpaces, err := c.service.(*services.SpaceService).GetPopularSpaces(order)
+	popularSpaces, err := c.service.GetPopularSpaces(order)
 	if err != nil {
 		HandleError(ctx, http.StatusInternalServerError, "Failed to get popular spaces", err)
 		return
@@ -403,7 +407,7 @@ func (c *SpaceController) UpdateUserRole(ctx *gin.Context) {
 		return
 	}
 
-	service := c.service.(*services.SpaceService)
+	service := c.service
 	err = service.UpdateMemberRole(spaceId, uint(memberId), req.RoleID, userID)
 	if err != nil {
 		HandleError(ctx, http.StatusInternalServerError, "Failed to update user role", err)
@@ -431,7 +435,7 @@ func (c *SpaceController) RemoveMember(ctx *gin.Context) {
 		return
 	}
 
-	service := c.service.(*services.SpaceService)
+	service := c.service
 	err = service.RemoveMember(spaceId, uint(memberId), userID)
 	if err != nil {
 		statusCode := http.StatusInternalServerError

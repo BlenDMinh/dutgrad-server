@@ -10,7 +10,18 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func GetRouter() *gin.Engine {
+func GetRouter(
+	userController *controllers.UserController,
+	authController *controllers.AuthController,
+	oauthController *controllers.OAuthController,
+	documentController *controllers.DocumentController,
+	spaceController *controllers.SpaceController,
+	spaceInvitationController *controllers.SpaceInvitationController,
+	spaceInvitationLinkController *controllers.SpaceInvitationLinkController,
+	userQuerySessionController *controllers.UserQuerySessionController,
+	userQueryController *controllers.UserQueryController,
+	spaceApiKeyController *controllers.SpaceApiKeyController,
+) *gin.Engine {
 	env := configs.GetEnv()
 	router := gin.New()
 	router.Use(cors.New(cors.Config{
@@ -33,7 +44,6 @@ func GetRouter() *gin.Engine {
 			})
 		})
 
-		userController := controllers.NewUserController()
 		userGroup := v1.Group("/user")
 		{
 			userGroup.GET("/me", middlewares.AuthMiddleware(), userController.GetCurrentUser)
@@ -42,15 +52,13 @@ func GetRouter() *gin.Engine {
 			userController.RegisterCRUD(userGroup)
 		}
 
-		userInvitationController := controllers.NewUserController()
 		userInvitationGroup := v1.Group("")
 		{
-			userInvitationGroup.GET("invitations/me", middlewares.AuthMiddleware(), userInvitationController.GetMyInvitations)
+			userInvitationGroup.GET("invitations/me", middlewares.AuthMiddleware(), userController.GetMyInvitations)
 		}
 
 		authGroup := v1.Group("/auth")
 		{
-			authController := controllers.NewAuthController()
 			authGroup.POST("/register", authController.Register)
 			authGroup.POST("/login", authController.Login)
 			authGroup.POST("/external-auth", authController.ExternalAuth)
@@ -69,12 +77,10 @@ func GetRouter() *gin.Engine {
 
 			oauthGroup := authGroup.Group("/oauth")
 			{
-				oauthController := controllers.NewOAuthController()
 				oauthGroup.GET("/google", oauthController.GoogleOAuth)
 			}
 		}
 
-		documentController := controllers.NewDocumentController()
 		documentGroup := v1.Group("/documents")
 		{
 			documentGroup.GET("", documentController.Retrieve)
@@ -89,8 +95,6 @@ func GetRouter() *gin.Engine {
 			documentGroup.DELETE("/:id", middlewares.AuthMiddleware(), documentController.DeleteDocument)
 		}
 
-		spaceController := controllers.NewSpaceController()
-		apiKeyController := controllers.NewSpaceApiKeyController()
 		spaceGroup := v1.Group("/spaces")
 		{
 			spaceGroup.GET("", spaceController.Retrieve)
@@ -129,16 +133,15 @@ func GetRouter() *gin.Engine {
 				detailGroup.DELETE("/members/:memberId", middlewares.AuthMiddleware(), spaceController.RemoveMember)
 				apiKeyGroup := detailGroup.Group("/api-keys")
 				{
-					apiKeyGroup.GET("", apiKeyController.List)
-					apiKeyGroup.GET("/:keyId", apiKeyController.GetOne)
+					apiKeyGroup.GET("", spaceApiKeyController.List)
+					apiKeyGroup.GET("/:keyId", spaceApiKeyController.GetOne)
 
-					apiKeyGroup.POST("", apiKeyController.Create)
+					apiKeyGroup.POST("", spaceApiKeyController.Create)
 
-					apiKeyGroup.DELETE("/:keyId", apiKeyController.Delete)
+					apiKeyGroup.DELETE("/:keyId", spaceApiKeyController.Delete)
 				}
 			}
 		}
-		spaceInvitationController := controllers.NewSpaceInvitationController()
 		spaceInvitationGroup := v1.Group("/space-invitations")
 		{
 			spaceInvitationGroup.GET("/count", middlewares.AuthMiddleware(), spaceInvitationController.GetInvitationCount)
@@ -154,13 +157,11 @@ func GetRouter() *gin.Engine {
 			spaceInvitationGroup.DELETE("/:id", spaceInvitationController.Delete)
 		}
 
-		spaceInvitationLinkController := controllers.NewSpaceInvitationLinkController()
 		spaceInvitationLinkGroup := v1.Group("/space-invitation-links")
 		{
 			spaceInvitationLinkController.RegisterCRUD(spaceInvitationLinkGroup)
 		}
 
-		userQuerySessionController := controllers.NewUserQuerySessionController()
 		userQuerySessionGroup := v1.Group("/user-query-sessions")
 		userQuerySessionGroup.Use(middlewares.AuthMiddleware())
 		{
@@ -176,7 +177,6 @@ func GetRouter() *gin.Engine {
 			userQuerySessionGroup.DELETE("/:id/history", userQuerySessionController.ClearChatHistory)
 		}
 
-		userQueryController := controllers.NewUserQueryController()
 		userQueryGroup := v1.Group("/user-query")
 		userQueryGroup.Use(middlewares.AuthMiddleware())
 		{

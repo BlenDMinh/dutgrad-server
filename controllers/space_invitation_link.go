@@ -7,10 +7,15 @@ import (
 
 type SpaceInvitationLinkController struct {
 	CrudController[entities.SpaceInvitationLink, uint]
+	service services.SpaceInvitationLinkService
 }
 
-func NewSpaceInvitationLinkController() *SpaceInvitationLinkController {
+func NewSpaceInvitationLinkController(
+	service services.SpaceInvitationLinkService,
+) *SpaceInvitationLinkController {
+	crudController := NewCrudController(service)
 	return &SpaceInvitationLinkController{
-		CrudController: *NewCrudController(services.NewSpaceInvitationLinkService()),
+		CrudController: *crudController,
+		service:        service,
 	}
 }

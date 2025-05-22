@@ -5,12 +5,20 @@ import (
 	"github.com/BlenDMinh/dutgrad-server/databases/repositories"
 )
 
-type SpaceInvitationLinkService struct {
-	CrudService[entities.SpaceInvitationLink, uint]
+type SpaceInvitationLinkService interface {
+	ICrudService[entities.SpaceInvitationLink, uint]
 }
 
-func NewSpaceInvitationLinkService() *SpaceInvitationLinkService {
-	return &SpaceInvitationLinkService{
-		CrudService: *NewCrudService(repositories.NewSpaceInvitationLinkRepository()),
+type spaceInvitationLinkServiceImpl struct {
+	CrudService[entities.SpaceInvitationLink, uint]
+	repo repositories.SpaceInvitationLinkRepository
+}
+
+func NewSpaceInvitationLinkService() SpaceInvitationLinkService {
+	crudService := NewCrudService(repositories.NewSpaceInvitationLinkRepository())
+	repo := crudService.repo.(repositories.SpaceInvitationLinkRepository)
+	return &spaceInvitationLinkServiceImpl{
+		CrudService: *crudService,
+		repo:        repo,
 	}
 }

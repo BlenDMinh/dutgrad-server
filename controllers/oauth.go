@@ -13,7 +13,6 @@ import (
 	"github.com/BlenDMinh/dutgrad-server/models/dtos"
 	"github.com/BlenDMinh/dutgrad-server/services"
 	"github.com/BlenDMinh/dutgrad-server/services/oauth"
-	"github.com/BlenDMinh/dutgrad-server/services/oauth/providers"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -38,16 +37,17 @@ type OAuthController struct {
 	mfaService   *services.MFAService
 }
 
-func NewOAuthController() *OAuthController {
-	providers := map[string]oauth.OAuthProvider{
-		"google": providers.NewGoogleOAuthProvider(),
-	}
-
+func NewOAuthController(
+	providers map[string]oauth.OAuthProvider,
+	authService *services.AuthService,
+	redisService *services.RedisService,
+	mfaService *services.MFAService,
+) *OAuthController {
 	return &OAuthController{
 		providers:    providers,
-		authService:  services.NewAuthService(),
-		redisService: services.NewRedisService(),
-		mfaService:   services.NewMFAService(),
+		authService:  authService,
+		redisService: redisService,
+		mfaService:   mfaService,
 	}
 }
 

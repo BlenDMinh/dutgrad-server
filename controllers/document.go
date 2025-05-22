@@ -13,13 +13,15 @@ import (
 
 type DocumentController struct {
 	CrudController[entities.Document, uint]
-	service *services.DocumentService
+	service services.DocumentService
 }
 
-func NewDocumentController() *DocumentController {
-	service := services.NewDocumentService()
+func NewDocumentController(
+	service services.DocumentService,
+) *DocumentController {
+	crudController := NewCrudController(service)
 	return &DocumentController{
-		CrudController: *NewCrudController(service),
+		CrudController: *crudController,
 		service:        service,
 	}
 }

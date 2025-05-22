@@ -24,16 +24,21 @@ import (
 type MFAService struct {
 	redisService       *RedisService
 	userRepo           repositories.UserRepository
-	userMFARepo        *repositories.UserMFARepository
-	authCredentialRepo *repositories.UserAuthCredentialRepository
+	userMFARepo        repositories.UserMFARepository
+	authCredentialRepo repositories.UserAuthCredentialRepository
 }
 
-func NewMFAService() *MFAService {
+func NewMFAService(
+	redisService *RedisService,
+	userRepo repositories.UserRepository,
+	userMFARepo repositories.UserMFARepository,
+	authCredentialRepo repositories.UserAuthCredentialRepository,
+) *MFAService {
 	return &MFAService{
-		redisService:       NewRedisService(),
-		userRepo:           repositories.NewUserRepository(),
-		userMFARepo:        repositories.NewUserMFARepository(),
-		authCredentialRepo: repositories.NewUserAuthCredentialRepository(),
+		redisService:       redisService,
+		userRepo:           userRepo,
+		userMFARepo:        userMFARepo,
+		authCredentialRepo: authCredentialRepo,
 	}
 }
 

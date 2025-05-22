@@ -21,17 +21,19 @@ type UserRepository interface {
 	GetUserTierUsage(userID uint) (*dtos.TierUsageResponse, error)
 }
 
-type UserRepositoryImpl struct {
+type userRepositoryImpl struct {
 	*CrudRepository[entities.User, uint]
 }
 
 func NewUserRepository() UserRepository {
-	return &UserRepositoryImpl{
-		CrudRepository: NewCrudRepository[entities.User, uint](),
+	crudRepository := NewCrudRepository[entities.User, uint]()
+	crudRepository.Preload = []string{"Tier"}
+	return &userRepositoryImpl{
+		CrudRepository: crudRepository,
 	}
 }
 
-func (r *UserRepositoryImpl) GetSpacesByUserId(userId uint) ([]entities.Space, error) {
+func (r *userRepositoryImpl) GetSpacesByUserId(userId uint) ([]entities.Space, error) {
 	db := databases.GetDB()
 	var spaceUsers []entities.SpaceUser
 	err := db.Preload("Space").Preload("SpaceRole").
@@ -49,7 +51,7 @@ func (r *UserRepositoryImpl) GetSpacesByUserId(userId uint) ([]entities.Space, e
 	return userSpaces, nil
 }
 
-func (r *UserRepositoryImpl) GetByEmail(email string) (*entities.User, error) {
+func (r *userRepositoryImpl) GetByEmail(email string) (*entities.User, error) {
 	db := databases.GetDB()
 	var user entities.User
 	if err := db.Where("email = ?", email).First(&user).Error; err != nil {
@@ -58,12 +60,12 @@ func (r *UserRepositoryImpl) GetByEmail(email string) (*entities.User, error) {
 	return &user, nil
 }
 
-func (r *UserRepositoryImpl) UpdateMFAStatus(userID uint, enabled bool) error {
+func (r *userRepositoryImpl) UpdateMFAStatus(userID uint, enabled bool) error {
 	db := databases.GetDB()
 	return db.Model(&entities.User{}).Where("id = ?", userID).Update("mfa_enabled", enabled).Error
 }
 
-func (r *UserRepositoryImpl) Transaction(fn func(*databases.Transaction) error) error {
+func (r *userRepositoryImpl) Transaction(fn func(*databases.Transaction) error) error {
 	db := databases.GetDB()
 	tx := db.Begin()
 
@@ -81,7 +83,7 @@ func (r *UserRepositoryImpl) Transaction(fn func(*databases.Transaction) error) 
 	return tx.Commit().Error
 }
 
-func (r *UserRepositoryImpl) GetInvitationsByUserId(InvitedUserId uint) ([]entities.SpaceInvitation, error) {
+func (r *userRepositoryImpl) GetInvitationsByUserId(InvitedUserId uint) ([]entities.SpaceInvitation, error) {
 	var invitations []entities.SpaceInvitation
 	db := databases.GetDB()
 	err := db.Preload("Space").Preload("Inviter").
@@ -92,7 +94,7 @@ func (r *UserRepositoryImpl) GetInvitationsByUserId(InvitedUserId uint) ([]entit
 	return invitations, nil
 }
 
-func (r *UserRepositoryImpl) SearchUsers(query string) ([]entities.User, error) {
+func (r *userRepositoryImpl) SearchUsers(query string) ([]entities.User, error) {
 	var users []entities.User
 	db := databases.GetDB()
 
@@ -111,7 +113,7 @@ func (r *UserRepositoryImpl) SearchUsers(query string) ([]entities.User, error) 
 	return users, nil
 }
 
-func (r *UserRepositoryImpl) GetUserTier(userID uint) (*entities.Tier, error) {
+func (r *userRepositoryImpl) GetUserTier(userID uint) (*entities.Tier, error) {
 	db := databases.GetDB()
 	var user entities.User
 
@@ -126,7 +128,7 @@ func (r *UserRepositoryImpl) GetUserTier(userID uint) (*entities.Tier, error) {
 	return user.Tier, nil
 }
 
-func (s *UserRepositoryImpl) GetUserTierUsage(userID uint) (*dtos.TierUsageResponse, error) {
+func (s *userRepositoryImpl) GetUserTierUsage(userID uint) (*dtos.TierUsageResponse, error) {
 	tier, err := s.GetUserTier(userID)
 	if err != nil {
 		return nil, err

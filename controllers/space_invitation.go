@@ -10,11 +10,16 @@ import (
 
 type SpaceInvitationController struct {
 	CrudController[entities.SpaceInvitation, uint]
+	service services.SpaceInvitationService
 }
 
-func NewSpaceInvitationController() *SpaceInvitationController {
+func NewSpaceInvitationController(
+	service services.SpaceInvitationService,
+) *SpaceInvitationController {
+	crudController := NewCrudController(service)
 	return &SpaceInvitationController{
-		CrudController: *NewCrudController(services.NewSpaceInvitationService()),
+		CrudController: *crudController,
+		service:        service,
 	}
 }
 
@@ -29,7 +34,7 @@ func (c *SpaceInvitationController) AcceptInvitation(ctx *gin.Context) {
 		return
 	}
 
-	err := c.service.(*services.SpaceInvitationService).AcceptInvitation(invitationId, userId)
+	err := c.service.AcceptInvitation(invitationId, userId)
 	if err != nil {
 		HandleError(ctx, http.StatusInternalServerError, "Failed to accept invitation", err)
 		return
@@ -49,7 +54,7 @@ func (c *SpaceInvitationController) RejectInvitation(ctx *gin.Context) {
 		return
 	}
 
-	err := c.service.(*services.SpaceInvitationService).RejectInvitation(invitationId, userId)
+	err := c.service.RejectInvitation(invitationId, userId)
 	if err != nil {
 		HandleError(ctx, http.StatusInternalServerError, "Failed to reject invitation", err)
 		return
@@ -64,7 +69,7 @@ func (c *SpaceInvitationController) GetInvitationCount(ctx *gin.Context) {
 		return
 	}
 
-	count, err := c.service.(*services.SpaceInvitationService).CountInvitationByUserID(userID)
+	count, err := c.service.CountInvitationByUserID(userID)
 	if err != nil {
 		HandleError(ctx, http.StatusInternalServerError, "Failed to get invitation count", err)
 		return

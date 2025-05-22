@@ -14,11 +14,12 @@ type UserController struct {
 	service services.UserService
 }
 
-func NewUserController() *UserController {
-	crudController := NewCrudController(services.NewUserService())
-	service := crudController.service.(services.UserService)
+func NewUserController(
+	service services.UserService,
+) *UserController {
+	crudController := NewCrudController(service)
 	return &UserController{
-		CrudController: *NewCrudController(services.NewUserService()),
+		CrudController: *crudController,
 		service:        service,
 	}
 }

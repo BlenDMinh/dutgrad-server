@@ -7,34 +7,47 @@ import (
 	"github.com/BlenDMinh/dutgrad-server/databases/repositories"
 )
 
-type UserQuerySessionService struct {
-	CrudService[entities.UserQuerySession, uint]
+type UserQuerySessionService interface {
+	ICrudService[entities.UserQuerySession, uint]
+	GetChatSessionsByUserID(userID uint) ([]entities.UserQuerySession, error)
+	CountChatSessionsByUserID(userID uint) (int64, error)
+	GetTempMessageByID(id uint) (*string, error)
+	GetChatHistoryBySessionID(sessionID uint, userID uint) ([]map[string]interface{}, error)
+	ClearChatHistoryBySessionID(sessionID uint, userID uint) error
 }
 
-func NewUserQuerySessionService() *UserQuerySessionService {
-	return &UserQuerySessionService{
-		CrudService: *NewCrudService(repositories.NewUserQuerySessionRepository()),
+type UserQuerySessionServiceImpl struct {
+	CrudService[entities.UserQuerySession, uint]
+	repo repositories.UserQuerySessionRepository
+}
+
+func NewUserQuerySessionService() UserQuerySessionService {
+	crudService := NewCrudService(repositories.NewUserQuerySessionRepository())
+	repo := crudService.repo.(repositories.UserQuerySessionRepository)
+	return &UserQuerySessionServiceImpl{
+		CrudService: *crudService,
+		repo:        repo,
 	}
 }
 
-func (s *UserQuerySessionService) GetChatSessionsByUserID(userID uint) ([]entities.UserQuerySession, error) {
-	return s.repo.(*repositories.UserQuerySessionRepository).GetByUserID(userID)
+func (s *UserQuerySessionServiceImpl) GetChatSessionsByUserID(userID uint) ([]entities.UserQuerySession, error) {
+	return s.repo.GetByUserID(userID)
 
 }
 
-func (s *UserQuerySessionService) CountChatSessionsByUserID(userID uint) (int64, error) {
-	return s.repo.(*repositories.UserQuerySessionRepository).CountByUserID(userID)
+func (s *UserQuerySessionServiceImpl) CountChatSessionsByUserID(userID uint) (int64, error) {
+	return s.repo.CountByUserID(userID)
 }
 
-func (s *UserQuerySessionService) GetTempMessageByID(id uint) (*string, error) {
-	return s.repo.(*repositories.UserQuerySessionRepository).GetTempMessageByID(id)
+func (s *UserQuerySessionServiceImpl) GetTempMessageByID(id uint) (*string, error) {
+	return s.repo.GetTempMessageByID(id)
 }
 
-func (s *UserQuerySessionService) GetChatHistoryBySessionID(sessionID uint, userID uint) ([]map[string]interface{}, error) {
-	return s.repo.(*repositories.UserQuerySessionRepository).GetChatHistoryBySessionID(sessionID)
+func (s *UserQuerySessionServiceImpl) GetChatHistoryBySessionID(sessionID uint, userID uint) ([]map[string]interface{}, error) {
+	return s.repo.GetChatHistoryBySessionID(sessionID)
 }
 
-func (s *UserQuerySessionService) ClearChatHistoryBySessionID(sessionID uint, userID uint) error {
+func (s *UserQuerySessionServiceImpl) ClearChatHistoryBySessionID(sessionID uint, userID uint) error {
 	session, err := s.GetById(sessionID)
 	if err != nil {
 		return fmt.Errorf("failed to find session: %v", err)
@@ -44,5 +57,5 @@ func (s *UserQuerySessionService) ClearChatHistoryBySessionID(sessionID uint, us
 		return fmt.Errorf("unauthorized: you can only clear chat history for your own sessions")
 	}
 
-	return s.repo.(*repositories.UserQuerySessionRepository).ClearChatHistory(sessionID)
+	return s.repo.ClearChatHistory(sessionID)
 }

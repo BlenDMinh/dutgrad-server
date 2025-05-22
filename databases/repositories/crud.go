@@ -8,6 +8,7 @@ import (
 )
 
 var DefaultPageSize = 20
+var DefaultPreload = []string{}
 
 type ICrudRepository[T entities.Entity, ID any] interface {
 	GetAll(page int, pageSize int) ([]T, error)
@@ -23,11 +24,13 @@ type ICrudRepository[T entities.Entity, ID any] interface {
 
 type CrudRepository[T entities.Entity, ID any] struct {
 	DefaultPageSize int
+	Preload         []string
 }
 
 func NewCrudRepository[T entities.Entity, ID any]() *CrudRepository[T, ID] {
 	return &CrudRepository[T, ID]{
 		DefaultPageSize: DefaultPageSize,
+		Preload:         DefaultPreload,
 	}
 }
 
@@ -35,31 +38,48 @@ func (c *CrudRepository[T, ID]) getModel() *T {
 	return new(T)
 }
 
-func (c *CrudRepository[T, ID]) GetAll(page int, pageSize int) ([]T, error) {
-
-	if pageSize <= 0 {
-		pageSize = c.DefaultPageSize
-	}
-	if page <= 0 {
-		page = 1
-	}
+func (c *CrudRepository[T, ID]) GetPaginated(page int, pageSize int) ([]T, Pagination, error) {
+	pagination := NewPagination(page, pageSize, c.DefaultPageSize)
 
 	db := databases.GetDB()
 	entities := []T{}
-	offset := (page - 1) * pageSize
-	dbctx := db.Limit(pageSize).Offset(offset).Find(&entities)
 
+	dbctx := pagination.ApplyPagination(db)
+	if len(c.Preload) > 0 {
+		for _, preload := range c.Preload {
+			dbctx = dbctx.Preload(preload)
+		}
+	}
+	dbctx = dbctx.Find(&entities)
 	if dbctx.Error != nil {
-		return nil, dbctx.Error
+		return nil, pagination, dbctx.Error
 	}
 
-	return entities, nil
+	var count int64
+	if err := db.Model(new(T)).Count(&count).Error; err != nil {
+		return nil, pagination, err
+	}
+
+	pagination.Total = count
+
+	return entities, pagination, nil
+}
+
+func (c *CrudRepository[T, ID]) GetAll(page int, pageSize int) ([]T, error) {
+	entities, _, err := c.GetPaginated(page, pageSize)
+	return entities, err
 }
 
 func (c *CrudRepository[T, ID]) GetById(id ID) (*T, error) {
 	db := databases.GetDB()
+	dbctx := db.Model(c.getModel())
 	entity := new(T)
-	dbctx := db.First(entity, id)
+	if len(c.Preload) > 0 {
+		for _, preload := range c.Preload {
+			dbctx = dbctx.Preload(preload)
+		}
+	}
+	dbctx = dbctx.First(entity, id)
 	if dbctx.Error != nil {
 		return nil, dbctx.Error
 	}
@@ -101,7 +121,13 @@ func (c *CrudRepository[T, ID]) Delete(id ID) error {
 func (c *CrudRepository[T, ID]) GetByField(fieldName string, value interface{}) ([]T, error) {
 	var results []T
 	db := databases.GetDB()
-	err := db.Where(fmt.Sprintf("%s = ?", fieldName), value).Find(&results).Error
+	dbctx := db.Model(c.getModel())
+	if len(c.Preload) > 0 {
+		for _, preload := range c.Preload {
+			dbctx = dbctx.Preload(preload)
+		}
+	}
+	err := dbctx.Where(fmt.Sprintf("%s = ?", fieldName), value).Find(&results).Error
 	return results, err
 }
 
@@ -120,22 +146,39 @@ func (c *CrudRepository[T, ID]) Count() (int64, error) {
 	return count, nil
 }
 
-func (c *CrudRepository[T, ID]) GetByFieldWithPagination(fieldName string, value interface{}, page int, pageSize int) ([]T, error) {
-	if pageSize <= 0 {
-		pageSize = c.DefaultPageSize
-	}
-	if page <= 0 {
-		page = 1
-	}
+func (c *CrudRepository[T, ID]) GetByFieldPaginated(fieldName string, value interface{}, page int, pageSize int) ([]T, Pagination, error) {
+	pagination := NewPagination(page, pageSize, c.DefaultPageSize)
 
 	db := databases.GetDB()
 	entities := []T{}
-	offset := (page - 1) * pageSize
-	dbctx := db.Where(fmt.Sprintf("%s = ?", fieldName), value).Limit(pageSize).Offset(offset).Find(&entities)
 
-	if dbctx.Error != nil {
-		return nil, dbctx.Error
+	dbctx := db.Model(c.getModel())
+
+	if len(c.Preload) > 0 {
+		for _, preload := range c.Preload {
+			dbctx = dbctx.Preload(preload)
+		}
 	}
 
-	return entities, nil
+	whereClause := fmt.Sprintf("%s = ?", fieldName)
+	dbctx = pagination.ApplyPagination(dbctx)
+	dbctx = dbctx.Where(whereClause, value).Find(&entities)
+
+	if dbctx.Error != nil {
+		return nil, pagination, dbctx.Error
+	}
+
+	var count int64
+	if err := db.Model(new(T)).Where(whereClause, value).Count(&count).Error; err != nil {
+		return nil, pagination, err
+	}
+
+	pagination.Total = count
+
+	return entities, pagination, nil
+}
+
+func (c *CrudRepository[T, ID]) GetByFieldWithPagination(fieldName string, value interface{}, page int, pageSize int) ([]T, error) {
+	entities, _, err := c.GetByFieldPaginated(fieldName, value, page, pageSize)
+	return entities, err
 }

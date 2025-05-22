@@ -11,11 +11,16 @@ import (
 
 type UserQueryController struct {
 	CrudController[entities.UserQuery, uint]
+	service services.UserQueryService
 }
 
-func NewUserQueryController() *UserQueryController {
+func NewUserQueryController(
+	service services.UserQueryService,
+) *UserQueryController {
+	crudController := NewCrudController(service)
 	return &UserQueryController{
-		CrudController: *NewCrudController(services.NewUserQueryService()),
+		CrudController: *crudController,
+		service:        service,
 	}
 }
 

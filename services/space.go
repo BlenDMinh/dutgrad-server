@@ -10,27 +10,65 @@ import (
 	"github.com/BlenDMinh/dutgrad-server/helpers"
 )
 
-type SpaceService struct {
-	CrudService[entities.Space, uint]
-	invitationLinkRepo repositories.SpaceInvitationLinkRepository
-	ragServerService   *RAGServerService
+type SpaceService interface {
+	ICrudService[entities.Space, uint]
+	GetPublicSpaces(page int, pageSize int) (*helpers.PaginationResult, error)
+	GetMembers(spaceId uint) ([]entities.SpaceUser, error)
+	GetInvitations(spaceId uint) ([]entities.SpaceInvitation, error)
+	GetOrCreateSpaceInvitationLink(spaceID, spaceRoleID uint) (*entities.SpaceInvitationLink, error)
+	CreateInvitation(invitation *entities.SpaceInvitation) (*entities.SpaceInvitation, error)
+	GetSpaceRoles() ([]entities.SpaceRole, error)
+	JoinSpaceWithToken(token string, userID uint) (uint, error)
+	JoinPublicSpace(spaceID uint, userID uint) error
+	GetUserRole(userID, spaceID uint) (*entities.SpaceRole, error)
+	IsMemberOfSpace(userID uint, spaceID uint) (bool, error)
+	CountSpacesByUserID(userID uint) (int64, error)
+	GetPopularSpaces(order string) ([]entities.Space, error)
+	CheckSpaceCreationLimit(userID uint) error
+	CreateSpace(space *entities.Space, userID uint) (*entities.Space, error)
+	UpdateMemberRole(spaceID, memberID, roleID, updatedBy uint) error
+	RemoveMember(spaceID, memberID, requestingUserID uint) error
+	Delete(id uint) error
 }
 
-func NewSpaceService(invitationLinkRepo repositories.SpaceInvitationLinkRepository) *SpaceService {
-	return &SpaceService{
-		CrudService:        *NewCrudService(repositories.NewSpaceRepository()),
-		invitationLinkRepo: invitationLinkRepo,
-		ragServerService:   NewRAGServerService(),
+type spaceServiceImpl struct {
+	CrudService[entities.Space, uint]
+	repo                      repositories.SpaceRepository
+	invitationLinkRepo        repositories.SpaceInvitationLinkRepository
+	ragServerService          *RAGServerService
+	userRepository            repositories.UserRepository
+	spaceInvitationRepository repositories.SpaceInvitationRepository
+	documentRepository        repositories.DocumentRepository
+}
+
+func NewSpaceService(
+	invitationLinkRepo repositories.SpaceInvitationLinkRepository,
+	ragServerService *RAGServerService,
+	userRepository repositories.UserRepository,
+	spaceInvitationRepository repositories.SpaceInvitationRepository,
+	documentRepository repositories.DocumentRepository,
+) SpaceService {
+	crudService := NewCrudService(repositories.NewSpaceRepository())
+	repo := crudService.repo.(repositories.SpaceRepository)
+
+	return &spaceServiceImpl{
+		CrudService:               *crudService,
+		invitationLinkRepo:        invitationLinkRepo,
+		ragServerService:          ragServerService,
+		repo:                      repo,
+		userRepository:            userRepository,
+		spaceInvitationRepository: spaceInvitationRepository,
+		documentRepository:        documentRepository,
 	}
 }
 
-func (s *SpaceService) GetPublicSpaces(page int, pageSize int) (*helpers.PaginationResult, error) {
-	spaces, err := s.repo.(*repositories.SpaceRepository).FindPublicSpaces(page, pageSize)
+func (s *spaceServiceImpl) GetPublicSpaces(page int, pageSize int) (*helpers.PaginationResult, error) {
+	spaces, err := s.repo.FindPublicSpaces(page, pageSize)
 	if err != nil {
 		return nil, err
 	}
 
-	count, err := s.repo.(*repositories.SpaceRepository).CountPublicSpaces()
+	count, err := s.repo.CountPublicSpaces()
 	if err != nil {
 		return nil, err
 	}
@@ -39,15 +77,15 @@ func (s *SpaceService) GetPublicSpaces(page int, pageSize int) (*helpers.Paginat
 	return &result, nil
 }
 
-func (s *SpaceService) GetMembers(spaceId uint) ([]entities.SpaceUser, error) {
-	return s.repo.(*repositories.SpaceRepository).GetMembers(spaceId)
+func (s *spaceServiceImpl) GetMembers(spaceId uint) ([]entities.SpaceUser, error) {
+	return s.repo.GetMembers(spaceId)
 }
 
-func (s *SpaceService) GetInvitations(spaceId uint) ([]entities.SpaceInvitation, error) {
-	return s.repo.(*repositories.SpaceRepository).GetInvitations(spaceId)
+func (s *spaceServiceImpl) GetInvitations(spaceId uint) ([]entities.SpaceInvitation, error) {
+	return s.repo.GetInvitations(spaceId)
 }
 
-func (s *SpaceService) GetOrCreateSpaceInvitationLink(spaceID, spaceRoleID uint) (*entities.SpaceInvitationLink, error) {
+func (s *spaceServiceImpl) GetOrCreateSpaceInvitationLink(spaceID, spaceRoleID uint) (*entities.SpaceInvitationLink, error) {
 	repo := s.invitationLinkRepo
 	invitationLink, _ := repo.GetBySpaceID(spaceID)
 	if invitationLink == nil {
@@ -74,15 +112,15 @@ func (s *SpaceService) GetOrCreateSpaceInvitationLink(spaceID, spaceRoleID uint)
 	return invitationLink, nil
 }
 
-func (s *SpaceService) CreateInvitation(invitation *entities.SpaceInvitation) (*entities.SpaceInvitation, error) {
-	return s.repo.(*repositories.SpaceRepository).CreateInvitation(invitation)
+func (s *spaceServiceImpl) CreateInvitation(invitation *entities.SpaceInvitation) (*entities.SpaceInvitation, error) {
+	return s.repo.CreateInvitation(invitation)
 }
 
-func (s *SpaceService) GetSpaceRoles() ([]entities.SpaceRole, error) {
-	return s.repo.(*repositories.SpaceRepository).GetAllRoles()
+func (s *spaceServiceImpl) GetSpaceRoles() ([]entities.SpaceRole, error) {
+	return s.repo.GetAllRoles()
 }
 
-func (s *SpaceService) JoinSpaceWithToken(token string, userID uint) (uint, error) {
+func (s *spaceServiceImpl) JoinSpaceWithToken(token string, userID uint) (uint, error) {
 	payload, err := helpers.VerifyTokenForPayload(token)
 	if err != nil {
 		return 0, err
@@ -121,8 +159,8 @@ func (s *SpaceService) JoinSpaceWithToken(token string, userID uint) (uint, erro
 	return spaceID, nil
 }
 
-func (s *SpaceService) GetUserRole(userID, spaceID uint) (*entities.SpaceRole, error) {
-	role, err := s.repo.(*repositories.SpaceRepository).GetUserRole(userID, spaceID)
+func (s *spaceServiceImpl) GetUserRole(userID, spaceID uint) (*entities.SpaceRole, error) {
+	role, err := s.repo.GetUserRole(userID, spaceID)
 	if err != nil {
 		return nil, fmt.Errorf("user is not a member of this space or %v", err)
 	}
@@ -132,28 +170,26 @@ func (s *SpaceService) GetUserRole(userID, spaceID uint) (*entities.SpaceRole, e
 	return role, nil
 }
 
-func (s *SpaceService) JoinPublicSpace(spaceID uint, userID uint) error {
-	return s.repo.(*repositories.SpaceRepository).JoinPublicSpace(spaceID, userID)
+func (s *spaceServiceImpl) JoinPublicSpace(spaceID uint, userID uint) error {
+	return s.repo.JoinPublicSpace(spaceID, userID)
 }
 
-func (s *SpaceService) IsMemberOfSpace(userID uint, spaceID uint) (bool, error) {
-	return s.repo.(*repositories.SpaceRepository).IsMemberOfSpace(userID, spaceID)
+func (s *spaceServiceImpl) IsMemberOfSpace(userID uint, spaceID uint) (bool, error) {
+	return s.repo.IsMemberOfSpace(userID, spaceID)
 }
 
-func (s *SpaceService) CountSpacesByUserID(userID uint) (int64, error) {
-	return s.repo.(*repositories.SpaceRepository).CountSpacesByUserID(userID)
+func (s *spaceServiceImpl) CountSpacesByUserID(userID uint) (int64, error) {
+	return s.repo.CountSpacesByUserID(userID)
 }
 
-func (s *SpaceService) GetPopularSpaces(order string) ([]entities.Space, error) {
-	return s.repo.(*repositories.SpaceRepository).GetPopularSpaces(order)
+func (s *spaceServiceImpl) GetPopularSpaces(order string) ([]entities.Space, error) {
+	return s.repo.GetPopularSpaces(order)
 }
 
-func (s *SpaceService) CheckSpaceCreationLimit(userID uint) error {
-	db := databases.GetDB()
-
-	var user entities.User
-	if err := db.Preload("Tier").Where("id = ?", userID).First(&user).Error; err != nil {
-		return err
+func (s *spaceServiceImpl) CheckSpaceCreationLimit(userID uint) error {
+	user, err := s.userRepository.GetById(userID)
+	if err != nil {
+		return fmt.Errorf("failed to get user: %v", err)
 	}
 
 	count, err := s.CountSpacesByUserID(userID)
@@ -174,7 +210,7 @@ func (s *SpaceService) CheckSpaceCreationLimit(userID uint) error {
 	return nil
 }
 
-func (s *SpaceService) CreateSpace(space *entities.Space, userID uint) (*entities.Space, error) {
+func (s *spaceServiceImpl) CreateSpace(space *entities.Space, userID uint) (*entities.Space, error) {
 	if err := s.CheckSpaceCreationLimit(userID); err != nil {
 		return nil, err
 	}
@@ -200,11 +236,11 @@ func (s *SpaceService) CreateSpace(space *entities.Space, userID uint) (*entitie
 	return createdSpace, nil
 }
 
-func (s *SpaceService) UpdateMemberRole(spaceID, memberID, roleID, updatedBy uint) error {
-	return s.repo.(*repositories.SpaceRepository).UpdateMemberRole(spaceID, memberID, roleID, updatedBy)
+func (s *spaceServiceImpl) UpdateMemberRole(spaceID, memberID, roleID, updatedBy uint) error {
+	return s.repo.UpdateMemberRole(spaceID, memberID, roleID, updatedBy)
 }
 
-func (s *SpaceService) RemoveMember(spaceID, memberID, requestingUserID uint) error {
+func (s *spaceServiceImpl) RemoveMember(spaceID, memberID, requestingUserID uint) error {
 	requestingUserRole, err := s.GetUserRole(requestingUserID, spaceID)
 	if err != nil {
 		return err
@@ -218,7 +254,7 @@ func (s *SpaceService) RemoveMember(spaceID, memberID, requestingUserID uint) er
 		return errors.New("you cannot remove yourself from the space")
 	}
 
-	isMember, err := s.repo.(*repositories.SpaceRepository).IsMemberOfSpace(memberID, spaceID)
+	isMember, err := s.repo.IsMemberOfSpace(memberID, spaceID)
 	if err != nil {
 		return err
 	}
@@ -233,22 +269,20 @@ func (s *SpaceService) RemoveMember(spaceID, memberID, requestingUserID uint) er
 			return errors.New("cannot remove a space owner")
 		}
 
-		return s.repo.(*repositories.SpaceRepository).RemoveMember(spaceID, memberID)
+		return s.repo.RemoveMember(spaceID, memberID)
 	}
 
-	invitationService := NewSpaceInvitationService()
-	return invitationService.CancelInvitation(spaceID, memberID)
+	return s.spaceInvitationRepository.CancelInvitation(spaceID, memberID)
 }
 
-func (s *SpaceService) Delete(id uint) error {
-	documentService := NewDocumentService()
-	documents, err := documentService.GetDocumentsBySpaceID(id)
+func (s *spaceServiceImpl) Delete(id uint) error {
+	documents, err := s.documentRepository.GetBySpaceID(id)
 	if err != nil {
 		return fmt.Errorf("failed to get documents in space: %v", err)
 	}
 
 	for _, doc := range documents {
-		err := documentService.DeleteDocument(doc.ID)
+		err := s.documentRepository.Delete(doc.ID)
 		if err != nil {
 			return fmt.Errorf("failed to delete document %d: %v", doc.ID, err)
 		}
