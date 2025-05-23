@@ -16,6 +16,7 @@ type DocumentService interface {
 	GetDocumentsBySpaceID(spaceID uint) ([]entities.Document, error)
 	CheckDocumentLimits(spaceID uint, fileSize int64) error
 	UploadDocument(fileHeader *multipart.FileHeader, spaceID uint, mimeType string, description string) (*entities.Document, error)
+	CountUserDocuments(userID uint) (int64, error)
 	GetUserRoleInSpace(userID, spaceID uint) (string, error)
 	DeleteDocument(documentID uint) error
 }
@@ -134,4 +135,8 @@ func (s *documentServiceImpl) DeleteDocument(documentID uint) error {
 	}
 
 	return s.repo.Delete(documentID)
+}
+
+func (s *documentServiceImpl) CountUserDocuments(userID uint) (int64, error) {
+	return s.repo.CountUserDocuments(userID)
 }

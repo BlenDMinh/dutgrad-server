@@ -11,6 +11,7 @@ type DocumentRepository interface {
 	ICrudRepository[entities.Document, uint]
 	GetBySpaceID(spaceID uint) ([]entities.Document, error)
 	GetUserRoleInSpace(userID, spaceID uint) (string, error)
+	CountUserDocuments(userID uint) (int64, error)
 }
 
 type documentRepositoryImpl struct {
@@ -44,4 +45,17 @@ func (s *documentRepositoryImpl) GetUserRoleInSpace(userID, spaceID uint) (strin
 		return "", errors.New("user has no role in this space")
 	}
 	return spaceUser.SpaceRole.Name, nil
+}
+
+func (s *documentRepositoryImpl) CountUserDocuments(userID uint) (int64, error) {
+	var count int64
+	db := databases.GetDB()
+
+	err := db.Model(&entities.Document{}).
+		Joins("JOIN spaces ON documents.space_id = spaces.id").
+		Joins("JOIN space_users ON spaces.id = space_users.space_id").
+		Where("space_users.user_id = ?", userID).
+		Count(&count).Error
+
+	return count, err
 }
