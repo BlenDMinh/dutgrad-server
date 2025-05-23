@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -73,6 +74,23 @@ func (c *DocumentController) UploadDocument(ctx *gin.Context) {
 	}
 
 	HandleSuccess(ctx, "Document uploaded successfully", gin.H{"document": document})
+}
+
+func (c *DocumentController) GetUserDocumentCount(ctx *gin.Context) {
+	userID, ok := ExtractID(ctx, "user_id")
+	if !ok {
+		return
+	}
+
+	count, err := c.service.CountUserDocuments(userID)
+	if err != nil {
+		HandleError(ctx, http.StatusInternalServerError, "Failed to count documents", err)
+		return
+	}
+
+	ctx.Header("X-Document-Count", fmt.Sprintf("%d", count))
+
+	HandleSuccess(ctx, "Document count retrieved successfully", gin.H{"count": count})
 }
 
 func (c *DocumentController) DeleteDocument(ctx *gin.Context) {

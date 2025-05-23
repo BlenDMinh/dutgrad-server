@@ -86,6 +86,8 @@ func GetRouter(
 			documentGroup.GET("", documentController.Retrieve)
 			documentGroup.GET("/:id", documentController.RetrieveOne)
 
+			documentGroup.HEAD("/count/me", middlewares.AuthMiddleware(), documentController.GetUserDocumentCount)
+
 			documentGroup.POST("/upload", middlewares.AuthMiddleware(), documentController.UploadDocument)
 
 			documentGroup.PUT("/:id", documentController.Update)
