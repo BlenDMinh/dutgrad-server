@@ -29,10 +29,13 @@ func (c *UserQueryController) Ask(ctx *gin.Context) {
 	if !ok {
 		return
 	}
-
 	var req dtos.AskRequest
 	if !HandleBindJSON(ctx, &req) {
 		return
+	}
+
+	if len(req.Query) > 1024 {
+		req.Query = req.Query[:1024]
 	}
 
 	sessionService := services.NewUserQuerySessionService()
