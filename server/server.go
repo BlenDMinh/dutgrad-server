@@ -22,9 +22,10 @@ func Init() {
 
 	// External service initialization
 	ragServerService := services.NewRAGServerService()
-	redisService := services.NewRedisService()
+	// redisService := services.NewRedisService()
+	memoryStorage := services.NewInMemoryStorage()
 	mfaService := services.NewMFAService(
-		redisService,
+		memoryStorage,
 		userRepo,
 		userMFARepo,
 		authCredentialRepo,
@@ -52,7 +53,7 @@ func Init() {
 	authController := controllers.NewAuthController(
 		authService,
 		userService,
-		redisService,
+		memoryStorage,
 		mfaService,
 	)
 	providers := map[string]oauth.OAuthProvider{
@@ -61,7 +62,7 @@ func Init() {
 	oauthController := controllers.NewOAuthController(
 		providers,
 		authService,
-		redisService,
+		memoryStorage,
 		mfaService,
 	)
 	documentController := controllers.NewDocumentController(documentService)

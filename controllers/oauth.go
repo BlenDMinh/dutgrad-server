@@ -31,23 +31,23 @@ func redirectToError(ctx *gin.Context, code string, message string) {
 }
 
 type OAuthController struct {
-	providers    map[string]oauth.OAuthProvider
-	authService  *services.AuthService
-	redisService *services.RedisService
-	mfaService   *services.MFAService
+	providers   map[string]oauth.OAuthProvider
+	authService *services.AuthService
+	kvStorage   services.KVStorage
+	mfaService  *services.MFAService
 }
 
 func NewOAuthController(
 	providers map[string]oauth.OAuthProvider,
 	authService *services.AuthService,
-	redisService *services.RedisService,
+	kvStorage services.KVStorage,
 	mfaService *services.MFAService,
 ) *OAuthController {
 	return &OAuthController{
-		providers:    providers,
-		authService:  authService,
-		redisService: redisService,
-		mfaService:   mfaService,
+		providers:   providers,
+		authService: authService,
+		kvStorage:   kvStorage,
+		mfaService:  mfaService,
 	}
 }
 
@@ -107,7 +107,7 @@ func (c *OAuthController) HandleOAuthCallback(ctx *gin.Context, providerName str
 			return
 		}
 
-		if err := c.redisService.Set(tempToken, user.ID, MFATokenExpiration); err != nil {
+		if err := c.kvStorage.Set(tempToken, user.ID, MFATokenExpiration); err != nil {
 			log.Printf("Redis error: %v", err)
 			redirectToError(ctx, "redis_error", "Internal server error")
 			return
@@ -129,7 +129,7 @@ func (c *OAuthController) HandleOAuthCallback(ctx *gin.Context, providerName str
 		Expires:   expiresAt,
 	}
 
-	if err := c.redisService.Set(stateToken, authResponse, StateTokenExpiration); err != nil {
+	if err := c.kvStorage.Set(stateToken, authResponse, StateTokenExpiration); err != nil {
 		log.Printf("Redis error: %v", err)
 		redirectToError(ctx, "redis_error", "Internal server error")
 		return
@@ -153,13 +153,13 @@ func (c *OAuthController) ExchangeState(ctx *gin.Context) {
 		return
 	}
 
-	authDataJSON, err := c.redisService.Get(state)
+	authDataJSON, err := c.kvStorage.Get(state)
 	if err != nil {
 		HandleError(ctx, http.StatusNotFound, "State token expired or invalid", nil)
 		return
 	}
 
-	c.redisService.Del(state)
+	c.kvStorage.Delete(state)
 
 	var authResponse dtos.AuthResponse
 	if err := json.Unmarshal([]byte(authDataJSON), &authResponse); err != nil {
@@ -182,7 +182,7 @@ func (c *OAuthController) VerifyOAuthMFA(ctx *gin.Context) {
 		return
 	}
 
-	userIDStr, err := c.redisService.Get(tempToken)
+	userIDStr, err := c.kvStorage.Get(tempToken)
 	if err != nil {
 		HandleError(ctx, http.StatusUnauthorized, "Invalid or expired temporary token", err)
 		return
@@ -212,7 +212,7 @@ func (c *OAuthController) VerifyOAuthMFA(ctx *gin.Context) {
 		return
 	}
 
-	c.redisService.Del(tempToken)
+	c.kvStorage.Delete(tempToken)
 
 	HandleSuccess(ctx, "Login successful", dtos.AuthResponse{
 		Token:   token,
