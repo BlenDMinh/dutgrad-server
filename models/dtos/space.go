@@ -41,3 +41,7 @@ type UpdateRoleRequest struct {
 type SpaceListResponse struct {
 	Spaces []entities.Space `json:"spaces"`
 }
+
+type UserSpaceListResponse struct {
+	Spaces []UserSpaceDTO `json:"spaces"`
+}

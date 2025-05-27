@@ -9,7 +9,7 @@ import (
 
 type UserService interface {
 	ICrudService[entities.User, uint]
-	GetSpacesByUserId(userId uint) ([]entities.Space, error)
+	GetSpacesByUserId(userId uint) ([]dtos.UserSpaceDTO, error)
 	GetUserByEmail(email string) (*entities.User, error)
 	GetInvitationsByUserId(InvitedUserId uint) ([]entities.SpaceInvitation, error)
 	SearchUsers(query string) ([]entities.User, error)
@@ -32,7 +32,7 @@ func NewUserService() UserService {
 	}
 }
 
-func (s *userServiceImpl) GetSpacesByUserId(userId uint) ([]entities.Space, error) {
+func (s *userServiceImpl) GetSpacesByUserId(userId uint) ([]dtos.UserSpaceDTO, error) {
 	return s.repo.GetSpacesByUserId(userId)
 }
 
