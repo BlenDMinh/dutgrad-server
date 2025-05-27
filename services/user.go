@@ -7,33 +7,48 @@ import (
 	"github.com/BlenDMinh/dutgrad-server/models/dtos"
 )
 
-type UserService struct {
-	CrudService[entities.User, uint]
+type UserService interface {
+	ICrudService[entities.User, uint]
+	GetSpacesByUserId(userId uint) ([]entities.Space, error)
+	GetUserByEmail(email string) (*entities.User, error)
+	GetInvitationsByUserId(InvitedUserId uint) ([]entities.SpaceInvitation, error)
+	SearchUsers(query string) ([]entities.User, error)
+	GetUserTier(userID uint) (*entities.Tier, error)
+	GetUserTierUsage(userID uint) (*dtos.TierUsageResponse, error)
 }
 
-func NewUserService() *UserService {
-	return &UserService{
-		CrudService: *NewCrudService(repositories.NewUserRepository()),
+type userServiceImpl struct {
+	CrudService[entities.User, uint]
+	repo repositories.UserRepository
+}
+
+func NewUserService() UserService {
+	crudService := NewCrudService(repositories.NewUserRepository())
+	repo := crudService.repo.(repositories.UserRepository)
+
+	return &userServiceImpl{
+		CrudService: *crudService,
+		repo:        repo,
 	}
 }
 
-func (s *UserService) GetSpacesByUserId(userId uint) ([]entities.Space, error) {
-	return s.repo.(*repositories.UserRepository).GetSpacesByUserId(userId)
+func (s *userServiceImpl) GetSpacesByUserId(userId uint) ([]entities.Space, error) {
+	return s.repo.GetSpacesByUserId(userId)
 }
 
-func (s *UserService) GetUserByEmail(email string) (*entities.User, error) {
-	return s.repo.(*repositories.UserRepository).GetUserByEmail(email)
+func (s *userServiceImpl) GetUserByEmail(email string) (*entities.User, error) {
+	return s.repo.GetByEmail(email)
 }
 
-func (s *UserService) GetInvitationsByUserId(InvitedUserId uint) ([]entities.SpaceInvitation, error) {
-	return s.repo.(*repositories.UserRepository).GetInvitationsByUserId(InvitedUserId)
+func (s *userServiceImpl) GetInvitationsByUserId(InvitedUserId uint) ([]entities.SpaceInvitation, error) {
+	return s.repo.GetInvitationsByUserId(InvitedUserId)
 }
 
-func (s *UserService) SearchUsers(query string) ([]entities.User, error) {
-	return s.repo.(*repositories.UserRepository).SearchUsers(query)
+func (s *userServiceImpl) SearchUsers(query string) ([]entities.User, error) {
+	return s.repo.SearchUsers(query)
 }
 
-func (s *UserService) GetUserTier(userID uint) (*entities.Tier, error) {
+func (s *userServiceImpl) GetUserTier(userID uint) (*entities.Tier, error) {
 	db := databases.GetDB()
 	var user entities.User
 
@@ -44,6 +59,6 @@ func (s *UserService) GetUserTier(userID uint) (*entities.Tier, error) {
 	return user.Tier, nil
 }
 
-func (s *UserService) GetUserTierUsage(userID uint) (*dtos.TierUsageResponse, error) {
-	return s.repo.(*repositories.UserRepository).GetUserTierUsage(userID)
+func (s *userServiceImpl) GetUserTierUsage(userID uint) (*dtos.TierUsageResponse, error) {
+	return s.repo.GetUserTierUsage(userID)
 }

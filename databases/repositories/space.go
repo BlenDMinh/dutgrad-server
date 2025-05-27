@@ -7,38 +7,66 @@ import (
 	"github.com/BlenDMinh/dutgrad-server/databases/entities"
 )
 
-type SpaceRepository struct {
+type SpaceRepository interface {
+	ICrudRepository[entities.Space, uint]
+	FindPublicSpaces(page int, pageSize int) ([]entities.Space, error)
+	CountPublicSpaces() (int64, error)
+	GetMembers(spaceId uint) ([]entities.SpaceUser, error)
+	GetInvitations(spaceId uint) ([]entities.SpaceInvitation, error)
+	GetUserRole(userID, spaceID uint) (*entities.SpaceRole, error)
+	CreateInvitation(invitation *entities.SpaceInvitation) (*entities.SpaceInvitation, error)
+	GetAllRoles() ([]entities.SpaceRole, error)
+	JoinPublicSpace(spaceID uint, userID uint) error
+	IsMemberOfSpace(userID uint, spaceID uint) (bool, error)
+	CountSpacesByUserID(userID uint) (int64, error)
+	GetPopularSpaces(order string) ([]entities.Space, error)
+	UpdateMemberRole(spaceID, memberID, roleID, updatedBy uint) error
+	RemoveMember(spaceID, memberID uint) error
+}
+
+type spaceRepositoryImpl struct {
 	*CrudRepository[entities.Space, uint]
 }
 
-func NewSpaceRepository() *SpaceRepository {
-	return &SpaceRepository{
+func NewSpaceRepository() SpaceRepository {
+	return &spaceRepositoryImpl{
 		CrudRepository: NewCrudRepository[entities.Space, uint](),
 	}
 }
 
-func (r *SpaceRepository) FindPublicSpaces() ([]entities.Space, error) {
+func (r *spaceRepositoryImpl) FindPublicSpaces(page int, pageSize int) ([]entities.Space, error) {
 	var spaces []entities.Space
 	db := databases.GetDB()
-	err := db.Where("privacy_status = ?", false).Find(&spaces).Error
+
+	pagination := NewPagination(page, pageSize, DefaultPageSize)
+
+	err := pagination.ApplyPagination(db).Where("privacy_status = ?", false).Find(&spaces).Error
+
 	return spaces, err
 }
 
-func (r *SpaceRepository) GetMembers(spaceId uint) ([]entities.SpaceUser, error) {
+func (r *spaceRepositoryImpl) CountPublicSpaces() (int64, error) {
+	var count int64
+	db := databases.GetDB()
+	err := db.Model(&entities.Space{}).Where("privacy_status = ?", false).Count(&count).Error
+	return count, err
+}
+
+func (r *spaceRepositoryImpl) GetMembers(spaceId uint) ([]entities.SpaceUser, error) {
 	var members []entities.SpaceUser
 	db := databases.GetDB()
 	err := db.Preload("User").Preload("SpaceRole").Where("space_id = ?", spaceId).Find(&members).Error
 	return members, err
 }
 
-func (r *SpaceRepository) GetInvitations(spaceId uint) ([]entities.SpaceInvitation, error) {
+func (r *spaceRepositoryImpl) GetInvitations(spaceId uint) ([]entities.SpaceInvitation, error) {
 	var invitations []entities.SpaceInvitation
 	db := databases.GetDB()
 	err := db.Preload("InvitedUser").Preload("SpaceRole").Where("space_id = ?", spaceId).Find(&invitations).Error
 	return invitations, err
 }
 
-func (r *SpaceRepository) GetUserRole(userID, spaceID uint) (*entities.SpaceRole, error) {
+func (r *spaceRepositoryImpl) GetUserRole(userID, spaceID uint) (*entities.SpaceRole, error) {
 	db := databases.GetDB()
 	var spaceUser entities.SpaceUser
 
@@ -57,7 +85,7 @@ func (r *SpaceRepository) GetUserRole(userID, spaceID uint) (*entities.SpaceRole
 	return &spaceUser.SpaceRole, nil
 }
 
-func (s *SpaceRepository) CreateInvitation(invitation *entities.SpaceInvitation) (*entities.SpaceInvitation, error) {
+func (s *spaceRepositoryImpl) CreateInvitation(invitation *entities.SpaceInvitation) (*entities.SpaceInvitation, error) {
 	db := databases.GetDB()
 	if err := db.Create(invitation).Error; err != nil {
 		return nil, err
@@ -65,7 +93,7 @@ func (s *SpaceRepository) CreateInvitation(invitation *entities.SpaceInvitation)
 	return invitation, nil
 }
 
-func (r *SpaceRepository) GetAllRoles() ([]entities.SpaceRole, error) {
+func (r *spaceRepositoryImpl) GetAllRoles() ([]entities.SpaceRole, error) {
 	var roles []entities.SpaceRole
 	db := databases.GetDB()
 	if err := db.Find(&roles).Error; err != nil {
@@ -74,7 +102,7 @@ func (r *SpaceRepository) GetAllRoles() ([]entities.SpaceRole, error) {
 	return roles, nil
 }
 
-func (s *SpaceRepository) JoinPublicSpace(spaceID uint, userID uint) error {
+func (s *spaceRepositoryImpl) JoinPublicSpace(spaceID uint, userID uint) error {
 	db := databases.GetDB()
 	var space entities.Space
 	if err := db.First(&space, spaceID).Error; err != nil {
@@ -101,7 +129,7 @@ func (s *SpaceRepository) JoinPublicSpace(spaceID uint, userID uint) error {
 	return nil
 }
 
-func (s *SpaceRepository) IsMemberOfSpace(userID uint, spaceID uint) (bool, error) {
+func (s *spaceRepositoryImpl) IsMemberOfSpace(userID uint, spaceID uint) (bool, error) {
 	var count int64
 	db := databases.GetDB()
 	err := db.Model(&entities.SpaceUser{}).
@@ -115,7 +143,7 @@ func (s *SpaceRepository) IsMemberOfSpace(userID uint, spaceID uint) (bool, erro
 	return count > 0, nil
 }
 
-func (s *SpaceRepository) CountSpacesByUserID(userID uint) (int64, error) {
+func (s *spaceRepositoryImpl) CountSpacesByUserID(userID uint) (int64, error) {
 	var count int64
 	err := databases.GetDB().
 		Table("space_users").
@@ -124,7 +152,7 @@ func (s *SpaceRepository) CountSpacesByUserID(userID uint) (int64, error) {
 	return count, err
 }
 
-func (r *SpaceRepository) GetPopularSpaces(order string) ([]entities.Space, error) {
+func (r *spaceRepositoryImpl) GetPopularSpaces(order string) ([]entities.Space, error) {
 	var spaces []entities.Space
 	db := databases.GetDB()
 
@@ -142,7 +170,7 @@ func (r *SpaceRepository) GetPopularSpaces(order string) ([]entities.Space, erro
 	return []entities.Space{}, nil
 }
 
-func (r *SpaceRepository) UpdateMemberRole(spaceID, memberID, roleID, updatedBy uint) error {
+func (r *spaceRepositoryImpl) UpdateMemberRole(spaceID, memberID, roleID, updatedBy uint) error {
 	db := databases.GetDB()
 
 	var spaceUser entities.SpaceUser
@@ -158,7 +186,7 @@ func (r *SpaceRepository) UpdateMemberRole(spaceID, memberID, roleID, updatedBy 
 	return nil
 }
 
-func (r *SpaceRepository) RemoveMember(spaceID, memberID uint) error {
+func (r *spaceRepositoryImpl) RemoveMember(spaceID, memberID uint) error {
 	db := databases.GetDB()
 
 	var spaceUser entities.SpaceUser

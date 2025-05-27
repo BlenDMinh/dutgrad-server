@@ -41,6 +41,8 @@ type RAGServerConfig struct {
 	BaseURL           string `yaml:"base_url"`
 	UploadDocumentURL string `yaml:"upload_document_url"`
 	ChatURL           string `yaml:"chat_url"`
+	RemoveDocURL      string `yaml:"remove_doc_url"`
+	RemoveSpaceURL    string `yaml:"remove_space_url"`
 }
 type Config struct {
 	Port         int              `yaml:"port"`

@@ -3,51 +3,49 @@ package controllers
 import (
 	"errors"
 	"net/http"
-	"strconv"
 
 	"github.com/BlenDMinh/dutgrad-server/databases/entities"
 	"github.com/BlenDMinh/dutgrad-server/helpers"
-	"github.com/BlenDMinh/dutgrad-server/models"
+	"github.com/BlenDMinh/dutgrad-server/models/dtos"
 	"github.com/BlenDMinh/dutgrad-server/services"
 	"github.com/gin-gonic/gin"
 )
 
 type SpaceApiKeyController struct {
 	CrudController[entities.SpaceAPIKey, uint]
+	service services.SpaceApiKeyService
 }
 
-func NewSpaceApiKeyController() *SpaceApiKeyController {
+func NewSpaceApiKeyController(
+	service services.SpaceApiKeyService,
+) *SpaceApiKeyController {
+	crudController := NewCrudController(service)
 	return &SpaceApiKeyController{
-		CrudController: *NewCrudController(services.NewSpaceApiKeyService()),
+		CrudController: *crudController,
+		service:        service,
 	}
 }
 
-func (ctrl *SpaceApiKeyController) Create(c *gin.Context) {
-	spaceID, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid space id"})
+func (c *SpaceApiKeyController) Create(ctx *gin.Context) {
+	spaceID, ok := ExtractID(ctx, "id")
+	if !ok {
 		return
 	}
 
-	var input struct {
-		Name        string `json:"name"`
-		Description string `json:"description"`
-	}
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	var input dtos.CreateApiKeyRequest
+	if !HandleBindJSON(ctx, &input) {
 		return
 	}
 
 	apiKey := entities.SpaceAPIKey{
 		Name:        input.Name,
 		Description: input.Description,
-		SpaceID:     uint(spaceID),
+		SpaceID:     spaceID,
 	}
 
-	created, err := ctrl.service.(*services.SpaceApiKeyService).Create(&apiKey)
-
+	created, err := c.service.Create(&apiKey)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(ctx, http.StatusInternalServerError, "Failed to create API key", err)
 		return
 	}
 
@@ -56,51 +54,50 @@ func (ctrl *SpaceApiKeyController) Create(c *gin.Context) {
 		"key_id":   created.ID,
 	}, nil)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate JWT"})
+		HandleError(ctx, http.StatusInternalServerError, "Failed to generate JWT", err)
 		return
 	}
 
-	response := gin.H{
-		"id":          created.ID,
-		"name":        created.Name,
-		"description": created.Description,
-		"space_id":    created.SpaceID,
-		"token":       token,
+	response := dtos.ApiKeyResponse{
+		ID:          created.ID,
+		Name:        created.Name,
+		Description: created.Description,
+		SpaceID:     created.SpaceID,
+		Token:       token,
 	}
-	c.JSON(201, models.NewSuccessResponse(201, "Created", response))
+
+	HandleCreated(ctx, "API key created successfully", response)
 }
 
-func (ctrl *SpaceApiKeyController) List(c *gin.Context) {
-	spaceId, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid space id"})
+func (c *SpaceApiKeyController) List(ctx *gin.Context) {
+	spaceId, ok := ExtractID(ctx, "id")
+	if !ok {
 		return
 	}
 
-	items, err := ctrl.service.(*services.SpaceApiKeyService).GetAllBySpaceID(uint(spaceId))
+	items, err := c.service.GetAllBySpaceID(spaceId)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(ctx, http.StatusInternalServerError, "Failed to retrieve API keys", err)
 		return
 	}
 
-	c.JSON(http.StatusOK, models.NewSuccessResponse(
-		http.StatusOK,
-		"Success",
-		gin.H{"API": items},
-	))
+	HandleSuccess(ctx, "API keys retrieved successfully", gin.H{"API": items})
 }
 
-func (ctrl *SpaceApiKeyController) GetOne(c *gin.Context) {
-	spaceID, err1 := strconv.Atoi(c.Param("id"))
-	keyID, err2 := strconv.Atoi(c.Param("keyId"))
-	if err1 != nil || err2 != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid ids"})
+func (c *SpaceApiKeyController) GetOne(ctx *gin.Context) {
+	spaceID, ok1 := ExtractID(ctx, "id")
+	if !ok1 {
 		return
 	}
 
-	item, err := ctrl.service.GetById(uint(keyID))
-	if err != nil || item == nil || item.SpaceID != uint(spaceID) {
-		c.JSON(http.StatusNotFound, gin.H{"error": "API key not found"})
+	keyID, ok2 := ExtractID(ctx, "keyId")
+	if !ok2 {
+		return
+	}
+
+	item, err := c.service.GetById(keyID)
+	if err != nil || item == nil || item.SpaceID != spaceID {
+		HandleError(ctx, http.StatusNotFound, "API key not found", err)
 		return
 	}
 
@@ -109,46 +106,45 @@ func (ctrl *SpaceApiKeyController) GetOne(c *gin.Context) {
 		"key_id":   item.ID,
 	}, nil)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate JWT"})
+		HandleError(ctx, http.StatusInternalServerError, "Failed to generate JWT", err)
 		return
 	}
 
-	response := gin.H{
-		"id":          item.ID,
-		"name":        item.Name,
-		"description": item.Description,
-		"space_id":    item.SpaceID,
-		"token":       token,
+	response := dtos.ApiKeyResponse{
+		ID:          item.ID,
+		Name:        item.Name,
+		Description: item.Description,
+		SpaceID:     item.SpaceID,
+		Token:       token,
 	}
 
-	c.JSON(http.StatusOK, models.NewSuccessResponse(
-		http.StatusOK,
-		"Success",
-		gin.H{"API": response},
-	))
+	HandleSuccess(ctx, "API key retrieved successfully", gin.H{"API": response})
 }
 
-func (ctrl *SpaceApiKeyController) Delete(c *gin.Context) {
-	spaceID, err1 := strconv.Atoi(c.Param("id"))
-	keyID, err2 := strconv.Atoi(c.Param("keyId"))
-	if err1 != nil || err2 != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid ids"})
+func (c *SpaceApiKeyController) Delete(ctx *gin.Context) {
+	spaceID, ok1 := ExtractID(ctx, "id")
+	if !ok1 {
 		return
 	}
 
-	item, err := ctrl.service.GetById(uint(keyID))
-	if err != nil || item == nil || item.SpaceID != uint(spaceID) {
-		c.JSON(http.StatusNotFound, gin.H{"error": "API key not found"})
+	keyID, ok2 := ExtractID(ctx, "keyId")
+	if !ok2 {
 		return
 	}
 
-	err = ctrl.service.Delete(uint(keyID))
+	item, err := c.service.GetById(keyID)
+	if err != nil || item == nil || item.SpaceID != spaceID {
+		HandleError(ctx, http.StatusNotFound, "API key not found", err)
+		return
+	}
+
+	err = c.service.Delete(keyID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		HandleError(ctx, http.StatusInternalServerError, "Failed to delete API key", err)
 		return
 	}
 
-	c.JSON(http.StatusOK, models.NewSuccessResponse(http.StatusOK, "API key deleted successfully", gin.H{}))
+	HandleSuccess(ctx, "API key deleted successfully", nil)
 }
 
 func VerifySpaceAPIKey(tokenString string) (*entities.SpaceAPIKey, error) {

@@ -10,35 +10,80 @@ import (
 	"github.com/BlenDMinh/dutgrad-server/models/dtos"
 )
 
-type UserRepository struct {
+type UserRepository interface {
+	ICrudRepository[entities.User, uint]
+	GetSpacesByUserId(userId uint) ([]entities.Space, error)
+	GetByEmail(email string) (*entities.User, error)
+	UpdateMFAStatus(userID uint, enabled bool) error
+	GetInvitationsByUserId(InvitedUserId uint) ([]entities.SpaceInvitation, error)
+	SearchUsers(query string) ([]entities.User, error)
+	GetUserTier(userID uint) (*entities.Tier, error)
+	GetUserTierUsage(userID uint) (*dtos.TierUsageResponse, error)
+}
+
+type userRepositoryImpl struct {
 	*CrudRepository[entities.User, uint]
 }
 
-func NewUserRepository() *UserRepository {
-	return &UserRepository{
-		CrudRepository: NewCrudRepository[entities.User, uint](),
+func NewUserRepository() UserRepository {
+	crudRepository := NewCrudRepository[entities.User, uint]()
+	crudRepository.Preload = []string{"Tier"}
+	return &userRepositoryImpl{
+		CrudRepository: crudRepository,
 	}
 }
 
-func (r *UserRepository) GetSpacesByUserId(userId uint) ([]entities.Space, error) {
-	var spaces []entities.Space
+func (r *userRepositoryImpl) GetSpacesByUserId(userId uint) ([]entities.Space, error) {
 	db := databases.GetDB()
-	err := db.Joins("JOIN space_users ON space_users.space_id = spaces.id").
-		Where("space_users.user_id = ?", userId).
-		Find(&spaces).Error
-	return spaces, err
+	var spaceUsers []entities.SpaceUser
+	err := db.Preload("Space").Preload("SpaceRole").
+		Where("user_id = ?", userId).
+		Find(&spaceUsers).Error
+
+	if err != nil {
+		return nil, err
+	}
+	var userSpaces []entities.Space
+	for _, spaceUser := range spaceUsers {
+		userSpaces = append(userSpaces, spaceUser.Space)
+	}
+
+	return userSpaces, nil
 }
 
-func (r *UserRepository) GetUserByEmail(email string) (*entities.User, error) {
-	var user entities.User
+func (r *userRepositoryImpl) GetByEmail(email string) (*entities.User, error) {
 	db := databases.GetDB()
+	var user entities.User
 	if err := db.Where("email = ?", email).First(&user).Error; err != nil {
 		return nil, err
 	}
 	return &user, nil
 }
 
-func (r *UserRepository) GetInvitationsByUserId(InvitedUserId uint) ([]entities.SpaceInvitation, error) {
+func (r *userRepositoryImpl) UpdateMFAStatus(userID uint, enabled bool) error {
+	db := databases.GetDB()
+	return db.Model(&entities.User{}).Where("id = ?", userID).Update("mfa_enabled", enabled).Error
+}
+
+func (r *userRepositoryImpl) Transaction(fn func(*databases.Transaction) error) error {
+	db := databases.GetDB()
+	tx := db.Begin()
+
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	if err := fn(&databases.Transaction{DB: tx}); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return tx.Commit().Error
+}
+
+func (r *userRepositoryImpl) GetInvitationsByUserId(InvitedUserId uint) ([]entities.SpaceInvitation, error) {
 	var invitations []entities.SpaceInvitation
 	db := databases.GetDB()
 	err := db.Preload("Space").Preload("Inviter").
@@ -49,7 +94,7 @@ func (r *UserRepository) GetInvitationsByUserId(InvitedUserId uint) ([]entities.
 	return invitations, nil
 }
 
-func (r *UserRepository) SearchUsers(query string) ([]entities.User, error) {
+func (r *userRepositoryImpl) SearchUsers(query string) ([]entities.User, error) {
 	var users []entities.User
 	db := databases.GetDB()
 
@@ -68,7 +113,7 @@ func (r *UserRepository) SearchUsers(query string) ([]entities.User, error) {
 	return users, nil
 }
 
-func (r *UserRepository) GetUserTier(userID uint) (*entities.Tier, error) {
+func (r *userRepositoryImpl) GetUserTier(userID uint) (*entities.Tier, error) {
 	db := databases.GetDB()
 	var user entities.User
 
@@ -83,7 +128,7 @@ func (r *UserRepository) GetUserTier(userID uint) (*entities.Tier, error) {
 	return user.Tier, nil
 }
 
-func (s *UserRepository) GetUserTierUsage(userID uint) (*dtos.TierUsageResponse, error) {
+func (s *userRepositoryImpl) GetUserTierUsage(userID uint) (*dtos.TierUsageResponse, error) {
 	tier, err := s.GetUserTier(userID)
 	if err != nil {
 		return nil, err

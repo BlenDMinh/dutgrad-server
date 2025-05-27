@@ -2,10 +2,11 @@ package controllers
 
 import (
 	"fmt"
+	"net/http"
 	"strconv"
 
 	"github.com/BlenDMinh/dutgrad-server/databases/entities"
-	"github.com/BlenDMinh/dutgrad-server/models"
+	"github.com/BlenDMinh/dutgrad-server/models/dtos"
 	"github.com/BlenDMinh/dutgrad-server/services"
 	"github.com/gin-gonic/gin"
 )
@@ -67,126 +68,119 @@ func (c *CrudController[T, ID]) Retrieve(ctx *gin.Context) {
 	pageSize, _ := strconv.Atoi(pageSizeStr)
 
 	entities, err := c.service.GetAll(page, pageSize)
-
 	if err != nil {
-		errMsg := err.Error()
-		ctx.JSON(500, models.NewErrorResponse(500, "Internal Server Error", &errMsg))
+		HandleError(ctx, http.StatusInternalServerError, "Failed to retrieve entities", err)
 		return
 	}
 
 	total, err := c.service.Count()
-
 	if err != nil {
-		errMsg := err.Error()
-		ctx.JSON(500, models.NewErrorResponse(500, "Internal Server Error", &errMsg))
+		HandleError(ctx, http.StatusInternalServerError, "Failed to count entities", err)
 		return
 	}
 
-	ctx.JSON(200, models.NewPaginationResponse(200, "Retrieve", entities, int64(page), int64(pageSize), total))
+	pagination := dtos.PaginationResponse{
+		CurrentPage: page,
+		PageSize:    pageSize,
+		TotalPages:  (total + int64(pageSize) - 1) / int64(pageSize),
+		TotalItems:  total,
+		HasNext:     int64(page*pageSize) < total,
+		HasPrev:     page > 1,
+	}
+
+	HandleSuccess(ctx, "Entities retrieved successfully", gin.H{
+		"data":       entities,
+		"pagination": pagination,
+	})
 }
 
 func (c *CrudController[T, ID]) RetrieveOne(ctx *gin.Context) {
 	id, err := c.parseID(ctx)
 	if err != nil {
-		errMsg := err.Error()
-		ctx.JSON(400, models.NewErrorResponse(400, "Bad Request", &errMsg))
+		HandleError(ctx, http.StatusBadRequest, "Invalid ID format", err)
 		return
 	}
 
 	entity, err := c.service.GetById(id)
 	if err != nil {
-		errMsg := err.Error()
-		ctx.JSON(500, models.NewErrorResponse(500, "Internal Server Error", &errMsg))
+		HandleError(ctx, http.StatusInternalServerError, "Failed to retrieve entity", err)
 		return
 	}
 
-	ctx.JSON(200, models.NewSuccessResponse(200, "Retrieve", entity))
+	HandleSuccess(ctx, "Entity retrieved successfully", entity)
 }
 
 func (c *CrudController[T, ID]) Create(ctx *gin.Context) {
 	model := c.getModel()
-	if err := ctx.ShouldBindJSON(model); err != nil {
-		errMsg := err.Error()
-		ctx.JSON(400, models.NewErrorResponse(400, "Bad Request", &errMsg))
+	if !HandleBindJSON(ctx, model) {
 		return
 	}
 
 	createdModel, err := c.service.Create(model)
 	if err != nil {
-		errMsg := err.Error()
-		ctx.JSON(500, models.NewErrorResponse(500, "Internal Server Error", &errMsg))
+		HandleError(ctx, http.StatusInternalServerError, "Failed to create entity", err)
 		return
 	}
 
-	ctx.JSON(201, models.NewSuccessResponse(201, "Created", createdModel))
+	HandleCreated(ctx, "Entity created successfully", createdModel)
 }
 
 func (c *CrudController[T, ID]) Update(ctx *gin.Context) {
 	id, err := c.parseID(ctx)
 	if err != nil {
-		errMsg := err.Error()
-		ctx.JSON(400, models.NewErrorResponse(400, "Bad Request", &errMsg))
+		HandleError(ctx, http.StatusBadRequest, "Invalid ID format", err)
 		return
 	}
 
 	model := c.getModel()
-	if err := ctx.ShouldBindJSON(model); err != nil {
-		errMsg := err.Error()
-		ctx.JSON(400, models.NewErrorResponse(400, "Bad Request", &errMsg))
+	if !HandleBindJSON(ctx, model) {
 		return
 	}
 
 	updatedModel, err := c.service.UpdateByID(id, model)
 	if err != nil {
-		errMsg := err.Error()
-		ctx.JSON(500, models.NewErrorResponse(500, "Internal Server Error", &errMsg))
+		HandleError(ctx, http.StatusInternalServerError, "Failed to update entity", err)
 		return
 	}
 
-	ctx.JSON(200, models.NewSuccessResponse(200, "Updated", updatedModel))
+	HandleSuccess(ctx, "Entity updated successfully", updatedModel)
 }
 
 func (c *CrudController[T, ID]) Patch(ctx *gin.Context) {
 	id, err := c.parseID(ctx)
 	if err != nil {
-		errMsg := err.Error()
-		ctx.JSON(400, models.NewErrorResponse(400, "Bad Request", &errMsg))
+		HandleError(ctx, http.StatusBadRequest, "Invalid ID format", err)
 		return
 	}
 
 	model := c.getModel()
-	if err := ctx.ShouldBindJSON(model); err != nil {
-		errMsg := err.Error()
-		ctx.JSON(400, models.NewErrorResponse(400, "Bad Request", &errMsg))
+	if !HandleBindJSON(ctx, model) {
 		return
 	}
 
 	patchedModel, err := c.service.PatchByID(id, model)
 	if err != nil {
-		errMsg := err.Error()
-		ctx.JSON(500, models.NewErrorResponse(500, "Internal Server Error", &errMsg))
+		HandleError(ctx, http.StatusInternalServerError, "Failed to patch entity", err)
 		return
 	}
 
-	ctx.JSON(200, models.NewSuccessResponse(200, "Patched", patchedModel))
+	HandleSuccess(ctx, "Entity patched successfully", patchedModel)
 }
 
 func (c *CrudController[T, ID]) Delete(ctx *gin.Context) {
 	id, err := c.parseID(ctx)
 	if err != nil {
-		errMsg := err.Error()
-		ctx.JSON(400, models.NewErrorResponse(400, "Bad Request", &errMsg))
+		HandleError(ctx, http.StatusBadRequest, "Invalid ID format", err)
 		return
 	}
 
 	err = c.service.Delete(id)
 	if err != nil {
-		errMsg := err.Error()
-		ctx.JSON(500, models.NewErrorResponse(500, "Internal Server Error", &errMsg))
+		HandleError(ctx, http.StatusInternalServerError, "Failed to delete entity", err)
 		return
 	}
 
-	ctx.JSON(200, models.NewSuccessResponse(200, "Deleted", gin.H{}))
+	HandleSuccess(ctx, "Entity deleted successfully", nil)
 }
 
 func (c *CrudController[T, ID]) RegisterCRUD(router gin.IRouter) {

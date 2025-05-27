@@ -2,6 +2,12 @@ package entities
 
 import "time"
 
+const (
+	InvitationStatusPending  = "pending"
+	InvitationStatusAccepted = "accepted"
+	InvitationStatusDeclined = "declined"
+)
+
 type SpaceInvitation struct {
 	ID            uint       `json:"id"`
 	SpaceID       uint       `json:"space_id"`

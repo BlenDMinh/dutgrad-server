@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dutgrad Server Chat Session Test Report</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1, h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        h1 {
+            text-align: center;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+        }
+        .summary {
+            background-color: #fff;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .summary-header {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #2c3e50;
+            font-size: 1.2em;
+        }
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .summary-label {
+            font-weight: bold;
+        }
+        .pass {
+            color: #27ae60;
+        }
+        .fail {
+            color: #e74c3c;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+            font-weight: 600;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .status-cell {
+            font-weight: bold;
+        }
+        .time-cell {
+            text-align: right;
+        }
+        .timestamp {
+            color: #7f8c8d;
+            font-size: 0.9em;
+            margin-top: 30px;
+            text-align: center;
+        }
+        .test-section {
+            margin-bottom: 30px;
+        }
+        .success-summary {
+            background-color: #e8f5e9;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #3498db;
+        }
+        .success-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #2e7d32;
+        }
+    </style>
+</head>
+<body>
+    <h1>Dutgrad Server Chat Session Test Report</h1>
+    
+    <div class="summary">
+        <div class="summary-header">Test Summary</div>
+        <div class="summary-item">
+            <span class="summary-label">Status:</span>
+            <span class="pass">PASS</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-label">Total Duration:</span>
+            <span>1.926s</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-label">Test Date:</span>
+            <span>May 21, 2025</span>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Chat Session Management</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Test Case</th>
+                    <th>Status</th>
+                    <th>HTTP Code</th>
+                    <th>Response</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Create new chat session</td>
+                    <td class="status-cell pass">PASS</td>
+                    <td>200</td>
+                    <td>OK</td>
+                </tr>
+                <tr>
+                    <td>Missing space id</td>
+                    <td class="status-cell pass">PASS</td>
+                    <td>400</td>
+                    <td>Bad Request</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="test-section">
+        <h2>Chat Session Listing</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Test Case</th>
+                    <th>Status</th>
+                    <th>HTTP Code</th>
+                    <th>Response</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Get My Chat Sessions</td>
+                    <td class="status-cell pass">PASS</td>
+                    <td>200</td>
+                    <td>OK</td>
+                </tr>
+                <tr>
+                    <td>Count My Chat Sessions</td>
+                    <td class="status-cell pass">PASS</td>
+                    <td>200</td>
+                    <td>OK</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="test-section">
+        <h2>Temporary Message</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Test Case</th>
+                    <th>Status</th>
+                    <th>HTTP Code</th>
+                    <th>Response</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Get temp message for session 2</td>
+                    <td class="status-cell pass">PASS</td>
+                    <td>200</td>
+                    <td>OK</td>
+                </tr>
+                <tr>
+                    <td>Session not found</td>
+                    <td class="status-cell pass">PASS</td>
+                    <td>404</td>
+                    <td>Not Found</td>
+                </tr>
+                <tr>
+                    <td>Invalid session ID</td>
+                    <td class="status-cell pass">PASS</td>
+                    <td>400</td>
+                    <td>Bad Request</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="test-section">
+        <h2>Chat History</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Test Case</th>
+                    <th>Status</th>
+                    <th>HTTP Code</th>
+                    <th>Response</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Get chat history for session 1</td>
+                    <td class="status-cell pass">PASS</td>
+                    <td>200</td>
+                    <td>OK</td>
+                </tr>
+                <tr>
+                    <td>Get chat history for session 2</td>
+                    <td class="status-cell pass">PASS</td>
+                    <td>200</td>
+                    <td>OK</td>
+                </tr>
+                <tr>
+                    <td>Session not found</td>
+                    <td class="status-cell pass">PASS</td>
+                    <td>404</td>
+                    <td>Not Found</td>
+                </tr>
+                <tr>
+                    <td>Invalid session ID</td>
+                    <td class="status-cell pass">PASS</td>
+                    <td>400</td>
+                    <td>Bad Request</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="test-section">
+        <h2>Clear Chat History</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Test Case</th>
+                    <th>Status</th>
+                    <th>HTTP Code</th>
+                    <th>Response</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Clear chat history for session 1</td>
+                    <td class="status-cell pass">PASS</td>
+                    <td>200</td>
+                    <td>OK</td>
+                </tr>
+                <tr>
+                    <td>Session not found</td>
+                    <td class="status-cell pass">PASS</td>
+                    <td>404</td>
+                    <td>Not Found</td>
+                </tr>
+                <tr>
+                    <td>Invalid session ID</td>
+                    <td class="status-cell pass">PASS</td>
+                    <td>400</td>
+                    <td>Bad Request</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="test-section">
+        <h2>Query API</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Test Case</th>
+                    <th>Status</th>
+                    <th>HTTP Code</th>
+                    <th>Response</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Ask a question with valid session</td>
+                    <td class="status-cell pass">PASS</td>
+                    <td>200</td>
+                    <td>OK</td>
+                </tr>
+                <tr>
+                    <td>Session not found</td>
+                    <td class="status-cell pass">PASS</td>
+                    <td>404</td>
+                    <td>Not Found</td>
+                </tr>
+                <tr>
+                    <td>Missing query</td>
+                    <td class="status-cell pass">PASS</td>
+                    <td>400</td>
+                    <td>Bad Request</td>
+                </tr>
+                <tr>
+                    <td>Missing session ID</td>
+                    <td class="status-cell pass">PASS</td>
+                    <td>400</td>
+                    <td>Bad Request</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="test-section">
+        <h2>Thông tin chi tiết</h2>
+        <p>Tất cả các test cases đã thực hiện thành công, xác nhận rằng các API Chat Session hoạt động đúng như thiết kế:</p>
+        <ul>
+            <li>Tạo session chat mới hoạt động chính xác và xử lý lỗi đúng khi thiếu không gian</li>
+            <li>Liệt kê và đếm các phiên chat của người dùng hoạt động đúng</li>
+            <li>Lấy tin nhắn tạm thời cho phiên chat hoạt động chính xác</li>
+            <li>Lấy và xóa lịch sử chat hoạt động đúng chức năng</li>
+            <li>API truy vấn (Ask) xử lý câu hỏi đúng cách</li>
+            <li>Tất cả các API đều xử lý đúng các trường hợp lỗi như không tìm thấy phiên, ID không hợp lệ, hoặc thiếu thông tin cần thiết</li>
+        </ul>
+    </div>
+    
+    <p class="timestamp">
+        Report generated on: May 21, 2025 at 21:09:11
+    </p>
+</body>
+</html>

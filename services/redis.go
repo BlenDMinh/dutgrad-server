@@ -77,7 +77,7 @@ func (s *RedisService) Get(key string) (string, error) {
 	return val, nil
 }
 
-func (s *RedisService) Del(key string) error {
+func (s *RedisService) Delete(key string) error {
 	err := s.client.Del(context.Background(), key).Err()
 	if err != nil {
 		log.Printf("Redis DEL error for key %s: %v", key, err)

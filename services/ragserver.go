@@ -11,6 +11,8 @@ import (
 	"net/textproto"
 
 	"github.com/BlenDMinh/dutgrad-server/configs"
+	"github.com/BlenDMinh/dutgrad-server/databases"
+	"github.com/BlenDMinh/dutgrad-server/databases/entities"
 	"github.com/BlenDMinh/dutgrad-server/helpers"
 )
 
@@ -18,6 +20,8 @@ type RAGServerService struct {
 	BaseURL           string
 	UploadDocumentURL string
 	ChatURL           string
+	RemoveDocURL      string
+	RemoveSpaceURL    string
 }
 
 func NewRAGServerService() *RAGServerService {
@@ -26,10 +30,12 @@ func NewRAGServerService() *RAGServerService {
 		BaseURL:           config.RAGServer.BaseURL,
 		UploadDocumentURL: config.RAGServer.UploadDocumentURL,
 		ChatURL:           config.RAGServer.ChatURL,
+		RemoveDocURL:      config.RAGServer.RemoveDocURL,
+		RemoveSpaceURL:    config.RAGServer.RemoveSpaceURL,
 	}
 }
 
-func (s *RAGServerService) UploadDocument(fileHeader *multipart.FileHeader, spaceID uint, docId uint) error {
+func (s *RAGServerService) UploadDocument(fileHeader *multipart.FileHeader, spaceID uint, docId uint, filePath string, desc string) error {
 	file, err := fileHeader.Open()
 	if err != nil {
 		return err
@@ -61,6 +67,12 @@ func (s *RAGServerService) UploadDocument(fileHeader *multipart.FileHeader, spac
 		return err
 	}
 	if err = writer.WriteField("docId", fmt.Sprintf("%d", docId)); err != nil {
+		return err
+	}
+	if err = writer.WriteField("filePath", filePath); err != nil {
+		return err
+	}
+	if err = writer.WriteField("desc", desc); err != nil {
 		return err
 	}
 
@@ -101,10 +113,16 @@ func (s *RAGServerService) UploadDocument(fileHeader *multipart.FileHeader, spac
 func (s *RAGServerService) Chat(sessionID uint, spaceID uint, message string) (string, error) {
 	url := fmt.Sprintf("%s%s", s.BaseURL, s.ChatURL)
 
+	var space entities.Space
+	if err := databases.GetDB().Where("id = ?", spaceID).First(&space).Error; err != nil {
+		return "", fmt.Errorf("failed to get space: %v", err)
+	}
+
 	reqBody := map[string]interface{}{
-		"session_id": sessionID,
-		"space_id":   spaceID,
-		"input":      message,
+		"session_id":    sessionID,
+		"space_id":      spaceID,
+		"input":         message,
+		"system_prompt": space.SystemPrompt,
 	}
 
 	body, err := json.Marshal(reqBody)
@@ -145,11 +163,91 @@ func (s *RAGServerService) Chat(sessionID uint, spaceID uint, message string) (s
 	var response struct {
 		Output string `json:"output"`
 	}
-
 	err = json.Unmarshal(respBody, &response)
 	if err != nil {
 		return "", fmt.Errorf("failed to parse response: %v, raw response: %s", err, string(respBody))
 	}
 
 	return response.Output, nil
+}
+
+func (s *RAGServerService) RemoveDocument(docId uint, spaceID uint) error {
+	url := fmt.Sprintf("%s%s", s.BaseURL, s.RemoveDocURL)
+
+	reqBody := map[string]interface{}{
+		"docId":   docId,
+		"spaceId": spaceID,
+	}
+
+	body, err := json.Marshal(reqBody)
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequest("DELETE", url, bytes.NewBuffer(body))
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+
+	httpClient := &http.Client{
+		Transport: tr,
+	}
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		respBody, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("failed to remove document, status: %d, response: %s", resp.StatusCode, string(respBody))
+	}
+
+	return nil
+}
+
+func (s *RAGServerService) RemoveSpace(spaceID uint) error {
+	url := fmt.Sprintf("%s%s", s.BaseURL, s.RemoveSpaceURL)
+
+	reqBody := map[string]interface{}{
+		"spaceId": spaceID,
+	}
+
+	body, err := json.Marshal(reqBody)
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequest("DELETE", url, bytes.NewBuffer(body))
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+
+	httpClient := &http.Client{
+		Transport: tr,
+	}
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		respBody, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("failed to remove space, status: %d, response: %s", resp.StatusCode, string(respBody))
+	}
+
+	return nil
 }

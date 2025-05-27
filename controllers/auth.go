@@ -2,33 +2,40 @@ package controllers
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
+	"strings"
+	"time"
 
-	"github.com/BlenDMinh/dutgrad-server/models"
 	"github.com/BlenDMinh/dutgrad-server/models/dtos"
 	"github.com/BlenDMinh/dutgrad-server/services"
 	"github.com/gin-gonic/gin"
 )
 
 type AuthController struct {
-	authService  *services.AuthService
-	userService  *services.UserService
-	redisService *services.RedisService
+	authService *services.AuthService
+	userService services.UserService
+	kvStorage   services.KVStorage
+	mfaService  *services.MFAService
 }
 
-func NewAuthController() *AuthController {
+func NewAuthController(
+	authService *services.AuthService,
+	userService services.UserService,
+	kvStorage services.KVStorage,
+	mfaService *services.MFAService,
+) *AuthController {
 	return &AuthController{
-		authService:  &services.AuthService{},
-		userService:  &services.UserService{},
-		redisService: services.NewRedisService(),
+		authService: authService,
+		userService: userService,
+		kvStorage:   kvStorage,
+		mfaService:  mfaService,
 	}
 }
 
 func (ac *AuthController) Register(ctx *gin.Context) {
 	var req dtos.RegisterRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		errMsg := err.Error()
-		ctx.JSON(http.StatusBadRequest, models.NewErrorResponse(http.StatusBadRequest, "Invalid request format", &errMsg))
+	if !HandleBindJSON(ctx, &req) {
 		return
 	}
 
@@ -40,46 +47,179 @@ func (ac *AuthController) Register(ctx *gin.Context) {
 		if err.Error() == "user with this email already exists" {
 			statusCode = http.StatusConflict
 		}
-		errMsg := err.Error()
-		ctx.JSON(statusCode, models.NewErrorResponse(statusCode, "Registration failed", &errMsg))
+		HandleError(ctx, statusCode, "Registration failed", err)
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, models.NewSuccessResponse(http.StatusCreated, "User registered successfully", dtos.AuthResponse{
+	HandleCreated(ctx, "User registered successfully", dtos.AuthResponse{
 		Token:     token,
 		User:      user,
 		IsNewUser: true,
 		Expires:   expiresAt,
-	}))
+	})
 }
 
 func (ac *AuthController) Login(ctx *gin.Context) {
 	var req dtos.LoginRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		errMsg := err.Error()
-		ctx.JSON(http.StatusBadRequest, models.NewErrorResponse(http.StatusBadRequest, "Invalid request format", &errMsg))
+	if !HandleBindJSON(ctx, &req) {
 		return
 	}
 
-	user, token, expiresAt, err := ac.authService.LoginUser(req.Email, req.Password)
+	user, requiresMFA, err := ac.mfaService.FirstFactorAuth(req.Email, req.Password)
 	if err != nil {
-		errMsg := err.Error()
-		ctx.JSON(http.StatusUnauthorized, models.NewErrorResponse(http.StatusUnauthorized, "Authentication failed", &errMsg))
+		HandleError(ctx, http.StatusUnauthorized, "Authentication failed", err)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, models.NewSuccessResponse(http.StatusOK, "Login successful", dtos.AuthResponse{
+	if !requiresMFA {
+		token, expiresAt, err := ac.mfaService.CompleteLogin(user.ID)
+		if err != nil {
+			HandleError(ctx, http.StatusInternalServerError, "Login failed", err)
+			return
+		}
+
+		HandleSuccess(ctx, "Login successful", dtos.AuthResponse{
+			Token:   token,
+			User:    user,
+			Expires: expiresAt,
+		})
+		return
+	}
+
+	tempToken, expiresAt, err := ac.mfaService.CreateTempToken(user.ID)
+	if err != nil {
+		HandleError(ctx, http.StatusInternalServerError, "Failed to create temporary token", err)
+		return
+	}
+
+	HandleSuccess(ctx, "MFA verification required", gin.H{
+		"requires_mfa": true,
+		"temp_token":   tempToken,
+		"expires_at":   expiresAt.Format(time.RFC3339),
+		"user": gin.H{
+			"id":       user.ID,
+			"username": user.Username,
+			"email":    user.Email,
+		},
+	})
+}
+
+func (ac *AuthController) VerifyMFA(ctx *gin.Context) {
+	var req dtos.MFALoginCompleteRequest
+	if !HandleBindJSON(ctx, &req) {
+		return
+	}
+
+	authHeader := ctx.GetHeader("Authorization")
+	if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
+		HandleError(ctx, http.StatusUnauthorized, "Unauthorized", nil)
+		return
+	}
+
+	tempToken := strings.TrimPrefix(authHeader, "Bearer ")
+	log.Printf("Temp token: %s", tempToken)
+
+	userID, err := ac.mfaService.GetUserIDFromTempToken(tempToken)
+	log.Printf("User ID from temp token: %d", userID)
+	if err != nil {
+		HandleError(ctx, http.StatusUnauthorized, "Invalid or expired temporary token", err)
+		return
+	}
+
+	isValid := ac.mfaService.VerifyMFACode(userID, req.Code, req.UseBackupCode)
+	log.Printf("MFA code valid: %v", isValid)
+	if !isValid {
+		HandleError(ctx, http.StatusUnauthorized, "Invalid MFA code", nil)
+		return
+	}
+
+	user, err := ac.userService.GetById(userID)
+	if err != nil {
+		HandleError(ctx, http.StatusInternalServerError, "Failed to get user", err)
+		return
+	}
+
+	token, expiresAt, err := ac.mfaService.CompleteLogin(userID)
+	if err != nil {
+		HandleError(ctx, http.StatusInternalServerError, "Failed to complete login", err)
+		return
+	}
+
+	HandleSuccess(ctx, "Login successful", dtos.AuthResponse{
 		Token:   token,
 		User:    user,
 		Expires: expiresAt,
-	}))
+	})
+}
+
+func (ac *AuthController) GetMFAStatus(ctx *gin.Context) {
+	userID, ok := ExtractID(ctx, "user_id")
+	if !ok {
+		return
+	}
+
+	mfaEnabled, err := ac.mfaService.GetUserMFAStatus(userID)
+	if err != nil {
+		HandleError(ctx, http.StatusInternalServerError, "Failed to get MFA status", err)
+		return
+	}
+
+	HandleSuccess(ctx, "MFA status retrieved", gin.H{
+		"mfa_enabled": mfaEnabled,
+	})
+}
+
+func (ac *AuthController) SetupMFA(ctx *gin.Context) {
+	userID, ok := ExtractID(ctx, "user_id")
+	if !ok {
+		return
+	}
+
+	setupResponse, err := ac.mfaService.GenerateMFASetup(userID)
+	if err != nil {
+		HandleError(ctx, http.StatusBadRequest, "Failed to set up MFA", err)
+		return
+	}
+
+	HandleSuccess(ctx, "MFA setup initialized", setupResponse)
+}
+
+func (ac *AuthController) ConfirmMFA(ctx *gin.Context) {
+	userID, ok := ExtractID(ctx, "user_id")
+	if !ok {
+		return
+	}
+
+	var req dtos.MFAVerifyRequest
+	if !HandleBindJSON(ctx, &req) {
+		return
+	}
+
+	if err := ac.mfaService.VerifyMFASetup(userID, req.Code); err != nil {
+		HandleError(ctx, http.StatusBadRequest, "Failed to verify MFA setup", err)
+		return
+	}
+
+	HandleSuccess(ctx, "MFA has been enabled successfully", nil)
+}
+
+func (ac *AuthController) DisableMFA(ctx *gin.Context) {
+	userID, ok := ExtractID(ctx, "user_id")
+	if !ok {
+		return
+	}
+
+	if err := ac.mfaService.DisableMFA(userID); err != nil {
+		HandleError(ctx, http.StatusBadRequest, "Failed to disable MFA", err)
+		return
+	}
+
+	HandleSuccess(ctx, "MFA has been disabled successfully", nil)
 }
 
 func (ac *AuthController) ExternalAuth(ctx *gin.Context) {
 	var req dtos.ExternalAuthRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		errMsg := err.Error()
-		ctx.JSON(http.StatusBadRequest, models.NewErrorResponse(http.StatusBadRequest, "Invalid request format", &errMsg))
+	if !HandleBindJSON(ctx, &req) {
 		return
 	}
 
@@ -97,57 +237,47 @@ func (ac *AuthController) ExternalAuth(ctx *gin.Context) {
 		if err.Error() == "invalid authentication type" {
 			statusCode = http.StatusBadRequest
 		}
-		errMsg := err.Error()
-		ctx.JSON(statusCode, models.NewErrorResponse(statusCode, "Authentication failed", &errMsg))
+		HandleError(ctx, statusCode, "Authentication failed", err)
 		return
 	}
 
-	statusCode := http.StatusOK
-	message := "Login successful"
 	if isNewUser {
-		statusCode = http.StatusCreated
-		message = "User registered successfully"
+		HandleCreated(ctx, "User registered successfully", dtos.AuthResponse{
+			Token:     token,
+			User:      user,
+			IsNewUser: isNewUser,
+			Expires:   expiresAt,
+		})
+	} else {
+		HandleSuccess(ctx, "Login successful", dtos.AuthResponse{
+			Token:     token,
+			User:      user,
+			IsNewUser: isNewUser,
+			Expires:   expiresAt,
+		})
 	}
-
-	ctx.JSON(statusCode, models.NewSuccessResponse(statusCode, message, dtos.AuthResponse{
-		Token:   token,
-		User:    user,
-		Expires: expiresAt,
-	}))
 }
 
 func (ac *AuthController) ExchangeState(ctx *gin.Context) {
 	state := ctx.Query("state")
 	if state == "" {
-		ctx.JSON(http.StatusBadRequest, models.NewErrorResponse(
-			http.StatusBadRequest,
-			"Invalid state token",
-			nil))
+		HandleError(ctx, http.StatusBadRequest, "Invalid state token", nil)
 		return
 	}
 
-	authDataJSON, err := ac.redisService.Get(state)
+	authDataJSON, err := ac.kvStorage.Get(state)
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, models.NewErrorResponse(
-			http.StatusNotFound,
-			"State token expired or invalid",
-			nil))
+		HandleError(ctx, http.StatusNotFound, "State token expired or invalid", nil)
 		return
 	}
 
-	ac.redisService.Del(state)
+	ac.kvStorage.Delete(state)
 
 	var authResponse dtos.AuthResponse
 	if err := json.Unmarshal([]byte(authDataJSON), &authResponse); err != nil {
-		ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(
-			http.StatusInternalServerError,
-			"Failed to parse auth data",
-			nil))
+		HandleError(ctx, http.StatusInternalServerError, "Failed to parse auth data", err)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, models.NewSuccessResponse(
-		http.StatusOK,
-		"Token exchange successful",
-		authResponse))
+	HandleSuccess(ctx, "Token exchange successful", authResponse)
 }

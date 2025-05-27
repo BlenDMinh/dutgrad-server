@@ -14,6 +14,10 @@ import (
 
 var db *gorm.DB
 
+type Transaction struct {
+	DB *gorm.DB
+}
+
 func connect(driver string, dsn string) *gorm.DB {
 	var _db *gorm.DB
 	var err error

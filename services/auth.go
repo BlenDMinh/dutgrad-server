@@ -14,6 +14,10 @@ import (
 
 type AuthService struct{}
 
+func NewAuthService() *AuthService {
+	return &AuthService{}
+}
+
 func (s *AuthService) RegisterUser(dto *dtos.RegisterDTO) (*entities.User, string, *time.Time, error) {
 	db := databases.GetDB()
 	var existingUser entities.User

@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/BlenDMinh/dutgrad-server/databases/entities"
-	"github.com/BlenDMinh/dutgrad-server/models"
 	"github.com/BlenDMinh/dutgrad-server/models/dtos"
 	"github.com/BlenDMinh/dutgrad-server/services"
 	"github.com/gin-gonic/gin"
@@ -12,58 +11,44 @@ import (
 
 type UserQueryController struct {
 	CrudController[entities.UserQuery, uint]
+	service services.UserQueryService
 }
 
-func NewUserQueryController() *UserQueryController {
+func NewUserQueryController(
+	service services.UserQueryService,
+) *UserQueryController {
+	crudController := NewCrudController(service)
 	return &UserQueryController{
-		CrudController: *NewCrudController(services.NewUserQueryService()),
+		CrudController: *crudController,
+		service:        service,
 	}
 }
 
 func (c *UserQueryController) Ask(ctx *gin.Context) {
-	_, exists := ctx.Get("user_id")
-	if !exists {
-		ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(
-			http.StatusInternalServerError,
-			"User ID not found in context",
-			nil,
-		))
+	_, ok := ExtractID(ctx, "user_id")
+	if !ok {
+		return
+	}
+	var req dtos.AskRequest
+	if !HandleBindJSON(ctx, &req) {
 		return
 	}
 
-	var req dtos.AskRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		errMsg := err.Error()
-		ctx.JSON(http.StatusBadRequest, models.NewErrorResponse(
-			http.StatusBadRequest,
-			"Invalid request",
-			&errMsg,
-		))
-		return
+	if len(req.Query) > 1024 {
+		req.Query = req.Query[:1024]
 	}
 
 	sessionService := services.NewUserQuerySessionService()
 
 	session, err := sessionService.GetById(req.QuerySessionID)
 	if err != nil {
-		errMsg := err.Error()
-		ctx.JSON(http.StatusNotFound, models.NewErrorResponse(
-			http.StatusNotFound,
-			"Session not found",
-			&errMsg,
-		))
+		HandleError(ctx, http.StatusNotFound, "Session not found", err)
 		return
 	}
-
 	ragService := services.NewRAGServerService()
 	answer, err := ragService.Chat(req.QuerySessionID, session.SpaceID, req.Query)
 	if err != nil {
-		errMsg := err.Error()
-		ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(
-			http.StatusInternalServerError,
-			"Failed to get answer",
-			&errMsg,
-		))
+		HandleError(ctx, http.StatusInternalServerError, "Failed to get answer", err)
 		return
 	}
 
@@ -73,25 +58,15 @@ func (c *UserQueryController) Ask(ctx *gin.Context) {
 	}
 
 	query, err = c.service.Create(query)
-
 	query.UserQuerySession = *session
 
 	if err != nil {
-		errMsg := err.Error()
-		ctx.JSON(http.StatusInternalServerError, models.NewErrorResponse(
-			http.StatusInternalServerError,
-			"Failed to save query",
-			&errMsg,
-		))
+		HandleError(ctx, http.StatusInternalServerError, "Failed to save query", err)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, models.NewSuccessResponse(
-		http.StatusOK,
-		"Answer retrieved successfully",
-		&gin.H{
-			"answer": answer,
-			"query":  query,
-		},
-	))
+	HandleSuccess(ctx, "Answer retrieved successfully", gin.H{
+		"answer": answer,
+		"query":  query,
+	})
 }

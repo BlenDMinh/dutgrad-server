@@ -66,7 +66,7 @@ func GetMimeType(fileHeader *multipart.FileHeader) (string, error) {
 
 	contentType := http.DetectContentType(buffer)
 
-	if contentType == "application/octet-stream" {
+	if contentType == "application/octet-stream" || contentType == "application/zip" || contentType == "application/x-zip-compressed" {
 		ext := filepath.Ext(fileHeader.Filename)
 		switch ext {
 		case ".pdf":
@@ -93,4 +93,23 @@ func GetMimeType(fileHeader *multipart.FileHeader) (string, error) {
 	}
 
 	return contentType, nil
+}
+
+func DeleteFromS3(bucket string, s3URL string) error {
+	sess := ConnectAWS()
+	s3Client := s3.New(sess)
+
+	key := filepath.Base(s3URL)
+
+	deleteParams := &s3.DeleteObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+	}
+
+	_, err := s3Client.DeleteObject(deleteParams)
+	if err != nil {
+		return fmt.Errorf("unable to delete file from S3, %v", err)
+	}
+
+	return nil
 }

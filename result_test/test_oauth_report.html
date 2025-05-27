@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dutgrad Server OAuth Test Report</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1, h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        h1 {
+            text-align: center;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+        }
+        .summary {
+            background-color: #fff;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .summary-header {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #2c3e50;
+            font-size: 1.2em;
+        }
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .summary-label {
+            font-weight: bold;
+        }
+        .pass {
+            color: #27ae60;
+        }
+        .fail {
+            color: #e74c3c;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+            font-weight: 600;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .status-cell {
+            font-weight: bold;
+        }
+        .time-cell {
+            text-align: right;
+        }
+        .timestamp {
+            color: #7f8c8d;
+            font-size: 0.9em;
+            margin-top: 30px;
+            text-align: center;
+        }
+        .test-section {
+            margin-bottom: 30px;
+        }
+        .success-summary {
+            background-color: #e8f5e9;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #3498db;
+        }
+        .success-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #2e7d32;
+        }
+    </style>
+</head>
+<body>
+    <h1>Dutgrad Server OAuth Test Report</h1>
+    
+    <div class="summary">
+        <div class="summary-header">Test Summary</div>
+        <div class="summary-item">
+            <span class="summary-label">Status:</span>
+            <span class="pass">PASS</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-label">Total Duration:</span>
+            <span>2.023s</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-label">Test Date:</span>
+            <span>May 21, 2025</span>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Google OAuth Authentication</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Test Case</th>
+                    <th>Status</th>
+                    <th>HTTP Code</th>
+                    <th>Response</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Google OAuth Redirect</td>
+                    <td class="status-cell pass">PASS</td>
+                    <td>307</td>
+                    <td>Temporary Redirect</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="test-section">
+        <h2>Exchange State (OAuth Callback)</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Test Case</th>
+                    <th>Status</th>
+                    <th>HTTP Code</th>
+                    <th>Response</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>✅ Exchange thành công</td>
+                    <td class="status-cell pass">PASS</td>
+                    <td>200</td>
+                    <td>OK</td>
+                </tr>
+                <tr>
+                    <td>❌ State không hợp lệ</td>
+                    <td class="status-cell pass">PASS</td>
+                    <td>400</td>
+                    <td>Bad Request</td>
+                </tr>
+                <tr>
+                    <td>❌ Code không hợp lệ</td>
+                    <td class="status-cell pass">PASS</td>
+                    <td>400</td>
+                    <td>Bad Request</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="test-section">
+        <h2>External Authentication</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Test Case</th>
+                    <th>Status</th>
+                    <th>HTTP Code</th>
+                    <th>Response</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>✅ External auth thành công</td>
+                    <td class="status-cell pass">PASS</td>
+                    <td>200</td>
+                    <td>OK</td>
+                </tr>
+                <tr>
+                    <td>❌ Token không hợp lệ</td>
+                    <td class="status-cell pass">PASS</td>
+                    <td>401</td>
+                    <td>Unauthorized</td>
+                </tr>
+                <tr>
+                    <td>❌ Auth type không được hỗ trợ</td>
+                    <td class="status-cell pass">PASS</td>
+                    <td>400</td>
+                    <td>Bad Request</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="test-section">
+        <h2>Thông tin chi tiết</h2>
+        <p>Tất cả các test cases đã thực hiện thành công, xác nhận rằng các API OAuth hoạt động đúng như thiết kế:</p>
+        <ul>
+            <li>Chuyển hướng Google OAuth hoạt động chính xác (HTTP 307)</li>
+            <li>Exchange state (callback) xử lý thành công và xác thực lỗi đúng cách</li>
+            <li>External authentication xử lý đúng với token hợp lệ, xác thực đúng các token không hợp lệ</li>
+            <li>Hệ thống từ chối đúng các auth type không được hỗ trợ</li>
+        </ul>
+    </div>
+    
+    <p class="timestamp">
+        Report generated on: May 21, 2025 at 20:47:00
+    </p>
+</body>
+</html>
