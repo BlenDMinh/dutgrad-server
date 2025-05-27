@@ -8,7 +8,7 @@ type User struct {
 	Email      *string            `json:"email" gorm:"size:100;uniqueIndex"`
 	Active     bool               `json:"active" gorm:"default:true"`
 	MFAEnabled bool               `json:"mfa_enabled" gorm:"default:false"`
-	TierID     *uint              `gorm:"default:null" json:"tier_id"`
+	TierID     *uint              `gorm:"default:1" json:"tier_id"`
 	CreatedAt  time.Time          `json:"created_at"`
 	UpdatedAt  time.Time          `json:"updated_at"`
 	Sessions   []UserQuerySession `gorm:"foreignKey:UserID" json:"sessions"`
