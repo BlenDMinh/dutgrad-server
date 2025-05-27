@@ -51,7 +51,7 @@ func (c *UserController) GetMySpaces(ctx *gin.Context) {
 		return
 	}
 
-	HandleSuccess(ctx, "Success", dtos.SpaceListResponse{
+	HandleSuccess(ctx, "Success", dtos.UserSpaceListResponse{
 		Spaces: spaces,
 	})
 }
@@ -68,7 +68,7 @@ func (c *UserController) GetUserSpaces(ctx *gin.Context) {
 		return
 	}
 
-	HandleSuccess(ctx, "Success", dtos.SpaceListResponse{
+	HandleSuccess(ctx, "Success", dtos.UserSpaceListResponse{
 		Spaces: spaces,
 	})
 }

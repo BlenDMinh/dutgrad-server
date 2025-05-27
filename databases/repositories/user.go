@@ -12,7 +12,7 @@ import (
 
 type UserRepository interface {
 	ICrudRepository[entities.User, uint]
-	GetSpacesByUserId(userId uint) ([]entities.Space, error)
+	GetSpacesByUserId(userId uint) ([]dtos.UserSpaceDTO, error)
 	GetByEmail(email string) (*entities.User, error)
 	UpdateMFAStatus(userID uint, enabled bool) error
 	GetInvitationsByUserId(InvitedUserId uint) ([]entities.SpaceInvitation, error)
@@ -33,7 +33,7 @@ func NewUserRepository() UserRepository {
 	}
 }
 
-func (r *userRepositoryImpl) GetSpacesByUserId(userId uint) ([]entities.Space, error) {
+func (r *userRepositoryImpl) GetSpacesByUserId(userId uint) ([]dtos.UserSpaceDTO, error) {
 	db := databases.GetDB()
 	var spaceUsers []entities.SpaceUser
 	err := db.Preload("Space").Preload("SpaceRole").
@@ -43,9 +43,21 @@ func (r *userRepositoryImpl) GetSpacesByUserId(userId uint) ([]entities.Space, e
 	if err != nil {
 		return nil, err
 	}
-	var userSpaces []entities.Space
-	for _, spaceUser := range spaceUsers {
-		userSpaces = append(userSpaces, spaceUser.Space)
+	var userSpaces []dtos.UserSpaceDTO
+	for _, su := range spaceUsers {
+		userSpace := dtos.UserSpaceDTO{
+			ID:              su.Space.ID,
+			Name:            su.Space.Name,
+			Description:     su.Space.Description,
+			PrivacyStatus:   su.Space.PrivacyStatus,
+			DocumentLimit:   su.Space.DocumentLimit,
+			FileSizeLimitKb: su.Space.FileSizeLimitKb,
+			ApiCallLimit:    su.Space.ApiCallLimit,
+			CreatedAt:       su.Space.CreatedAt,
+			UpdatedAt:       su.Space.UpdatedAt,
+			Role:            su.SpaceRole,
+		}
+		userSpaces = append(userSpaces, userSpace)
 	}
 
 	return userSpaces, nil
