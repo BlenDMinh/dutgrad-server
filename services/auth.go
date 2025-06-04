@@ -179,3 +179,54 @@ func (s *AuthService) ExternalAuth(dto *dtos.ExternalAuthDTO) (*entities.User, s
 
 	return &user, token, expiresAt, isNewUser, nil
 }
+
+func (s *AuthService) ChangePassword(userID uint, currentPassword, newPassword string) error {
+	db := databases.GetDB()
+	var credential entities.UserAuthCredential
+	if err := db.Where("user_id = ? AND auth_type = ?", userID, "local").First(&credential).Error; err != nil {
+		return errors.New("password change not available for accounts using social login (Google, Facebook)")
+	}
+
+	if credential.PasswordHash == nil {
+		return errors.New("no password set for this user")
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(*credential.PasswordHash), []byte(currentPassword)); err != nil {
+		return errors.New("incorrect current password")
+	}
+
+	if bcrypt.CompareHashAndPassword([]byte(*credential.PasswordHash), []byte(newPassword)) == nil {
+		return errors.New("new password must be different from current password")
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return errors.New("failed to hash new password")
+	}
+
+	passwordStr := string(hashedPassword)
+	credential.PasswordHash = &passwordStr
+	credential.UpdatedAt = time.Now()
+
+	if err := db.Save(&credential).Error; err != nil {
+		return errors.New("failed to update password: " + err.Error())
+	}
+
+	return nil
+}
+
+func (s *AuthService) GetUserAuthMethods(userID uint) (map[string]bool, error) {
+	db := databases.GetDB()
+
+	var credentials []entities.UserAuthCredential
+	if err := db.Where("user_id = ?", userID).Find(&credentials).Error; err != nil {
+		return nil, err
+	}
+
+	authMethods := make(map[string]bool)
+	for _, cred := range credentials {
+		authMethods[cred.AuthType] = true
+	}
+
+	return authMethods, nil
+}
