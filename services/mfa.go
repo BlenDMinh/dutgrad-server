@@ -22,20 +22,20 @@ import (
 )
 
 type MFAService struct {
-	redisService       *RedisService
+	kvStorage          KVStorage
 	userRepo           repositories.UserRepository
 	userMFARepo        repositories.UserMFARepository
 	authCredentialRepo repositories.UserAuthCredentialRepository
 }
 
 func NewMFAService(
-	redisService *RedisService,
+	kvStorage KVStorage,
 	userRepo repositories.UserRepository,
 	userMFARepo repositories.UserMFARepository,
 	authCredentialRepo repositories.UserAuthCredentialRepository,
 ) *MFAService {
 	return &MFAService{
-		redisService:       redisService,
+		kvStorage:          kvStorage,
 		userRepo:           userRepo,
 		userMFARepo:        userMFARepo,
 		authCredentialRepo: authCredentialRepo,
@@ -188,7 +188,7 @@ func (s *MFAService) CreateTempToken(userID uint) (string, time.Time, error) {
 	expiresAt := time.Now().Add(5 * time.Minute)
 
 	key := fmt.Sprintf("mfa:temp:%s", tempToken)
-	if err := s.redisService.Set(key, fmt.Sprintf("%d", userID), 5*time.Minute); err != nil {
+	if err := s.kvStorage.Set(key, fmt.Sprintf("%d", userID), 5*time.Minute); err != nil {
 		return "", time.Time{}, err
 	}
 
@@ -197,7 +197,7 @@ func (s *MFAService) CreateTempToken(userID uint) (string, time.Time, error) {
 
 func (s *MFAService) GetUserIDFromTempToken(token string) (uint, error) {
 	key := fmt.Sprintf("mfa:temp:%s", token)
-	value, err := s.redisService.Get(key)
+	value, err := s.kvStorage.Get(key)
 	if err != nil {
 		return 0, errors.New("invalid or expired token")
 	}
@@ -209,7 +209,7 @@ func (s *MFAService) GetUserIDFromTempToken(token string) (uint, error) {
 		return 0, fmt.Errorf("invalid token data: %v", err)
 	}
 
-	s.redisService.Del(key)
+	s.kvStorage.Delete(key)
 
 	return uint(userIDInt), nil
 }

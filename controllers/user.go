@@ -51,7 +51,7 @@ func (c *UserController) GetMySpaces(ctx *gin.Context) {
 		return
 	}
 
-	HandleSuccess(ctx, "Success", dtos.SpaceListResponse{
+	HandleSuccess(ctx, "Success", dtos.UserSpaceListResponse{
 		Spaces: spaces,
 	})
 }
@@ -68,7 +68,7 @@ func (c *UserController) GetUserSpaces(ctx *gin.Context) {
 		return
 	}
 
-	HandleSuccess(ctx, "Success", dtos.SpaceListResponse{
+	HandleSuccess(ctx, "Success", dtos.UserSpaceListResponse{
 		Spaces: spaces,
 	})
 }
@@ -124,4 +124,53 @@ func (c *UserController) GetUserTier(ctx *gin.Context) {
 		Tier:  tierUsage.Tier,
 		Usage: tierUsage.Usage,
 	})
+}
+
+func (c *UserController) UpdatePassword(ctx *gin.Context) {
+	userID, ok := ExtractID(ctx, "user_id")
+	if !ok {
+		return
+	}
+	var req struct {
+		CurrentPassword string `json:"currentPassword"`
+		NewPassword     string `json:"newPassword"`
+	}
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		HandleError(ctx, http.StatusBadRequest, "Invalid request data", err)
+		return
+	}
+	if len(req.NewPassword) < 6 {
+		HandleError(ctx, http.StatusBadRequest, "New password must be at least 6 characters long", nil)
+		return
+	}
+
+	if req.CurrentPassword == req.NewPassword {
+		HandleError(ctx, http.StatusBadRequest, "New password must be different from current password", nil)
+		return
+	}
+
+	authService := services.NewAuthService()
+	err := authService.ChangePassword(userID, req.CurrentPassword, req.NewPassword)
+	if err != nil {
+		HandleError(ctx, http.StatusBadRequest, "Failed to update password", err)
+		return
+	}
+
+	HandleSuccess(ctx, "Password updated successfully", nil)
+}
+
+func (c *UserController) GetUserAuthMethod(ctx *gin.Context) {
+	userID, ok := ExtractID(ctx, "user_id")
+	if !ok {
+		return
+	}
+
+	authService := services.NewAuthService()
+	authMethods, err := authService.GetUserAuthMethods(userID)
+	if err != nil {
+		HandleError(ctx, http.StatusInternalServerError, "Failed to retrieve auth methods", err)
+		return
+	}
+
+	HandleSuccess(ctx, "Auth methods retrieved successfully", authMethods)
 }

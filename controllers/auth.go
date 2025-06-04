@@ -13,23 +13,23 @@ import (
 )
 
 type AuthController struct {
-	authService  *services.AuthService
-	userService  services.UserService
-	redisService *services.RedisService
-	mfaService   *services.MFAService
+	authService *services.AuthService
+	userService services.UserService
+	kvStorage   services.KVStorage
+	mfaService  *services.MFAService
 }
 
 func NewAuthController(
 	authService *services.AuthService,
 	userService services.UserService,
-	redisService *services.RedisService,
+	kvStorage services.KVStorage,
 	mfaService *services.MFAService,
 ) *AuthController {
 	return &AuthController{
-		authService:  authService,
-		userService:  userService,
-		redisService: redisService,
-		mfaService:   mfaService,
+		authService: authService,
+		userService: userService,
+		kvStorage:   kvStorage,
+		mfaService:  mfaService,
 	}
 }
 
@@ -265,13 +265,13 @@ func (ac *AuthController) ExchangeState(ctx *gin.Context) {
 		return
 	}
 
-	authDataJSON, err := ac.redisService.Get(state)
+	authDataJSON, err := ac.kvStorage.Get(state)
 	if err != nil {
 		HandleError(ctx, http.StatusNotFound, "State token expired or invalid", nil)
 		return
 	}
 
-	ac.redisService.Del(state)
+	ac.kvStorage.Delete(state)
 
 	var authResponse dtos.AuthResponse
 	if err := json.Unmarshal([]byte(authDataJSON), &authResponse); err != nil {
