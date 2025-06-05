@@ -49,6 +49,8 @@ func GetRouter(
 			userGroup.GET("/me", middlewares.AuthMiddleware(), userController.GetCurrentUser)
 			userGroup.GET("/search", middlewares.AuthMiddleware(), userController.SearchUsers)
 			userGroup.GET("/tier", middlewares.AuthMiddleware(), userController.GetUserTier)
+			userGroup.GET("/auth-method", middlewares.AuthMiddleware(), userController.GetUserAuthMethod)
+			userGroup.PATCH("/password", middlewares.AuthMiddleware(), userController.UpdatePassword)
 			userController.RegisterCRUD(userGroup)
 		}
 
