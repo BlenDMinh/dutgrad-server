@@ -25,7 +25,7 @@ func NewUserQueryController(
 }
 
 func (c *UserQueryController) Ask(ctx *gin.Context) {
-	_, ok := ExtractID(ctx, "user_id")
+	userID, ok := ExtractID(ctx, "user_id")
 	if !ok {
 		return
 	}
@@ -36,6 +36,18 @@ func (c *UserQueryController) Ask(ctx *gin.Context) {
 
 	if len(req.Query) > 1024 {
 		req.Query = req.Query[:1024]
+	}
+
+	userService := services.NewUserService()
+	tierUsage, err := userService.GetUserTierUsage(userID)
+	if err != nil {
+		HandleError(ctx, http.StatusInternalServerError, "Failed to check user tier usage", err)
+		return
+	}
+
+	if tierUsage.Usage.ChatUsageDaily >= int64(tierUsage.Tier.QueryLimit) {
+		HandleError(ctx, http.StatusTooManyRequests, "You have reached your daily chat limit. Please try again tomorrow or upgrade your plan.", nil)
+		return
 	}
 
 	sessionService := services.NewUserQuerySessionService()
