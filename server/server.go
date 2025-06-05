@@ -6,6 +6,7 @@ import (
 	"github.com/BlenDMinh/dutgrad-server/configs"
 	"github.com/BlenDMinh/dutgrad-server/controllers"
 	"github.com/BlenDMinh/dutgrad-server/databases/repositories"
+	"github.com/BlenDMinh/dutgrad-server/middlewares"
 	"github.com/BlenDMinh/dutgrad-server/services"
 	"github.com/BlenDMinh/dutgrad-server/services/oauth"
 	"github.com/BlenDMinh/dutgrad-server/services/oauth/providers"
@@ -75,6 +76,9 @@ func Init() {
 
 	config := configs.GetEnv()
 
+	// Middleware initialization
+	chatRateLimiter := middlewares.ChatRateLimiter(userService)
+
 	// Router initialization
 	r := GetRouter(
 		userController,
@@ -87,6 +91,7 @@ func Init() {
 		userQuerySessionController,
 		userQueryController,
 		spaceApiKeyController,
+		chatRateLimiter,
 	)
 
 	r.Run(":" + strconv.Itoa(config.Port))
