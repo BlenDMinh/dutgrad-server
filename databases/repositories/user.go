@@ -165,11 +165,10 @@ func (s *userRepositoryImpl) GetUserTierUsage(userID uint) (*dtos.TierUsageRespo
 	if err != nil {
 		return nil, err
 	}
-
 	err = db.Model(&entities.ChatHistory{}).
 		Joins("JOIN user_query_sessions ON user_query_sessions.id = chat_histories.session_id").
 		Where("user_query_sessions.user_id = ?", userID).
-		Count(&response.Usage.QueryHistoryCount).Error
+		Count(&response.Usage.TotalChatMessages).Error
 	if err != nil {
 		return nil, err
 	}
@@ -178,12 +177,19 @@ func (s *userRepositoryImpl) GetUserTierUsage(userID uint) (*dtos.TierUsageRespo
 	err = db.Model(&entities.ChatHistory{}).
 		Joins("JOIN user_query_sessions ON user_query_sessions.id = chat_histories.session_id").
 		Where("user_query_sessions.user_id = ? AND DATE(chat_histories.created_at) = ?", userID, today).
-		Count(&response.Usage.TodayQueryCount).Error
+		Count(&response.Usage.ChatUsageDaily).Error
 	if err != nil {
 		return nil, err
 	}
 
-	response.Usage.TodayApiCallCount = 0
+	firstDayOfMonth := time.Now().Format("2006-01") + "-01"
+	err = db.Model(&entities.ChatHistory{}).
+		Joins("JOIN user_query_sessions ON user_query_sessions.id = chat_histories.session_id").
+		Where("user_query_sessions.user_id = ? AND chat_histories.created_at >= ?", userID, firstDayOfMonth).
+		Count(&response.Usage.ChatUsageMonthly).Error
+	if err != nil {
+		return nil, err
+	}
 
 	return &response, nil
 }

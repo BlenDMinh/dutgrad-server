@@ -1,6 +1,8 @@
 package services
 
 import (
+	"fmt"
+
 	"github.com/BlenDMinh/dutgrad-server/databases"
 	"github.com/BlenDMinh/dutgrad-server/databases/entities"
 	"github.com/BlenDMinh/dutgrad-server/databases/repositories"
@@ -15,6 +17,7 @@ type UserService interface {
 	SearchUsers(query string) ([]entities.User, error)
 	GetUserTier(userID uint) (*entities.Tier, error)
 	GetUserTierUsage(userID uint) (*dtos.TierUsageResponse, error)
+	IsRateLimited(userID uint) bool
 }
 
 type userServiceImpl struct {
@@ -61,4 +64,27 @@ func (s *userServiceImpl) GetUserTier(userID uint) (*entities.Tier, error) {
 
 func (s *userServiceImpl) GetUserTierUsage(userID uint) (*dtos.TierUsageResponse, error) {
 	return s.repo.GetUserTierUsage(userID)
+}
+
+func (s *userServiceImpl) IsRateLimited(userID uint) bool {
+	usage, err := s.repo.GetUserTierUsage(userID)
+	if err != nil || usage == nil {
+		fmt.Println("Failed to get user tier usage:", err)
+		return false
+	}
+
+	if usage.Tier == nil {
+		fmt.Println("User tier is nil")
+		return false
+	}
+
+	if usage.Usage.ChatUsageDaily >= int64(usage.Tier.QueryLimit) {
+		return true
+	}
+
+	if usage.Usage.ChatUsageMonthly >= int64(usage.Tier.QueryLimit*30) {
+		return true
+	}
+
+	return false
 }
