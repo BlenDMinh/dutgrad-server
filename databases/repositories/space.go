@@ -2,9 +2,11 @@ package repositories
 
 import (
 	"errors"
+	"time"
 
 	"github.com/BlenDMinh/dutgrad-server/databases"
 	"github.com/BlenDMinh/dutgrad-server/databases/entities"
+	"github.com/BlenDMinh/dutgrad-server/models/dtos"
 )
 
 type SpaceRepository interface {
@@ -22,6 +24,7 @@ type SpaceRepository interface {
 	GetPopularSpaces(order string) ([]entities.Space, error)
 	UpdateMemberRole(spaceID, memberID, roleID, updatedBy uint) error
 	RemoveMember(spaceID, memberID uint) error
+	GetSpaceUsage(spaceID uint) (*dtos.SpaceUsage, error)
 }
 
 type spaceRepositoryImpl struct {
@@ -199,4 +202,23 @@ func (r *spaceRepositoryImpl) RemoveMember(spaceID, memberID uint) error {
 	}
 
 	return nil
+}
+
+func (r *spaceRepositoryImpl) GetSpaceUsage(spaceID uint) (*dtos.SpaceUsage, error) {
+	db := databases.GetDB()
+	var usage dtos.SpaceUsage
+	usage.SpaceID = spaceID
+
+	today := time.Now().Format("2006-01-02")
+
+	err := db.Model(&entities.ChatHistory{}).
+		Joins("JOIN user_query_sessions ON user_query_sessions.id = chat_histories.session_id").
+		Where("user_query_sessions.space_id = ? AND DATE(chat_histories.created_at) = ?", spaceID, today).
+		Count(&usage.ChatAPICallsUsageDaily).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &usage, nil
 }

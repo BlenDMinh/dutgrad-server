@@ -8,6 +8,7 @@ import (
 	"github.com/BlenDMinh/dutgrad-server/databases/entities"
 	"github.com/BlenDMinh/dutgrad-server/databases/repositories"
 	"github.com/BlenDMinh/dutgrad-server/helpers"
+	"github.com/BlenDMinh/dutgrad-server/models/dtos"
 )
 
 type SpaceService interface {
@@ -29,6 +30,8 @@ type SpaceService interface {
 	UpdateMemberRole(spaceID, memberID, roleID, updatedBy uint) error
 	RemoveMember(spaceID, memberID, requestingUserID uint) error
 	Delete(id uint) error
+	GetSpaceUsage(spaceID uint) (*dtos.SpaceUsage, error)
+	IsAPIRateLimited(spaceID uint) bool
 }
 
 type spaceServiceImpl struct {
@@ -294,4 +297,33 @@ func (s *spaceServiceImpl) Delete(id uint) error {
 	}
 
 	return s.repo.Delete(id)
+}
+
+func (s *spaceServiceImpl) GetSpaceUsage(spaceID uint) (*dtos.SpaceUsage, error) {
+	usage, err := s.repo.GetSpaceUsage(spaceID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get space usage: %v", err)
+	}
+
+	if usage == nil {
+		return &dtos.SpaceUsage{
+			SpaceID:                spaceID,
+			ChatAPICallsUsageDaily: 0,
+		}, nil
+	}
+
+	return usage, nil
+}
+
+func (s *spaceServiceImpl) IsAPIRateLimited(spaceID uint) bool {
+	space, err := s.repo.GetById(spaceID)
+	if err != nil {
+		return false
+	}
+	usage, err := s.GetSpaceUsage(spaceID)
+	if err != nil {
+		return false
+	}
+
+	return usage.ChatAPICallsUsageDaily >= int64(space.ApiCallLimit)
 }

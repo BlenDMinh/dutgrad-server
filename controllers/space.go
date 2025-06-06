@@ -352,6 +352,11 @@ func (c *SpaceController) Chat(ctx *gin.Context) {
 		return
 	}
 
+	if c.service.IsAPIRateLimited(spaceId) {
+		HandleError(ctx, http.StatusTooManyRequests, "API call limit exceeded for this space", nil)
+		return
+	}
+
 	var req dtos.ApiChatRequest
 	if !HandleBindJSON(ctx, &req) {
 		return
