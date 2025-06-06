@@ -45,3 +45,8 @@ type SpaceListResponse struct {
 type UserSpaceListResponse struct {
 	Spaces []UserSpaceDTO `json:"spaces"`
 }
+
+type SpaceUsage struct {
+	SpaceID                uint  `json:"space_id"`
+	ChatAPICallsUsageDaily int64 `json:"chat_api_calls_usage_daily"`
+}
