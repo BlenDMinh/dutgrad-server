@@ -131,7 +131,6 @@ func GetRouter(
 
 				detailGroup.POST("/invitations", spaceController.InviteUserToSpace)
 				detailGroup.POST("/join-public", spaceController.JoinPublicSpace)
-				detailGroup.POST("/chat", middlewares.RequireApiKey(), spaceController.Chat)
 
 				detailGroup.PATCH("/members/:memberId/role", middlewares.AuthMiddleware(), spaceController.UpdateUserRole)
 
@@ -146,6 +145,7 @@ func GetRouter(
 					apiKeyGroup.DELETE("/:keyId", spaceApiKeyController.Delete)
 				}
 			}
+			spaceGroup.POST("/:id/chat", middlewares.RequireApiKey(), spaceController.Chat)
 		}
 		spaceInvitationGroup := v1.Group("/space-invitations")
 		{
