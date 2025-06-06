@@ -21,6 +21,7 @@ func GetRouter(
 	userQuerySessionController *controllers.UserQuerySessionController,
 	userQueryController *controllers.UserQueryController,
 	spaceApiKeyController *controllers.SpaceApiKeyController,
+	chatRateLimiter gin.HandlerFunc,
 ) *gin.Engine {
 	env := configs.GetEnv()
 	router := gin.New()
@@ -186,7 +187,7 @@ func GetRouter(
 		{
 			userQueryController.RegisterCRUD(userQueryGroup)
 
-			userQueryGroup.POST("/ask", userQueryController.Ask)
+			userQueryGroup.POST("/ask", chatRateLimiter, userQueryController.Ask)
 		}
 	}
 
