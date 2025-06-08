@@ -177,6 +177,7 @@ func (s *userRepositoryImpl) GetUserTierUsage(userID uint) (*dtos.TierUsageRespo
 	err = db.Model(&entities.ChatHistory{}).
 		Joins("JOIN user_query_sessions ON user_query_sessions.id = chat_histories.session_id").
 		Where("user_query_sessions.user_id = ? AND DATE(chat_histories.created_at) = ?", userID, today).
+		Where("message->>'type' = ?", "human").
 		Count(&response.Usage.ChatUsageDaily).Error
 	if err != nil {
 		return nil, err
@@ -186,6 +187,7 @@ func (s *userRepositoryImpl) GetUserTierUsage(userID uint) (*dtos.TierUsageRespo
 	err = db.Model(&entities.ChatHistory{}).
 		Joins("JOIN user_query_sessions ON user_query_sessions.id = chat_histories.session_id").
 		Where("user_query_sessions.user_id = ? AND chat_histories.created_at >= ?", userID, firstDayOfMonth).
+		Where("message->>'type' = ?", "human").
 		Count(&response.Usage.ChatUsageMonthly).Error
 	if err != nil {
 		return nil, err
