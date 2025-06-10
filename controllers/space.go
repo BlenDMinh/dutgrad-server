@@ -92,6 +92,21 @@ func (c *SpaceController) GetMembers(ctx *gin.Context) {
 	HandleSuccess(ctx, "Members retrieved successfully", gin.H{"members": members})
 }
 
+func (c *SpaceController) CountSpaceMembers(ctx *gin.Context) {
+	spaceId, ok := ExtractID(ctx, "id")
+	if !ok {
+		return
+	}
+
+	count, err := c.service.CountSpaceMembers(spaceId)
+	if err != nil {
+		HandleError(ctx, http.StatusInternalServerError, "Failed to count members", err)
+		return
+	}
+
+	HandleSuccess(ctx, "Member count retrieved successfully", gin.H{"count": count})
+}
+
 func (c *SpaceController) GetInvitations(ctx *gin.Context) {
 	spaceId, ok := ExtractID(ctx, "id")
 	if !ok {
