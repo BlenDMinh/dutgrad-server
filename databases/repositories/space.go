@@ -119,7 +119,7 @@ func (s *spaceRepositoryImpl) JoinPublicSpace(spaceID uint, userID uint) error {
 		return errors.New("user is already a member of this space")
 	}
 
-	roleID := uint(entities.Viewer)
+	roleID := uint(entities.SpaceRoleViewer)
 	spaceUser := entities.SpaceUser{
 		UserID:      userID,
 		SpaceID:     spaceID,

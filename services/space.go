@@ -223,7 +223,7 @@ func (s *spaceServiceImpl) CreateSpace(space *entities.Space, userID uint) (*ent
 		return nil, err
 	}
 
-	ownerRoleID := uint(entities.Owner)
+	ownerRoleID := uint(entities.SpaceRoleOwner)
 
 	spaceUser := entities.SpaceUser{
 		UserID:      userID,
@@ -249,7 +249,7 @@ func (s *spaceServiceImpl) RemoveMember(spaceID, memberID, requestingUserID uint
 		return err
 	}
 
-	if requestingUserRole.ID != uint(entities.Owner) {
+	if requestingUserRole.ID != uint(entities.SpaceRoleOwner) {
 		return errors.New("only space owners can remove members")
 	}
 
@@ -268,7 +268,7 @@ func (s *spaceServiceImpl) RemoveMember(spaceID, memberID, requestingUserID uint
 			return err
 		}
 
-		if memberRole.ID == uint(entities.Owner) {
+		if memberRole.ID == uint(entities.SpaceRoleOwner) {
 			return errors.New("cannot remove a space owner")
 		}
 
