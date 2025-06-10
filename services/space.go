@@ -24,6 +24,7 @@ type SpaceService interface {
 	GetUserRole(userID, spaceID uint) (*entities.SpaceRole, error)
 	IsMemberOfSpace(userID uint, spaceID uint) (bool, error)
 	CountSpacesByUserID(userID uint) (int64, error)
+	CountSpaceMembers(spaceID uint) (int64, error)
 	GetPopularSpaces(order string) ([]entities.Space, error)
 	CheckSpaceCreationLimit(userID uint) error
 	CreateSpace(space *entities.Space, userID uint) (*entities.Space, error)
@@ -183,6 +184,14 @@ func (s *spaceServiceImpl) IsMemberOfSpace(userID uint, spaceID uint) (bool, err
 
 func (s *spaceServiceImpl) CountSpacesByUserID(userID uint) (int64, error) {
 	return s.repo.CountSpacesByUserID(userID)
+}
+
+func (s *spaceServiceImpl) CountSpaceMembers(spaceID uint) (int64, error) {
+	members, err := s.GetMembers(spaceID)
+	if err != nil {
+		return 0, err
+	}
+	return int64(len(members)), nil
 }
 
 func (s *spaceServiceImpl) GetPopularSpaces(order string) ([]entities.Space, error) {
