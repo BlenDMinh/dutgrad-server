@@ -249,7 +249,7 @@ func (s *spaceServiceImpl) RemoveMember(spaceID, memberID, requestingUserID uint
 		return err
 	}
 
-	if requestingUserRole.ID != uint(entities.SpaceRoleOwner) {
+	if !requestingUserRole.IsOwner() {
 		return errors.New("only space owners can remove members")
 	}
 
