@@ -10,8 +10,20 @@ type SpaceRole struct {
 	UpdatedAt  time.Time `json:"updated_at"`
 }
 
+func (r SpaceRole) IsOwner() bool {
+	return r.ID == SpaceRoleOwner
+}
+
+func (r SpaceRole) IsEditor() bool {
+	return r.ID == SpaceRoleEditor
+}
+
+func (r SpaceRole) IsViewer() bool {
+	return r.ID == SpaceRoleViewer
+}
+
 const (
-	Owner  = 1
-	Editor = 2
-	Viewer = 3
+	SpaceRoleOwner  = 1
+	SpaceRoleEditor = 2
+	SpaceRoleViewer = 3
 )

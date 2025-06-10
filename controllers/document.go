@@ -14,16 +14,19 @@ import (
 
 type DocumentController struct {
 	CrudController[entities.Document, uint]
-	service services.DocumentService
+	service      services.DocumentService
+	spaceService services.SpaceService
 }
 
 func NewDocumentController(
 	service services.DocumentService,
+	spaceService services.SpaceService,
 ) *DocumentController {
 	crudController := NewCrudController(service)
 	return &DocumentController{
 		CrudController: *crudController,
 		service:        service,
+		spaceService:   spaceService,
 	}
 }
 
@@ -57,14 +60,13 @@ func (c *DocumentController) UploadDocument(ctx *gin.Context) {
 	}
 	req.SpaceID = uint(spaceID)
 	req.Description = ctx.Request.FormValue("description")
-	role, err := c.service.GetUserRoleInSpace(userID, req.SpaceID)
+	role, err := c.spaceService.GetUserRole(userID, req.SpaceID)
 	if err != nil {
 		HandleError(ctx, http.StatusInternalServerError, "Failed to get user role", err)
 		return
 	}
 
-	roleLower := strings.ToLower(role)
-	if roleLower != "owner" && roleLower != "editor" {
+	if !role.IsOwner() && !role.IsEditor() {
 		HandleError(ctx, http.StatusForbidden, "You are not allowed to import documents to this space", nil)
 		return
 	}
@@ -125,14 +127,13 @@ func (c *DocumentController) DeleteDocument(ctx *gin.Context) {
 		HandleError(ctx, http.StatusNotFound, "Document not found", err)
 		return
 	}
-	role, err := c.service.GetUserRoleInSpace(userID, document.SpaceID)
+	role, err := c.spaceService.GetUserRole(userID, document.SpaceID)
 	if err != nil {
 		HandleError(ctx, http.StatusInternalServerError, "Failed to get user role", err)
 		return
 	}
 
-	roleLower := strings.ToLower(role)
-	if roleLower != "owner" && roleLower != "editor" {
+	if !role.IsOwner() && !role.IsEditor() {
 		HandleError(ctx, http.StatusForbidden, "You are not allowed to delete this document", nil)
 		return
 	}
