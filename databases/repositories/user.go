@@ -152,7 +152,7 @@ func (s *userRepositoryImpl) GetUserTierUsage(userID uint) (*dtos.TierUsageRespo
 	response.Usage = &dtos.TierUsage{}
 
 	err = db.Model(&entities.SpaceUser{}).
-		Where("user_id = ? AND space_role_id = ?", userID, entities.Owner).
+		Where("user_id = ? AND space_role_id = ?", userID, entities.SpaceRoleOwner).
 		Count(&response.Usage.SpaceCount).Error
 	if err != nil {
 		return nil, err
@@ -160,7 +160,7 @@ func (s *userRepositoryImpl) GetUserTierUsage(userID uint) (*dtos.TierUsageRespo
 
 	err = db.Model(&entities.Document{}).
 		Joins("JOIN space_users ON space_users.space_id = documents.space_id").
-		Where("space_users.user_id = ? AND space_users.space_role_id = ?", userID, entities.Owner).
+		Where("space_users.user_id = ? AND space_users.space_role_id = ?", userID, entities.SpaceRoleOwner).
 		Count(&response.Usage.DocumentCount).Error
 	if err != nil {
 		return nil, err

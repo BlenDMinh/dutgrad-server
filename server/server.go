@@ -66,7 +66,7 @@ func Init() {
 		memoryStorage,
 		mfaService,
 	)
-	documentController := controllers.NewDocumentController(documentService)
+	documentController := controllers.NewDocumentController(documentService, spaceService)
 	spaceController := controllers.NewSpaceController(spaceService)
 	spaceInvitationController := controllers.NewSpaceInvitationController(spaceInvitationService)
 	spaceInvitationLinkController := controllers.NewSpaceInvitationLinkController(spaceInvitationLinkService)
