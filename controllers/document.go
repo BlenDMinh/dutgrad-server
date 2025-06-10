@@ -43,6 +43,11 @@ func (c *DocumentController) GetBySpaceID(ctx *gin.Context) {
 }
 
 func (c *DocumentController) UploadDocument(ctx *gin.Context) {
+	userID, ok := ExtractID(ctx, "user_id")
+	if !ok {
+		return
+	}
+
 	var req dtos.DocumentUploadRequest
 	spaceIDStr := ctx.Request.FormValue("space_id")
 	spaceID, err := strconv.ParseUint(spaceIDStr, 10, 32)
@@ -52,6 +57,17 @@ func (c *DocumentController) UploadDocument(ctx *gin.Context) {
 	}
 	req.SpaceID = uint(spaceID)
 	req.Description = ctx.Request.FormValue("description")
+	role, err := c.service.GetUserRoleInSpace(userID, req.SpaceID)
+	if err != nil {
+		HandleError(ctx, http.StatusInternalServerError, "Failed to get user role", err)
+		return
+	}
+
+	roleLower := strings.ToLower(role)
+	if roleLower != "owner" && roleLower != "editor" {
+		HandleError(ctx, http.StatusForbidden, "You are not allowed to import documents to this space", nil)
+		return
+	}
 
 	file, err := ctx.FormFile("file")
 	if err != nil {
@@ -109,14 +125,14 @@ func (c *DocumentController) DeleteDocument(ctx *gin.Context) {
 		HandleError(ctx, http.StatusNotFound, "Document not found", err)
 		return
 	}
-
 	role, err := c.service.GetUserRoleInSpace(userID, document.SpaceID)
 	if err != nil {
 		HandleError(ctx, http.StatusInternalServerError, "Failed to get user role", err)
 		return
 	}
 
-	if role != "owner" && role != "editor" {
+	roleLower := strings.ToLower(role)
+	if roleLower != "owner" && roleLower != "editor" {
 		HandleError(ctx, http.StatusForbidden, "You are not allowed to delete this document", nil)
 		return
 	}
