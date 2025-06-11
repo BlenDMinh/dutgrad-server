@@ -32,6 +32,7 @@ type SpaceInvitationRequest struct {
 	InvitedUserID    *uint  `json:"invited_user_id"`
 	InvitedUserEmail string `json:"invited_user_email"`
 	SpaceRoleID      uint   `json:"space_role_id" binding:"required"`
+	Message          string `json:"message"`
 }
 
 type UpdateRoleRequest struct {
