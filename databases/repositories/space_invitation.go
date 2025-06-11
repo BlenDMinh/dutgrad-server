@@ -7,7 +7,7 @@ import (
 
 type SpaceInvitationRepository interface {
 	ICrudRepository[entities.SpaceInvitation, uint]
-	AcceptInvitation(invitationId uint, userId uint) error
+	AcceptInvitation(invitationId uint, userId uint) (uint, error)
 	RejectInvitation(invitationId uint, userId uint) error
 	CancelInvitation(spaceID uint, invitedUserID uint) error
 	CountInvitationByUserID(userID uint) (int64, error)
@@ -23,11 +23,11 @@ func NewSpaceInvitationRepository() SpaceInvitationRepository {
 	}
 }
 
-func (r *spaceInvitationRepositoryImpl) AcceptInvitation(invitationId uint, userId uint) error {
+func (r *spaceInvitationRepositoryImpl) AcceptInvitation(invitationId uint, userId uint) (uint, error) {
 	var invitation entities.SpaceInvitation
 	db := databases.GetDB()
 	if err := db.First(&invitation, "id = ? AND invited_user_id = ?", invitationId, userId).Error; err != nil {
-		return err
+		return 0, err
 	}
 
 	member := entities.SpaceUser{
@@ -36,14 +36,14 @@ func (r *spaceInvitationRepositoryImpl) AcceptInvitation(invitationId uint, user
 		SpaceRoleID: &invitation.SpaceRoleID,
 	}
 	if err := db.Create(&member).Error; err != nil {
-		return err
+		return 0, err
 	}
 
 	if err := db.Delete(&invitation).Error; err != nil {
-		return err
+		return 0, err
 	}
 
-	return nil
+	return invitation.SpaceID, nil
 }
 
 func (r *spaceInvitationRepositoryImpl) RejectInvitation(invitationId uint, userId uint) error {

@@ -1,8 +1,6 @@
 package repositories
 
 import (
-	"errors"
-
 	"github.com/BlenDMinh/dutgrad-server/databases"
 	"github.com/BlenDMinh/dutgrad-server/databases/entities"
 )
@@ -10,7 +8,6 @@ import (
 type DocumentRepository interface {
 	ICrudRepository[entities.Document, uint]
 	GetBySpaceID(spaceID uint) ([]entities.Document, error)
-	GetUserRoleInSpace(userID, spaceID uint) (string, error)
 	CountUserDocuments(userID uint) (int64, error)
 }
 
@@ -32,19 +29,6 @@ func (r *documentRepositoryImpl) GetBySpaceID(spaceID uint) ([]entities.Document
 		return nil, err
 	}
 	return documents, nil
-}
-
-func (s *documentRepositoryImpl) GetUserRoleInSpace(userID, spaceID uint) (string, error) {
-	var spaceUser entities.SpaceUser
-	db := databases.GetDB()
-	result := db.Preload("SpaceRole").Where("user_id = ? AND space_id = ?", userID, spaceID).First(&spaceUser)
-	if result.Error != nil {
-		return "", result.Error
-	}
-	if spaceUser.SpaceRole.Name == "" {
-		return "", errors.New("user has no role in this space")
-	}
-	return spaceUser.SpaceRole.Name, nil
 }
 
 func (s *documentRepositoryImpl) CountUserDocuments(userID uint) (int64, error) {

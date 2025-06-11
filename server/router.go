@@ -123,6 +123,7 @@ func GetRouter(
 				detailGroup.DELETE("", spaceController.Delete)
 
 				detailGroup.GET("/members", spaceController.GetMembers)
+				detailGroup.GET("/members/count", spaceController.CountSpaceMembers)
 				detailGroup.GET("/invitations", spaceController.GetInvitations)
 				detailGroup.GET("/user-role", spaceController.GetUserRole)
 				detailGroup.GET("/documents", documentController.GetBySpaceID)

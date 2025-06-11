@@ -24,6 +24,7 @@ type SpaceService interface {
 	GetUserRole(userID, spaceID uint) (*entities.SpaceRole, error)
 	IsMemberOfSpace(userID uint, spaceID uint) (bool, error)
 	CountSpacesByUserID(userID uint) (int64, error)
+	CountSpaceMembers(spaceID uint) (int64, error)
 	GetPopularSpaces(order string) ([]entities.Space, error)
 	CheckSpaceCreationLimit(userID uint) error
 	CreateSpace(space *entities.Space, userID uint) (*entities.Space, error)
@@ -185,6 +186,14 @@ func (s *spaceServiceImpl) CountSpacesByUserID(userID uint) (int64, error) {
 	return s.repo.CountSpacesByUserID(userID)
 }
 
+func (s *spaceServiceImpl) CountSpaceMembers(spaceID uint) (int64, error) {
+	members, err := s.GetMembers(spaceID)
+	if err != nil {
+		return 0, err
+	}
+	return int64(len(members)), nil
+}
+
 func (s *spaceServiceImpl) GetPopularSpaces(order string) ([]entities.Space, error) {
 	return s.repo.GetPopularSpaces(order)
 }
@@ -223,7 +232,7 @@ func (s *spaceServiceImpl) CreateSpace(space *entities.Space, userID uint) (*ent
 		return nil, err
 	}
 
-	ownerRoleID := uint(entities.Owner)
+	ownerRoleID := uint(entities.SpaceRoleOwner)
 
 	spaceUser := entities.SpaceUser{
 		UserID:      userID,
@@ -249,7 +258,7 @@ func (s *spaceServiceImpl) RemoveMember(spaceID, memberID, requestingUserID uint
 		return err
 	}
 
-	if requestingUserRole.ID != uint(entities.Owner) {
+	if !requestingUserRole.IsOwner() {
 		return errors.New("only space owners can remove members")
 	}
 
@@ -268,7 +277,7 @@ func (s *spaceServiceImpl) RemoveMember(spaceID, memberID, requestingUserID uint
 			return err
 		}
 
-		if memberRole.ID == uint(entities.Owner) {
+		if memberRole.ID == uint(entities.SpaceRoleOwner) {
 			return errors.New("cannot remove a space owner")
 		}
 

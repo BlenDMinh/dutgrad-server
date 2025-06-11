@@ -19,6 +19,7 @@ type SpaceInvitation struct {
 	InviterID     uint       `json:"inviter_id"`
 	Inviter       *User      `json:"inviter" gorm:"foreignKey:InviterID"`
 	Status        string     `json:"status"` // e.g., "pending", "accepted", "declined"
+	Message       string     `json:"message"`
 	CreatedAt     time.Time  `json:"created_at"`
 	UpdatedAt     time.Time  `json:"updated_at"`
 }
