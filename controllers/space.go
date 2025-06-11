@@ -241,6 +241,7 @@ func (c *SpaceController) InviteUserToSpace(ctx *gin.Context) {
 		SpaceRoleID: req.SpaceRoleID,
 		InviterID:   inviterId,
 		Status:      "pending",
+		Message:     req.Message,
 	}
 
 	if req.InvitedUserID != nil {

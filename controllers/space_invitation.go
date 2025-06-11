@@ -34,13 +34,13 @@ func (c *SpaceInvitationController) AcceptInvitation(ctx *gin.Context) {
 		return
 	}
 
-	err := c.service.AcceptInvitation(invitationId, userId)
+	spaceId, err := c.service.AcceptInvitation(invitationId, userId)
 	if err != nil {
 		HandleError(ctx, http.StatusInternalServerError, "Failed to accept invitation", err)
 		return
 	}
 
-	HandleSuccess(ctx, "Invitation accepted successfully", gin.H{"ok": "yes"})
+	HandleSuccess(ctx, "Invitation accepted successfully", gin.H{"ok": "yes", "space_id": spaceId})
 }
 
 func (c *SpaceInvitationController) RejectInvitation(ctx *gin.Context) {
