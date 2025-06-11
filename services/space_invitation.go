@@ -7,7 +7,7 @@ import (
 
 type SpaceInvitationService interface {
 	ICrudService[entities.SpaceInvitation, uint]
-	AcceptInvitation(invitationId uint, userId uint) error
+	AcceptInvitation(invitationId uint, userId uint) (uint, error)
 	RejectInvitation(invitationId uint, userId uint) error
 	CancelInvitation(spaceID uint, invitedUserID uint) error
 	CountInvitationByUserID(userID uint) (int64, error)
@@ -27,7 +27,7 @@ func NewSpaceInvitationService() SpaceInvitationService {
 	}
 }
 
-func (s *spaceInvitationServiceImpl) AcceptInvitation(invitationId uint, userId uint) error {
+func (s *spaceInvitationServiceImpl) AcceptInvitation(invitationId uint, userId uint) (uint, error) {
 	return s.repo.AcceptInvitation(invitationId, userId)
 }
 
