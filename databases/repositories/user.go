@@ -232,7 +232,7 @@ func (r *userRepositoryImpl) aggregateUserCount(spaces []*entities.SpaceUser) ([
 	}
 
 	for _, space := range spaces {
-		if count, exists := spaceCountsMap[space.ID]; exists {
+		if count, exists := spaceCountsMap[space.SpaceID]; exists {
 			space.Space.UserCount = int(count)
 		} else {
 			space.Space.UserCount = 0
