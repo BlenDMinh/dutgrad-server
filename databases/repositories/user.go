@@ -35,7 +35,7 @@ func NewUserRepository() UserRepository {
 
 func (r *userRepositoryImpl) GetSpacesByUserId(userId uint) ([]dtos.UserSpaceDTO, error) {
 	db := databases.GetDB()
-	var spaceUsers []entities.SpaceUser
+	var spaceUsers []*entities.SpaceUser
 	err := db.Preload("Space").Preload("SpaceRole").
 		Where("user_id = ?", userId).
 		Find(&spaceUsers).Error
@@ -43,6 +43,12 @@ func (r *userRepositoryImpl) GetSpacesByUserId(userId uint) ([]dtos.UserSpaceDTO
 	if err != nil {
 		return nil, err
 	}
+
+	spaceUsers, err = r.aggregateUserCount(spaceUsers)
+	if err != nil {
+		return nil, err
+	}
+
 	var userSpaces []dtos.UserSpaceDTO
 	for _, su := range spaceUsers {
 		userSpace := dtos.UserSpaceDTO{
@@ -56,6 +62,7 @@ func (r *userRepositoryImpl) GetSpacesByUserId(userId uint) ([]dtos.UserSpaceDTO
 			CreatedAt:       su.Space.CreatedAt,
 			UpdatedAt:       su.Space.UpdatedAt,
 			Role:            su.SpaceRole,
+			UserCount:       su.Space.UserCount,
 		}
 		userSpaces = append(userSpaces, userSpace)
 	}
@@ -194,4 +201,43 @@ func (s *userRepositoryImpl) GetUserTierUsage(userID uint) (*dtos.TierUsageRespo
 	}
 
 	return &response, nil
+}
+
+func (r *userRepositoryImpl) aggregateUserCount(spaces []*entities.SpaceUser) ([]*entities.SpaceUser, error) {
+	type SpaceWithUserCount struct {
+		SpaceID   uint
+		UserCount int64
+	}
+
+	spaceIds := make([]uint, 0, len(spaces))
+	for _, space := range spaces {
+		spaceIds = append(spaceIds, space.SpaceID)
+	}
+
+	var spaceCounts []SpaceWithUserCount
+	db := databases.GetDB()
+	err := db.Table("space_users").
+		Select("space_id, COUNT(user_id) as user_count").
+		Where("space_id IN (?)", spaceIds).
+		Group("space_id").
+		Scan(&spaceCounts).Error
+	if err != nil {
+		return nil, err
+	}
+
+	// Create a map for quick lookup of user counts by space ID
+	spaceCountsMap := make(map[uint]int64)
+	for _, sc := range spaceCounts {
+		spaceCountsMap[sc.SpaceID] = sc.UserCount
+	}
+
+	for _, space := range spaces {
+		if count, exists := spaceCountsMap[space.SpaceID]; exists {
+			space.Space.UserCount = int(count)
+		} else {
+			space.Space.UserCount = 0
+		}
+	}
+
+	return spaces, nil
 }
