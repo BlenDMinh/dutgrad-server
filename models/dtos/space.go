@@ -26,6 +26,7 @@ type UserSpaceDTO struct {
 	CreatedAt       time.Time          `json:"created_at"`
 	UpdatedAt       time.Time          `json:"updated_at"`
 	Role            entities.SpaceRole `json:"role"`
+	UserCount       int                `json:"user_count"`
 }
 
 type SpaceInvitationRequest struct {

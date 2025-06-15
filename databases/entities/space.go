@@ -15,6 +15,7 @@ type Space struct {
 	UpdatedAt       time.Time          `json:"updated_at"`
 	Documents       []Document         `gorm:"foreignKey:SpaceID" json:"documents"`
 	Sessions        []UserQuerySession `gorm:"foreignKey:SpaceID" json:"sessions"`
+	UserCount       int                `json:"user_count" gorm:"-"`
 }
 
 func (s Space) GetIdType() string {
