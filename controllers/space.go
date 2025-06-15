@@ -346,10 +346,10 @@ func (c *SpaceController) CountMySpaces(ctx *gin.Context) {
 }
 
 func (c *SpaceController) GetPopularSpaces(ctx *gin.Context) {
-	order := ctx.DefaultQuery("order", "member_count")
+	order := ctx.DefaultQuery("order", "user_count")
 
-	if order != "member_count" {
-		HandleError(ctx, http.StatusBadRequest, "Invalid order parameter. Only 'member_count' is supported.", nil)
+	if order != "user_count" {
+		HandleError(ctx, http.StatusBadRequest, "Invalid order parameter. Only 'user_count' is supported.", nil)
 		return
 	}
 

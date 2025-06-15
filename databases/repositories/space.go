@@ -11,7 +11,7 @@ import (
 
 type SpaceRepository interface {
 	ICrudRepository[entities.Space, uint]
-	FindPublicSpaces(page int, pageSize int) ([]entities.Space, error)
+	FindPublicSpaces(page int, pageSize int) ([]*entities.Space, error)
 	CountPublicSpaces() (int64, error)
 	GetMembers(spaceId uint) ([]entities.SpaceUser, error)
 	GetInvitations(spaceId uint) ([]entities.SpaceInvitation, error)
@@ -37,13 +37,21 @@ func NewSpaceRepository() SpaceRepository {
 	}
 }
 
-func (r *spaceRepositoryImpl) FindPublicSpaces(page int, pageSize int) ([]entities.Space, error) {
-	var spaces []entities.Space
+func (r *spaceRepositoryImpl) FindPublicSpaces(page int, pageSize int) ([]*entities.Space, error) {
+	var spaces []*entities.Space
 	db := databases.GetDB()
 
 	pagination := NewPagination(page, pageSize, DefaultPageSize)
 
 	err := pagination.ApplyPagination(db).Where("privacy_status = ?", false).Find(&spaces).Error
+	if err != nil {
+		return nil, err
+	}
+
+	spaces, err = r.aggregateUserCount(spaces)
+	if err != nil {
+		return nil, err
+	}
 
 	return spaces, err
 }
@@ -159,13 +167,13 @@ func (r *spaceRepositoryImpl) GetPopularSpaces(order string) ([]entities.Space, 
 	var spaces []entities.Space
 	db := databases.GetDB()
 
-	if order == "member_count" {
+	if order == "user_count" {
 		err := db.Model(&entities.Space{}).
-			Select("spaces.*, COUNT(space_users.user_id) as member_count").
+			Select("spaces.*, COUNT(space_users.user_id) as user_count").
 			Where("privacy_status = ?", false).
 			Joins("LEFT JOIN space_users ON space_users.space_id = spaces.id").
 			Group("spaces.id").
-			Order("member_count DESC").
+			Order("user_count DESC").
 			Find(&spaces).Error
 		return spaces, err
 	}
@@ -221,4 +229,42 @@ func (r *spaceRepositoryImpl) GetSpaceUsage(spaceID uint) (*dtos.SpaceUsage, err
 	}
 
 	return &usage, nil
+}
+
+func (r *spaceRepositoryImpl) aggregateUserCount(spaces []*entities.Space) ([]*entities.Space, error) {
+	type SpaceWithUserCount struct {
+		SpaceID   uint
+		UserCount int64
+	}
+
+	spaceIds := make([]uint, len(spaces))
+	for i, space := range spaces {
+		spaceIds[i] = space.ID
+	}
+
+	var spaceCounts []SpaceWithUserCount
+	db := databases.GetDB()
+	err := db.Table("space_users").
+		Select("space_id, COUNT(user_id) as user_count").
+		Where("space_id IN (?)", spaceIds).
+		Group("space_id").
+		Scan(&spaceCounts).Error
+	if err != nil {
+		return nil, err
+	}
+
+	spaceCountsMap := make(map[uint]int64)
+	for _, sc := range spaceCounts {
+		spaceCountsMap[sc.SpaceID] = sc.UserCount
+	}
+
+	for _, space := range spaces {
+		if count, exists := spaceCountsMap[space.ID]; exists {
+			space.UserCount = int(count)
+		} else {
+			space.UserCount = 0
+		}
+	}
+
+	return spaces, nil
 }
