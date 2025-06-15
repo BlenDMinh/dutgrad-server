@@ -22,7 +22,7 @@ type SpaceRepository interface {
 	IsMemberOfSpace(userID uint, spaceID uint) (bool, error)
 	CountSpacesByUserID(userID uint) (int64, error)
 	CountOwnedSpacesByUserID(userID uint) (int64, error)
-	GetPopularSpaces(order string) ([]entities.Space, error)
+	GetPopularSpaces(order string) ([]*entities.Space, error)
 	UpdateMemberRole(spaceID, memberID, roleID, updatedBy uint) error
 	RemoveMember(spaceID, memberID uint) error
 	GetSpaceUsage(spaceID uint) (*dtos.SpaceUsage, error)
@@ -173,8 +173,8 @@ func (s *spaceRepositoryImpl) CountOwnedSpacesByUserID(userID uint) (int64, erro
 	return count, err
 }
 
-func (r *spaceRepositoryImpl) GetPopularSpaces(order string) ([]entities.Space, error) {
-	var spaces []entities.Space
+func (r *spaceRepositoryImpl) GetPopularSpaces(order string) ([]*entities.Space, error) {
+	var spaces []*entities.Space
 	db := databases.GetDB()
 
 	if order == "user_count" {
@@ -185,10 +185,20 @@ func (r *spaceRepositoryImpl) GetPopularSpaces(order string) ([]entities.Space, 
 			Group("spaces.id").
 			Order("user_count DESC").
 			Find(&spaces).Error
+		spaces, err := r.aggregateUserCount(spaces)
+		if err != nil {
+			return nil, err
+		}
+
 		return spaces, err
 	}
 
-	return []entities.Space{}, nil
+	spaces, err := r.aggregateUserCount(spaces)
+	if err != nil {
+		return nil, err
+	}
+
+	return []*entities.Space{}, nil
 }
 
 func (r *spaceRepositoryImpl) UpdateMemberRole(spaceID, memberID, roleID, updatedBy uint) error {
