@@ -186,6 +186,10 @@ func (s *spaceServiceImpl) CountSpacesByUserID(userID uint) (int64, error) {
 	return s.repo.CountSpacesByUserID(userID)
 }
 
+func (s *spaceServiceImpl) CountOwnedSpacesByUserID(userID uint) (int64, error) {
+	return s.repo.CountOwnedSpacesByUserID(userID)
+}
+
 func (s *spaceServiceImpl) CountSpaceMembers(spaceID uint) (int64, error) {
 	members, err := s.GetMembers(spaceID)
 	if err != nil {
@@ -199,26 +203,20 @@ func (s *spaceServiceImpl) GetPopularSpaces(order string) ([]entities.Space, err
 }
 
 func (s *spaceServiceImpl) CheckSpaceCreationLimit(userID uint) error {
-	user, err := s.userRepository.GetById(userID)
-	if err != nil {
-		return fmt.Errorf("failed to get user: %v", err)
-	}
-
-	count, err := s.CountSpacesByUserID(userID)
+	count, err := s.CountOwnedSpacesByUserID(userID)
 	if err != nil {
 		return err
 	}
 
 	spaceLimit := 5
-
-	if user.Tier != nil {
-		spaceLimit = user.Tier.SpaceLimit
+	tier, err := s.userRepository.GetUserTier(userID)
+	if err == nil {
+		spaceLimit = tier.SpaceLimit
 	}
 
 	if count >= int64(spaceLimit) {
 		return fmt.Errorf("space limit reached: you can only create %d spaces with your current tier", spaceLimit)
 	}
-
 	return nil
 }
 
