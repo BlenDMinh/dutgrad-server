@@ -225,7 +225,6 @@ func (r *userRepositoryImpl) aggregateUserCount(spaces []*entities.SpaceUser) ([
 		return nil, err
 	}
 
-	// Create a map for quick lookup of user counts by space ID
 	spaceCountsMap := make(map[uint]int64)
 	for _, sc := range spaceCounts {
 		spaceCountsMap[sc.SpaceID] = sc.UserCount

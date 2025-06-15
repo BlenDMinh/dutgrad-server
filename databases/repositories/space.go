@@ -167,13 +167,13 @@ func (r *spaceRepositoryImpl) GetPopularSpaces(order string) ([]entities.Space, 
 	var spaces []entities.Space
 	db := databases.GetDB()
 
-	if order == "member_count" {
+	if order == "user_count" {
 		err := db.Model(&entities.Space{}).
-			Select("spaces.*, COUNT(space_users.user_id) as member_count").
+			Select("spaces.*, COUNT(space_users.user_id) as user_count").
 			Where("privacy_status = ?", false).
 			Joins("LEFT JOIN space_users ON space_users.space_id = spaces.id").
 			Group("spaces.id").
-			Order("member_count DESC").
+			Order("user_count DESC").
 			Find(&spaces).Error
 		return spaces, err
 	}
