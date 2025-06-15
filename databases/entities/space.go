@@ -17,7 +17,7 @@ type Space struct {
 	Sessions        []UserQuerySession `gorm:"foreignKey:SpaceID" json:"sessions"`
 
 	// Additional fields
-	UserCount int `json:"user_count" gorm:"default:0"`
+	UserCount int `json:"user_count" gorm:"-"`
 }
 
 func (s Space) GetIdType() string {
