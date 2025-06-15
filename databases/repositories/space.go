@@ -21,6 +21,7 @@ type SpaceRepository interface {
 	JoinPublicSpace(spaceID uint, userID uint) error
 	IsMemberOfSpace(userID uint, spaceID uint) (bool, error)
 	CountSpacesByUserID(userID uint) (int64, error)
+	CountOwnedSpacesByUserID(userID uint) (int64, error)
 	GetPopularSpaces(order string) ([]entities.Space, error)
 	UpdateMemberRole(spaceID, memberID, roleID, updatedBy uint) error
 	RemoveMember(spaceID, memberID uint) error
@@ -159,6 +160,15 @@ func (s *spaceRepositoryImpl) CountSpacesByUserID(userID uint) (int64, error) {
 	err := databases.GetDB().
 		Table("space_users").
 		Where("space_users.user_id = ?", userID).
+		Count(&count).Error
+	return count, err
+}
+
+func (s *spaceRepositoryImpl) CountOwnedSpacesByUserID(userID uint) (int64, error) {
+	var count int64
+	err := databases.GetDB().
+		Table("space_users").
+		Where("space_users.user_id = ? AND space_users.space_role_id = ?", userID, entities.SpaceRoleOwner).
 		Count(&count).Error
 	return count, err
 }
